@@ -1,4 +1,6 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Library.aspx.cs" Inherits="Library" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true"
+    CodeFile="Library.aspx.cs"
+    Inherits="Library" %>
 
 <!DOCTYPE html>
 
@@ -10,158 +12,118 @@
 
     <style type="text/css">
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
+        body
+        {
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background-color: #eef2f7;
+            background-color: #f2f2f2;
+        }
+
+        .container
+        {
+            width: 90%;
+            margin: 30px auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px #cccccc;
+        }
+
+        .heading
+        {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 25px;
+        }
+
+        .form-table
+        {
+            width: 600px;
+            margin: auto;
+        }
+
+        .form-table td
+        {
+            padding: 8px;
+        }
+
+        .label
+        {
+            font-weight: bold;
             color: #333333;
         }
-        .container {
-            width: 1000px;
-            margin: 40px auto;
-            background-color: #ffffff;
-            padding: 35px 45px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-        }
-        .title {
-            text-align: center;
-            font-size: 30px;
-            font-weight: bold;
-            color: #1f2937;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .section-title {
-            font-size: 23px;
-            font-weight: bold;
-            color: #1f2937;
-            margin-top: 10px;
-            margin-bottom: 22px;
-        }
-        .form-row {
-            display: inline-block;
-            width: 48%;
-            margin-bottom: 20px;
-            vertical-align: top;
-        }
-        .form-row label {
-            display: block;
-            width: 100%;
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 8px;
-            color: #374151;
-        }
-        .textbox {
-            width: 100%;
-            height: 40px;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 15px;
-            outline: none;
+
+        .textbox,
+        .dropdown
+        {
+            width: 250px;
+            height: 30px;
+            padding: 4px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
         }
 
-        .textbox:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-        }
-        .dropdown {
-            width: 100%;
-            height: 40px;
-            padding: 5px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 15px;
-            background-color: #ffffff;
-            outline: none;
-        }
+        /* Button styling */
 
-        .dropdown:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-        }
-        .button {
-            padding: 11px 24px;
-            margin-right: 10px;
+        .button
+        {
+            padding: 9px 18px;
+            margin: 5px;
             border: none;
-            border-radius: 6px;
-            background-color: #2563eb;
-            color: white;
-            font-size: 15px;
-            font-weight: bold;
+            border-radius: 4px;
             cursor: pointer;
+            background-color: #337ab7;
+            color: white;
+            font-weight: bold;
+            height: 38px;
         }
 
-        .button:hover {
-            background-color: #1d4ed8;
+        .button:hover
+        {
+            background-color: #286090;
         }
-        .message {
+
+        /* Keep all buttons on one line */
+
+        .button-area
+        {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .message
+        {
             display: block;
-            margin-top: 18px;
-            padding: 10px 14px;
+            text-align: center;
+            margin: 15px;
             font-weight: bold;
-            font-size: 15px;
         }
-        .grid {
-            margin-top: 15px;
+
+        .grid
+        {
             width: 100%;
+            margin-top: 25px;
             border-collapse: collapse;
-            border: 1px solid #d1d5db;
-            font-size: 14px;
         }
-        .grid th {
-            background-color: #1f2937;
+
+        .grid th
+        {
+            background-color: #337ab7;
             color: white;
-            padding: 13px 10px;
+            padding: 10px;
+        }
+
+        .grid td
+        {
+            padding: 8px;
             text-align: center;
-            font-size: 15px;
-            border: 1px solid #374151;
-        }
-        .grid td {
-            padding: 12px 10px;
-            border: 1px solid #d1d5db;
-            text-align: center;
-        }
-        .grid tr:nth-child(even) td {
-            background-color: #f8fafc;
-        }
-        .grid tr:hover td {
-            background-color: #eef4ff;
-        }
-        .grid input[type="submit"] {
-            padding: 6px 14px;
-            border: 1px solid #dc2626;
-            border-radius: 5px;
-            background-color: #ffffff;
-            color: #dc2626;
-            cursor: pointer;
-            font-weight: bold;
+            border: 1px solid #dddddd;
         }
 
-        .grid input[type="submit"]:hover {
-            background-color: #dc2626;
-            color: #ffffff;
-        }
-        @media screen and (max-width: 1050px) {
-
-            .container {
-                width: 94%;
-                margin: 20px auto;
-                padding: 25px;
-            }
-
-            .form-row {
-                width: 100%;
-            }
-
+        .grid tr:nth-child(even)
+        {
+            background-color: #f9f9f9;
         }
 
     </style>
@@ -172,219 +134,261 @@
 
 <form id="form1" runat="server">
 
-    <div class="container">
+<div class="container">
 
-        <div class="title">
-            📚 Library Management System
-        </div>
-
-        <div class="section-title">
-            Add New Book
-        </div>
-
-        <div class="form-row">
-
-            <asp:Label ID="lblbname"
-                runat="server"
-                Text="Book Name :"></asp:Label>
-
-            <asp:TextBox ID="txtbname"
-                runat="server"
-                CssClass="textbox">
-            </asp:TextBox>
-
-        </div>
-
-        <div class="form-row">
-
-            <asp:Label ID="lblauthorname"
-                runat="server"
-                Text="Author Name :"></asp:Label>
-
-            <asp:TextBox ID="txtaname"
-                runat="server"
-                CssClass="textbox">
-            </asp:TextBox>
-
-        </div>
-
-        <div class="form-row">
-
-            <asp:Label ID="lblcategory"
-                runat="server"
-                Text="Category :"></asp:Label>
-
-            <asp:DropDownList ID="ddlcategory"
-                runat="server"
-                CssClass="dropdown">
-
-                <asp:ListItem
-                    Text="Select Category"
-                    Value="">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Programming"
-                    Value="Programming">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="History"
-                    Value="History">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Biography"
-                    Value="Biography">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Science"
-                    Value="Science">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Technology"
-                    Value="Technology">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Business"
-                    Value="Business">
-                </asp:ListItem>
-
-                <asp:ListItem
-                    Text="Others"
-                    Value="Others">
-                </asp:ListItem>
-
-            </asp:DropDownList>
-
-        </div>
-
-        <div class="form-row">
-
-            <asp:Label ID="lblprice"
-                runat="server"
-                Text="Price :"></asp:Label>
-
-            <asp:TextBox ID="txtprice"
-                runat="server"
-                CssClass="textbox">
-            </asp:TextBox>
-
-        </div>
-
-        <div class="form-row">
-
-            <asp:Label ID="lblqty"
-                runat="server"
-                Text="Quantity :"></asp:Label>
-
-            <asp:TextBox ID="txtqty"
-                runat="server"
-                CssClass="textbox">
-            </asp:TextBox>
-
-        </div>
+    <h1 class="heading">
+        Library Management System
+    </h1>
 
 
-        <br />
+    <table class="form-table">
 
-        <asp:Button ID="btnsave"
-            runat="server"
-            Text="Save Book"
-            CssClass="button"
-            OnClick="btnsave_Click" />
+        <!-- Book Name -->
 
-        <asp:Button ID="btnview"
-            runat="server"
-            Text="View Books"
-            CssClass="button"
-            OnClick="btnview_Click" />
+        <tr>
 
-        <asp:Label ID="lblmsg"
-            runat="server"
-            CssClass="message">
-        </asp:Label>
+            <td class="label">
+                Book Name
+            </td>
 
+            <td>
 
-        <br />
-        <br />
+                <asp:TextBox
+                    ID="txtbname"
+                    runat="server"
+                    CssClass="textbox">
+                </asp:TextBox>
 
-        <div class="section-title">
-            Books List
-        </div>
+            </td>
+
+        </tr>
 
 
-        <asp:GridView ID="gvBooks"
-            runat="server"
-            CssClass="grid"
-            AutoGenerateColumns="False"
-            DataKeyNames="BookID"
-            OnRowDeleting="gvBooks_RowDeleting"
-            CellPadding="4"
-            GridLines="None" ForeColor="#333333">
+        <!-- Author Name -->
 
-            <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+        <tr>
 
-            <Columns>
+            <td class="label">
+                Author Name
+            </td>
 
-                <asp:BoundField
-                    DataField="BookID"
-                    HeaderText="Book ID" />
+            <td>
 
-                <asp:BoundField
-                    DataField="BookName"
-                    HeaderText="Book Name" />
+                <asp:TextBox
+                    ID="txtaname"
+                    runat="server"
+                    CssClass="textbox">
+                </asp:TextBox>
 
-                <asp:BoundField
-                    DataField="AuthorName"
-                    HeaderText="Author Name" />
+            </td>
 
-                <asp:BoundField
-                    DataField="Category"
-                    HeaderText="Category" />
-
-                <asp:BoundField
-                    DataField="Price"
-                    HeaderText="Price" />
-
-                <asp:BoundField
-                    DataField="Quantity"
-                    HeaderText="Quantity" />
-
-                <asp:ButtonField
-                    Text="Delete"
-                    CommandName="Delete"
-                    ButtonType="Button" />
-
-            </Columns>
+        </tr>
 
 
-            <EditRowStyle BackColor="#999999" />
-            <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <!-- Category -->
+
+        <tr>
+
+            <td class="label">
+                Category
+            </td>
+
+            <td>
+
+                <asp:DropDownList
+                    ID="ddlcategory"
+                    runat="server"
+                    CssClass="dropdown">
+
+                    <asp:ListItem Value="">
+                        Select Category
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Technology">
+                        Technology
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Programing">
+                        Programing
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Bussiness">
+                        Bussiness
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Science">
+                        Science
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Biography">
+                        Biography
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Novel">
+                        Novel
+                    </asp:ListItem>
+
+                    <asp:ListItem Value="Other">
+                        Other
+                    </asp:ListItem>
+
+                </asp:DropDownList>
+
+            </td>
+
+        </tr>
 
 
-            <HeaderStyle
-                BackColor="#5D7B9D"
-                ForeColor="White"
-                Font-Bold="True" />
+        <!-- Price -->
 
-            <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+        <tr>
 
-            <RowStyle
-                BackColor="#F7F6F3" ForeColor="#333333" />
+            <td class="label">
+                Price
+            </td>
 
-            <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
-            <SortedAscendingCellStyle BackColor="#E9E7E2" />
-            <SortedAscendingHeaderStyle BackColor="#506C8C" />
-            <SortedDescendingCellStyle BackColor="#FFFDF8" />
-            <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+            <td>
 
-        </asp:GridView>
+                <asp:TextBox
+                    ID="txtprice"
+                    runat="server"
+                    CssClass="textbox">
+                </asp:TextBox>
 
-    </div>
+            </td>
+
+        </tr>
+
+
+        <!-- Quantity -->
+
+        <tr>
+
+            <td class="label">
+                Quantity
+            </td>
+
+            <td>
+
+                <asp:TextBox
+                    ID="txtqty"
+                    runat="server"
+                    CssClass="textbox">
+                </asp:TextBox>
+
+            </td>
+
+        </tr>
+
+
+        <!-- Buttons -->
+
+        <tr>
+
+            <td colspan="2">
+
+                <div class="button-area">
+
+                    <asp:Button
+                        ID="btnsave"
+                        runat="server"
+                        Text="Save Book"
+                        CssClass="button"
+                        OnClick="btnsave_Click" />
+
+                    <asp:Button
+                        ID="btnupdate"
+                        runat="server"
+                        Text="Update Book"
+                        CssClass="button"
+                        OnClick="btnupdate_Click" />
+
+                    <asp:Button
+                        ID="btnview"
+                        runat="server"
+                        Text="View Books"
+                        CssClass="button"
+                        OnClick="btnview_Click" />
+
+                    <asp:Button
+                        ID="btnclear"
+                        runat="server"
+                        Text="Clear"
+                        CssClass="button"
+                        OnClick="btnclear_Click" />
+
+                    <asp:Button
+                        ID="btnback"
+                        runat="server"
+                        Text="Back"
+                        CssClass="button"
+                        OnClick="btnback_Click" />
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+
+    <!-- Message -->
+
+    <asp:Label
+        ID="lblmsg"
+        runat="server"
+        CssClass="message">
+    </asp:Label>
+
+
+    <!-- Books Grid -->
+
+    <asp:GridView
+        ID="gvBooks"
+        runat="server"
+        CssClass="grid"
+        AutoGenerateColumns="False"
+        DataKeyNames="BookID"
+        OnRowDeleting="gvBooks_RowDeleting"
+        OnSelectedIndexChanged="gvBooks_SelectedIndexChanged">
+
+        <Columns>
+
+            <asp:BoundField
+                DataField="BookID"
+                HeaderText="Book ID" />
+
+            <asp:BoundField
+                DataField="BookName"
+                HeaderText="Book Name" />
+
+            <asp:BoundField
+                DataField="AuthorName"
+                HeaderText="Author Name" />
+
+            <asp:BoundField
+                DataField="Category"
+                HeaderText="Category" />
+
+            <asp:BoundField
+                DataField="Price"
+                HeaderText="Price" />
+
+            <asp:BoundField
+                DataField="Quantity"
+                HeaderText="Quantity" />
+
+            <asp:CommandField
+                ShowSelectButton="True"
+                ShowDeleteButton="True"
+                HeaderText="Action" />
+
+        </Columns>
+
+    </asp:GridView>
+
+</div>
 
 </form>
 
