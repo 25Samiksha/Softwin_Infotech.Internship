@@ -1,0 +1,91 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true"
+    CodeFile="Site.Master.cs"
+    Inherits="Site" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head id="Head1" runat="server">
+
+    <title>Employee Management System</title>
+
+    <link href="CSS/Site.css" rel="stylesheet" />
+
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+
+</head>
+
+<body>
+
+<form id="form1" runat="server">
+
+    <div class="header">
+
+        <div class="logo">
+            Employee Management System
+        </div>
+
+        <div class="user">
+
+            <asp:Label ID="lblLoggedInUser"
+                runat="server"
+                Text="Admin">
+            </asp:Label>
+
+        </div>
+
+    </div>
+
+    <div class="container">
+
+        <div class="sidebar">
+
+            <h3>MENU</h3>
+
+            <a href="Dashboard.aspx">Dashboard</a>
+
+            <a href="Employee.aspx">Employees</a>
+
+            <a href="Department.aspx">Departments</a>
+
+            <a href="Designation.aspx">Designations</a>
+
+            <a href="Attendance.aspx">Attendance</a>
+
+            <a href="Leave.aspx">Leave Management</a>
+
+            <a href="Reports.aspx">Reports</a>
+
+            <asp:LinkButton ID="lnkLogout"
+                runat="server"
+                OnClick="lnkLogout_Click"
+                CssClass="logout-link">
+                Logout
+            </asp:LinkButton>
+
+        </div>
+
+        <div class="content">
+
+            <asp:ContentPlaceHolder
+                ID="ContentPlaceHolder1"
+                runat="server">
+            </asp:ContentPlaceHolder>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+
+        Employee Management System © 2026
+
+    </div>
+
+</form>
+
+</body>
+
+</html>
