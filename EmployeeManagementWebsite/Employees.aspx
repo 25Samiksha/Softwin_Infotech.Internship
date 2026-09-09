@@ -1,240 +1,215 @@
-﻿
-<%@ Page Title="Employees" Language="C#" MasterPageFile="~/Site.master"
-    AutoEventWireup="true" CodeFile="Employees.aspx.cs" Inherits="Employees" %>
+﻿<%@ Page Title="Employees" Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" CodeFile="Employees.aspx.cs" Inherits="Employees" %>
 
-<asp:Content ID="Content1"
-    ContentPlaceHolderID="MainContent"
-    runat="server">
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
 
-    <div class="container">
-    <div class="page-header">
-      <h1>Employee Management</h1>
-       </div>
-       <ol class="breadcrumb">
-        <li>
-          <a href="Dashboard.aspx">Home</a>
-        </li>
-        <li class="active">Employees</li>
-         </ol>
-     <div class="alert alert-danger">
-             <strong>Information!</strong>
-            Manage employee information from this page.
+<div class="container">
+
+<div class="page-header">
+<h2>Employee Management</h2>
+<ol class="breadcrumb">
+<li><a href="Dashboard.aspx">Home</a></li>
+<li class="active">Employees</li>
+</ol>
 </div>
-         <div class="row">
-         <div class="col-md-12">
-       <button type="button"class="btn btn-primary"data-toggle="modal"data-target="#employeeModal">
-         <span class="glyphicon glyphicon-plus"></span>Add Employee</button>
-<br /><br /></div></div>
-        <div class="row">
-        <div class="col-md-12">
-        <div class="panel panel-primary">
-         <div class="panel-heading">
-         <h3 class="panel-title">Add Employee</h3>
-</div>
-        <div class="panel-body">
-        <div class="row">
-        <div class="col-md-6">
-        <div class="form-group">
-        <label>Name</label>
-            <br />
-            <asp:TextBox ID="txtname" runat="server" CssClass="Form-control" placeholder="Enter employee Name" Height="34px" Width="100%"></asp:TextBox>
 
-</div></div>
-<div class="col-md-6">
+<div class="alert alert-info">
+<strong>Information!</strong> Manage employee information from this page.
+</div>
+
+<asp:Label ID="lblMessage" runat="server" Visible="false"></asp:Label>
+
+<div class="panel panel-info">
+<div class="panel-heading">
+<h3 class="panel-title">Employee Search</h3>
+</div>
+
+<div class="panel-body">
+<div class="row">
+
+<div class="col-md-4">
 <div class="form-group">
-<label>Email</label>
-    <br />
-    <asp:TextBox ID="txtemail" runat="server" CssClass="Form-control" placeholder="Enter employee Email" Height="34px" Width="100%"></asp:TextBox>
+<label>Employee Name</label>
+<asp:TextBox ID="txtSearchName" runat="server" CssClass="form-control" placeholder="Enter employee name"></asp:TextBox>
 </div>
-</div></div>
-      <div class="row">
-      <div class="col-md-6">
-      <div class="form-group">
-<label>Mobile</label>
-    <br />
-    <asp:TextBox ID="txtMobile" runat="server" CssClass="Form-control" placeholder="Enter Mobile Number" Height="34px" Width="100%"></asp:TextBox>
- </div>
- </div>
-      <div class="col-md-6">
-      <div class="form-group">
-           <label>Department</label>
- <asp:DropDownList ID="ddlDepartment"
-  runat="server"
-    CssClass="form-control">
-     <asp:ListItem Value="">Select Department</asp:ListItem>
-     <asp:ListItem>IT</asp:ListItem>
-     <asp:ListItem>Finance</asp:ListItem>
-     <asp:ListItem>Marketing</asp:ListItem>
-     <asp:ListItem>Sales</asp:ListItem>
-     <asp:ListItem></asp:ListItem>
+</div>
+
+<div class="col-md-4">
+<div class="form-group">
+<label>Department</label>
+<asp:DropDownList ID="ddlSearchDepartment" runat="server" CssClass="form-control">
+<asp:ListItem Text="All Departments" Value=""></asp:ListItem>
+<asp:ListItem Text="IT" Value="IT"></asp:ListItem>
+<asp:ListItem Text="HR" Value="HR"></asp:ListItem>
+<asp:ListItem Text="Finance" Value="Finance"></asp:ListItem>
+<asp:ListItem Text="Marketing" Value="Marketing"></asp:ListItem>
+<asp:ListItem Text="Sales" Value="Sales"></asp:ListItem>
 </asp:DropDownList>
 </div>
-   </div>
-     </div>
-      <div class="row">
-      <div class="col-md-6">
-     <div class="form-group">
-    <label>Joining Date</label>
-<asp:TextBox ID="txtJoiningDate"
-      runat="server"
-            TextMode="Date"
-                  CssClass="form-control"></asp:TextBox>
-</div>
-</div>
-      <div class="col-md-6">
-      <div class="form-group">
-      <label>Gender</label>
- <br />
-        <asp:RadioButtonList ID="rbl1" runat="server">
-             <asp:ListItem>Male</asp:ListItem>
-             <asp:ListItem>Female</asp:ListItem>
-              <asp:ListItem>Other</asp:ListItem>
-             </asp:RadioButtonList>
- </div>
- </div>
 </div>
 
-<div class="row">
-<div class="col-md-12">
+<div class="col-md-4">
 <div class="form-group">
-<label>Skills</label>
-    <br />
-    <asp:CheckBoxList ID="cb1" runat="server" Width="86px">
-        <asp:ListItem>HTML</asp:ListItem>
-        <asp:ListItem>SQL</asp:ListItem>
-        <asp:ListItem>C#</asp:ListItem>
-        <asp:ListItem>.NET</asp:ListItem>
-    </asp:CheckBoxList>
+<label>Status</label>
+<asp:DropDownList ID="ddlSearchStatus" runat="server" CssClass="form-control">
+<asp:ListItem Text="All Status" Value=""></asp:ListItem>
+<asp:ListItem Text="Active" Value="Active"></asp:ListItem>
+<asp:ListItem Text="Inactive" Value="Inactive"></asp:ListItem>
+</asp:DropDownList>
 </div>
 </div>
-</div>
-        <div class="row">
-           <div class="col-md-12">
-   <asp:Button ID="btnSubmit" runat="server" CssClass="btn-success" Height="35px" Text="Submit" />
 
-</div></div></div></div>
-</div></div>
-      <div class="row">
-      <div class="col-md-12">
-     <div class="panel panel-default">
+</div>
+
+<asp:Button ID="btnSearch" runat="server" Text="Search" CssClass="btn btn-primary" CausesValidation="false" OnClick="btnSearch_Click" />
+&nbsp;
+<asp:Button ID="btnResetSearch" runat="server" Text="Reset" CssClass="btn btn-default" CausesValidation="false" OnClick="btnResetSearch_Click" />
+
+</div>
+</div>
+
+<div class="clearfix">
+<div class="pull-right">
+<asp:Button ID="btnAddEmployee" runat="server" Text="+ Add Employee" CssClass="btn btn-success" CausesValidation="false" OnClick="btnAddEmployee_Click" />
+</div>
+</div>
+
+<br />
+
+<div class="panel panel-default">
 <div class="panel-heading">
-<h3 class="panel-title">Employee List</h3></div>
+<h3 class="panel-title">Employee List</h3>
+</div>
+
 <div class="panel-body">
-       <div class="table-responsive">
-<table class="table table-striped table-bordered table-hover">
-<thead>
-<tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Email</th>
-      <th>Department</th>
-      <th>Joining Date</th>
-      <th>Status</th>
-      <th>Edit</th>
-      <th>Delete</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-      <td>1</td>
-      <td>Rahul Patil</td>
-      <td>rahul@gmail.com</td>
-      <td>IT</td>
-      <td>01-09-2026</td>
-<td>
-       <span class="label label-success">Active</span>
-</td>
-<td>
-      <button type="button"class="btn btn-primary btn-sm">
-      <span class="glyphicon glyphicon-edit"></span>Edit</button>
-</td>
-<td>
-    <button type="button"class="btn btn-danger btn-sm">
-          <span class="glyphicon glyphicon-trash"></span>Delete</button></td></tr>
-<tr>
+<div class="table-responsive">
 
-    <td>2</td>
-       <td>Priya Sharma</td>
-       <td>priya@gmail.com</td>
-       <td>HR</td>
-       <td> 03-09-2026</td>
-<td>
-       <span class="label label-success">Active</span>
-</td>
-<td>
-      <button type="button"class="btn btn-primary btn-sm">
-          <span class="glyphicon glyphicon-edit"></span>Edit</button>
-</td>
-<td>
-       <button type="button" class="btn btn-danger btn-sm">
-       <span class="glyphicon glyphicon-trash"></span>Delete</button>
-</td></tr>
-<tr>
-        <td>3</td>
-        <td>Amit Joshi</td>
-        <td>amit@gmail.com</td>
-        <td>Finance</td>
-        <td> 05-09-2026</td>
-  <td>
-       <span class="label label-warning">Inactive</span>
-</td>
-<td>
-       <button type="button" class="btn btn-primary btn-sm">
-      <span class="glyphicon glyphicon-edit"></span>Edit
-</button>
-</td> <td>
-        <button type="button"class="btn btn-danger btn-sm">
-        <span class="glyphicon glyphicon-trash"></span>Delete
-</button>
-</td>
-     </tr>
-</tbody>
- </table>
+<asp:GridView ID="gvEmployees" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-striped table-hover" EmptyDataText="No employees found." AllowPaging="true" PageSize="5" OnRowCommand="gvEmployees_RowCommand" OnPageIndexChanging="gvEmployees_PageIndexChanging">
+
+<Columns>
+
+<asp:BoundField DataField="EmployeeId" HeaderText="ID" />
+<asp:BoundField DataField="EmployeeName" HeaderText="Name" />
+<asp:BoundField DataField="Email" HeaderText="Email" />
+<asp:BoundField DataField="Department" HeaderText="Department" />
+<asp:BoundField DataField="Designation" HeaderText="Designation" />
+<asp:BoundField DataField="JoiningDate" HeaderText="Joining Date" DataFormatString="{0:dd-MM-yyyy}" />
+
+<asp:TemplateField HeaderText="Status">
+<ItemTemplate>
+<asp:Label ID="lblStatus" runat="server" Text='<%# Eval("Status") %>' CssClass='<%# GetStatusClass(Eval("Status")) %>'></asp:Label>
+</ItemTemplate>
+</asp:TemplateField>
+
+<asp:TemplateField HeaderText="Actions">
+<ItemTemplate>
+
+<asp:LinkButton ID="btnView" runat="server" Text="View" CommandName="ViewEmployee" CommandArgument='<%# Eval("EmployeeId") %>' CssClass="btn btn-info btn-xs" CausesValidation="false">
+<span class="glyphicon glyphicon-eye-open"></span> View
+</asp:LinkButton>
+
+&nbsp;
+
+<asp:LinkButton ID="btnEdit" runat="server" Text="Edit" CommandName="EditEmployee" CommandArgument='<%# Eval("EmployeeId") %>' CssClass="btn btn-warning btn-xs" CausesValidation="false">
+<span class="glyphicon glyphicon-edit"></span> Edit
+</asp:LinkButton>
+
+&nbsp;
+
+<asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CommandName="DeleteEmployee" CommandArgument='<%# Eval("EmployeeId") %>' CssClass="btn btn-danger btn-xs" CausesValidation="false" OnClientClick="return confirm('Are you sure you want to delete this employee?');">
+<span class="glyphicon glyphicon-trash"></span> Delete
+</asp:LinkButton>
+
+</ItemTemplate>
+</asp:TemplateField>
+
+</Columns>
+
+<PagerStyle CssClass="pagination" />
+
+</asp:GridView>
+
 </div>
-   </div>
-      </div>
-       </div>
-     </div>
 </div>
-        <div id="employeeModal"class="modal fade"role="dialog">
-        <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
+</div>
 
-                    <button type="button"
-                        class="close"
-                        data-dismiss="modal">
-                        &times;
-                     </button>
+</div>
 
-                    <h4 class="modal-title">
-                        Employee Information
-                    </h4>
+<div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalTitle">
 
-                </div>
-                <div class="modal-body">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
 
-                    <p>
-                        Employee form is available above.
-                    </p>
-                    <p>
-                        This modal is included to practice
-                        the Bootstrap modal component.
-                    </p>
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">
+<span>&times;</span>
+</button>
+<h4 class="modal-title" id="employeeModalTitle">Add Employee</h4>
+</div>
 
-                </div>
+<div class="modal-body">
 
-                <div class="modal-footer">
+<asp:HiddenField ID="hfEmployeeId" runat="server" />
 
-                    <button type="button"
-                        class="btn btn-default"
-                        data-dismiss="modal">Close
+<div class="form-group">
+<label>Employee Name</label>
+<asp:TextBox ID="txtEmployeeName" runat="server" CssClass="form-control" placeholder="Enter employee name"></asp:TextBox>
+<asp:RequiredFieldValidator ID="rfvName" runat="server" ControlToValidate="txtEmployeeName" ErrorMessage="Employee name is required." CssClass="text-danger" Display="Dynamic"></asp:RequiredFieldValidator>
+</div>
 
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="form-group">
+<label>Email</label>
+<asp:TextBox ID="txtEmail" runat="server" CssClass="form-control" placeholder="Enter email"></asp:TextBox>
+<asp:RegularExpressionValidator ID="revEmail" runat="server" ControlToValidate="txtEmail" ErrorMessage="Enter a valid email address." CssClass="text-danger" Display="Dynamic" ValidationExpression="^[^@\s]+@[^@\s]+\.[^@\s]+$"></asp:RegularExpressionValidator>
+</div>
+
+<div class="form-group">
+<label>Department</label>
+<asp:DropDownList ID="ddlDepartment" runat="server" CssClass="form-control">
+<asp:ListItem Text="Select Department" Value=""></asp:ListItem>
+<asp:ListItem Text="IT" Value="IT"></asp:ListItem>
+<asp:ListItem Text="HR" Value="HR"></asp:ListItem>
+<asp:ListItem Text="Finance" Value="Finance"></asp:ListItem>
+<asp:ListItem Text="Marketing" Value="Marketing"></asp:ListItem>
+<asp:ListItem Text="Sales" Value="Sales"></asp:ListItem>
+</asp:DropDownList>
+<asp:RequiredFieldValidator ID="rfvDepartment" runat="server" ControlToValidate="ddlDepartment" InitialValue="" ErrorMessage="Please select a department." CssClass="text-danger" Display="Dynamic"></asp:RequiredFieldValidator>
+</div>
+
+<div class="form-group">
+<label>Designation</label>
+<asp:TextBox ID="txtDesignation" runat="server" CssClass="form-control" placeholder="Enter designation"></asp:TextBox>
+<asp:RequiredFieldValidator ID="rfvDesignation" runat="server" ControlToValidate="txtDesignation" ErrorMessage="Designation is required." CssClass="text-danger" Display="Dynamic"></asp:RequiredFieldValidator>
+</div>
+
+<div class="form-group">
+<label>Joining Date</label>
+<asp:TextBox ID="txtJoiningDate" runat="server" CssClass="form-control" placeholder="dd-MM-yyyy"></asp:TextBox>
+<asp:RequiredFieldValidator ID="rfvJoiningDate" runat="server" ControlToValidate="txtJoiningDate" ErrorMessage="Joining date is required." CssClass="text-danger" Display="Dynamic"></asp:RequiredFieldValidator>
+</div>
+
+<div class="form-group">
+<label>Status</label>
+<asp:DropDownList ID="ddlStatus" runat="server" CssClass="form-control">
+<asp:ListItem Text="Active" Value="Active"></asp:ListItem>
+<asp:ListItem Text="Inactive" Value="Inactive"></asp:ListItem>
+</asp:DropDownList>
+</div>
+
+</div>
+
+<div class="modal-footer">
+
+<asp:Button ID="btnSave" runat="server" Text="Save Employee" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+
+<asp:Button ID="btnClear" runat="server" Text="Clear" CssClass="btn btn-default" CausesValidation="false" OnClick="btnClear_Click" />
+
+<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+
+</div>
+
+</div>
+</div>
+
+</div>
 
 </asp:Content>
-
