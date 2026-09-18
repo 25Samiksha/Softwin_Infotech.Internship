@@ -34,7 +34,14 @@
                                 Remember me
                         </label>
                         </div>
+<<<<<<< HEAD
             <asp:Button ID="btnLogin" runat="server" Text="Login" CssClass="btn btn-primary btn-block" />
+=======
+            <asp:Button ID="btnLogin"
+                            runat="server"
+                            Text="Login"
+                            CssClass="btn btn-primary btn-block" />
+>>>>>>> origin/main
 </div>
  </div>
 </div>
