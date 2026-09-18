@@ -1,0 +1,453 @@
+﻿using System;
+using System.Data;
+using System.Data.SqlClient;
+
+public partial class Expenses : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        RoleHelper.RequirePresidentSecretary(this);
+        if (!IsPostBack)
+        {
+            LoadBachatGats();
+
+            txtExpenseDate.Text =
+                DateTime.Now.ToString("yyyy-MM-dd");
+
+            LoadExpenses();
+            LoadSummary();
+        }
+    }
+
+
+    // =====================================================
+    // LOAD BACHAT GATS
+    // =====================================================
+
+    private void LoadBachatGats()
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT BachatGatID, GatName
+                FROM BachatGat
+                WHERE Status = 'Active'
+                ORDER BY GatName";
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(query, con);
+
+            DataTable dt = new DataTable();
+
+            da.Fill(dt);
+
+            ddlBachatGat.DataSource = dt;
+
+            ddlBachatGat.DataTextField =
+                "GatName";
+
+            ddlBachatGat.DataValueField =
+                "BachatGatID";
+
+            ddlBachatGat.DataBind();
+
+            ddlBachatGat.Items.Insert(
+                0,
+                new System.Web.UI.WebControls.ListItem(
+                    " Select Bachat Gat ",
+                    "")
+            );
+        }
+    }
+
+
+    // =====================================================
+    // LOAD EXPENSES
+    // =====================================================
+
+    private void LoadExpenses()
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT
+                    E.ExpenseID,
+                    B.GatName,
+                    E.ExpenseDate,
+                    E.ExpenseType,
+                    E.Amount,
+                    E.PaidTo,
+                    E.PaymentMode,
+                    E.ReceiptNumber
+                FROM Expenses E
+                INNER JOIN BachatGat B
+                    ON E.BachatGatID = B.BachatGatID
+                ORDER BY
+                    E.ExpenseDate DESC,
+                    E.ExpenseID DESC";
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(query, con);
+
+            DataTable dt = new DataTable();
+
+            da.Fill(dt);
+
+            gvExpenses.DataSource = dt;
+            gvExpenses.DataBind();
+        }
+    }
+
+
+    // =====================================================
+    // SAVE EXPENSE
+    // =====================================================
+
+    protected void btnSave_Click(
+        object sender,
+        EventArgs e)
+    {
+        decimal amount;
+
+        if (ddlBachatGat.SelectedValue == "")
+        {
+            ShowMessage(
+                "Please select Bachat Gat.",
+                "alert-danger");
+
+            return;
+        }
+
+        if (ddlExpenseType.SelectedValue == "")
+        {
+            ShowMessage(
+                "Please select expense type.",
+                "alert-danger");
+
+            return;
+        }
+
+        DateTime expenseDate;
+
+        if (!DateTime.TryParse(
+            txtExpenseDate.Text,
+            out expenseDate))
+        {
+            ShowMessage(
+                "Please enter valid expense date.",
+                "alert-danger");
+
+            return;
+        }
+
+        if (!decimal.TryParse(
+            txtAmount.Text,
+            out amount) || amount <= 0)
+        {
+            ShowMessage(
+                "Please enter valid amount.",
+                "alert-danger");
+
+            return;
+        }
+
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                INSERT INTO Expenses
+                (
+                    BachatGatID,
+                    ExpenseDate,
+                    ExpenseType,
+                    Amount,
+                    Description,
+                    PaidTo,
+                    PaymentMode,
+                    ReceiptNumber
+                   
+                )
+                VALUES
+                (
+                    @BachatGatID,
+                    @ExpenseDate,
+                    @ExpenseType,
+                    @Amount,
+                    @Description,
+                    @PaidTo,
+                    @PaymentMode,
+                    @ReceiptNumber
+                    
+                )";
+
+            SqlCommand cmd =
+                new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                ddlBachatGat.SelectedValue);
+
+            cmd.Parameters.AddWithValue(
+                "@ExpenseDate",
+                expenseDate);
+
+            cmd.Parameters.AddWithValue(
+                "@ExpenseType",
+                ddlExpenseType.SelectedValue);
+
+            cmd.Parameters.AddWithValue(
+                "@Amount",
+                amount);
+
+            cmd.Parameters.AddWithValue(
+                "@Description",
+                txtDescription.Text.Trim());
+
+            cmd.Parameters.AddWithValue(
+                "@PaidTo",
+                txtPaidTo.Text.Trim());
+
+            cmd.Parameters.AddWithValue(
+                "@PaymentMode",
+                ddlPaymentMode.SelectedValue);
+
+            cmd.Parameters.AddWithValue(
+                "@ReceiptNumber",
+                txtReceiptNumber.Text.Trim());
+
+            
+            con.Open();
+
+            cmd.ExecuteNonQuery();
+        }
+
+
+        ShowMessage(
+            "Expense entry saved successfully.",
+            "alert-success");
+
+        ClearForm();
+
+        LoadExpenses();
+        LoadSummary();
+    }
+
+
+    // =====================================================
+    // DELETE
+    // =====================================================
+
+    protected void gvExpenses_RowCommand(
+        object sender,
+        System.Web.UI.WebControls.GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "DeleteExpense")
+        {
+            int expenseID =
+                Convert.ToInt32(e.CommandArgument);
+
+            DeleteExpense(expenseID);
+        }
+    }
+
+
+    private void DeleteExpense(int expenseID)
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                DELETE FROM Expenses
+                WHERE ExpenseID = @ExpenseID";
+
+            SqlCommand cmd =
+                new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue(
+                "@ExpenseID",
+                expenseID);
+
+            con.Open();
+
+            cmd.ExecuteNonQuery();
+        }
+
+        ShowMessage(
+            "Expense entry deleted successfully.",
+            "alert-success");
+
+        LoadExpenses();
+        LoadSummary();
+    }
+
+
+    // =====================================================
+    // SEARCH
+    // =====================================================
+
+    protected void btnSearch_Click(
+        object sender,
+        EventArgs e)
+    {
+        string search =
+            txtSearch.Text.Trim();
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT
+                    E.ExpenseID,
+                    B.GatName,
+                    E.ExpenseDate,
+                    E.ExpenseType,
+                    E.Amount,
+                    E.PaidTo,
+                    E.PaymentMode,
+                    E.ReceiptNumber
+                FROM Expenses E
+                INNER JOIN BachatGat B
+                    ON E.BachatGatID = B.BachatGatID
+                WHERE
+                    E.ExpenseType LIKE @Search
+                    OR E.PaidTo LIKE @Search
+                    OR E.ReceiptNumber LIKE @Search
+                ORDER BY
+                    E.ExpenseDate DESC,
+                    E.ExpenseID DESC";
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(query, con);
+
+            da.SelectCommand.Parameters.AddWithValue(
+                "@Search",
+                "%" + search + "%");
+
+            DataTable dt = new DataTable();
+
+            da.Fill(dt);
+
+            gvExpenses.DataSource = dt;
+            gvExpenses.DataBind();
+        }
+    }
+
+
+    // =====================================================
+    // SHOW ALL
+    // =====================================================
+
+    protected void btnShowAll_Click(
+        object sender,
+        EventArgs e)
+    {
+        txtSearch.Text = "";
+
+        LoadExpenses();
+    }
+
+
+    // =====================================================
+    // SUMMARY
+    // =====================================================
+
+    private void LoadSummary()
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT
+                    ISNULL(SUM(Amount), 0) AS TotalExpenses,
+                    COUNT(*) AS TotalRecords,
+                    ISNULL(
+                        SUM(
+                            CASE
+                                WHEN MONTH(ExpenseDate) = MONTH(GETDATE())
+                                AND YEAR(ExpenseDate) = YEAR(GETDATE())
+                                THEN Amount
+                                ELSE 0
+                            END
+                        ), 0
+                    ) AS CurrentMonthExpenses
+                FROM Expenses";
+
+            SqlCommand cmd =
+                new SqlCommand(query, con);
+
+            con.Open();
+
+            SqlDataReader dr =
+                cmd.ExecuteReader();
+
+            if (dr.Read())
+            {
+                lblTotalExpenses.Text =
+                    Convert.ToDecimal(
+                        dr["TotalExpenses"])
+                    .ToString("N2");
+
+                lblTotalRecords.Text =
+                    dr["TotalRecords"].ToString();
+
+                lblCurrentMonthExpenses.Text =
+                    Convert.ToDecimal(
+                        dr["CurrentMonthExpenses"])
+                    .ToString("N2");
+            }
+        }
+    }
+
+
+    // =====================================================
+    // CLEAR FORM
+    // =====================================================
+
+    protected void btnClear_Click(
+        object sender,
+        EventArgs e)
+    {
+        ClearForm();
+    }
+
+
+    private void ClearForm()
+    {
+        hfExpenseID.Value = "";
+
+        ddlBachatGat.SelectedIndex = 0;
+
+        ddlExpenseType.SelectedIndex = 0;
+
+        txtExpenseDate.Text =
+            DateTime.Now.ToString("yyyy-MM-dd");
+
+        txtAmount.Text = "";
+
+        txtDescription.Text = "";
+
+        txtPaidTo.Text = "";
+
+        ddlPaymentMode.SelectedIndex = 0;
+
+        txtReceiptNumber.Text = "";
+
+        txtRemarks.Text = "";
+
+        btnSave.Text = "Save Expense";
+    }
+
+
+    // =====================================================
+    // MESSAGE
+    // =====================================================
+
+    private void ShowMessage(
+        string message,
+        string cssClass)
+    {
+        lblMessage.Text = message;
+
+        lblMessage.CssClass =
+            "alert " + cssClass;
+
+        lblMessage.Visible = true;
+    }
+}
