@@ -7,6 +7,7 @@ public partial class Loans : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             LoadBachatGats();
@@ -25,30 +26,36 @@ public partial class Loans : System.Web.UI.Page
 
 
     // =========================================================
-    // LOAD BACHAT GATS
+    // LOAD BACHAT GAT
     // =========================================================
 
     private void LoadBachatGats()
     {
         ddlBachatGat.Items.Clear();
 
-        ddlBachatGat.Items.Add(
-            new System.Web.UI.WebControls.ListItem(
-                "-- Select Bachat Gat --",
-                ""));
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
 
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
             string query = @"
-                SELECT BachatGatID, GatName
+                SELECT
+                    BachatGatID,
+                    GatName
                 FROM BachatGat
-                WHERE Status = 'Active'
+                WHERE
+                    BachatGatID = @BachatGatID
+                    AND Status = 'Active'
                 ORDER BY GatName";
 
             using (SqlCommand cmd =
                 new SqlCommand(query, con))
             {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
                 con.Open();
 
                 using (SqlDataReader dr =
@@ -64,6 +71,15 @@ public partial class Loans : System.Web.UI.Page
                 }
             }
         }
+
+        // Automatically select the user's Bachat Gat
+        if (ddlBachatGat.Items.Count > 0)
+        {
+            ddlBachatGat.SelectedValue =
+                bachatGatID.ToString();
+
+            LoadMembers();
+        }
     }
 
 
@@ -75,6 +91,22 @@ public partial class Loans : System.Web.UI.Page
         object sender,
         EventArgs e)
     {
+        int assignedBachatGatID =
+            RoleHelper.GetBachatGatID();
+
+        // Prevent President/Secretary from selecting
+        // another Bachat Gat.
+        if (ddlBachatGat.SelectedValue !=
+            assignedBachatGatID.ToString())
+        {
+            ShowMessage(
+                "You cannot select another Bachat Gat.",
+                "alert alert-danger");
+
+            ddlBachatGat.SelectedValue =
+                assignedBachatGatID.ToString();
+        }
+
         LoadMembers();
     }
 
@@ -92,7 +124,18 @@ public partial class Loans : System.Web.UI.Page
                 "-- Select Member --",
                 ""));
 
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
         if (ddlBachatGat.SelectedValue == "")
+        {
+            return;
+        }
+
+        // Extra server-side protection
+        if (Convert.ToInt32(
+                ddlBachatGat.SelectedValue) !=
+            bachatGatID)
         {
             return;
         }
@@ -101,10 +144,14 @@ public partial class Loans : System.Web.UI.Page
             DBHelper.GetConnection())
         {
             string query = @"
-                SELECT MemberID, MemberCode, MemberName
+                SELECT
+                    MemberID,
+                    MemberCode,
+                    MemberName
                 FROM Members
-                WHERE BachatGatID = @BachatGatID
-                AND Status = 'Active'
+                WHERE
+                    BachatGatID = @BachatGatID
+                    AND Status = 'Active'
                 ORDER BY MemberName";
 
             using (SqlCommand cmd =
@@ -112,8 +159,7 @@ public partial class Loans : System.Web.UI.Page
             {
                 cmd.Parameters.AddWithValue(
                     "@BachatGatID",
-                    Convert.ToInt32(
-                        ddlBachatGat.SelectedValue));
+                    bachatGatID);
 
                 con.Open();
 
@@ -145,10 +191,25 @@ public partial class Loans : System.Web.UI.Page
     {
         lblMessage.Visible = false;
 
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
         if (ddlBachatGat.SelectedValue == "")
         {
             ShowMessage(
                 "Please select Bachat Gat.",
+                "alert alert-danger");
+
+            return;
+        }
+
+        // Make sure selected Gat is user's Gat
+        if (Convert.ToInt32(
+                ddlBachatGat.SelectedValue) !=
+            bachatGatID)
+        {
+            ShowMessage(
+                "You cannot create a loan for another Bachat Gat.",
                 "alert alert-danger");
 
             return;
@@ -162,6 +223,11 @@ public partial class Loans : System.Web.UI.Page
 
             return;
         }
+
+
+        int memberID =
+            Convert.ToInt32(
+                ddlMember.SelectedValue);
 
 
         DateTime applicationDate;
@@ -236,13 +302,59 @@ public partial class Loans : System.Web.UI.Page
         }
 
 
-        // =====================================================
-        // INSERT
-        // =====================================================
-
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
+            con.Open();
+
+
+            // =================================================
+            // VERIFY MEMBER BELONGS TO CURRENT BACHAT GAT
+            // =================================================
+
+            string memberCheckQuery = @"
+                SELECT COUNT(*)
+                FROM Members
+                WHERE
+                    MemberID = @MemberID
+                    AND BachatGatID = @BachatGatID
+                    AND Status = 'Active'";
+
+
+            using (SqlCommand memberCheckCmd =
+                new SqlCommand(
+                    memberCheckQuery,
+                    con))
+            {
+                memberCheckCmd.Parameters.AddWithValue(
+                    "@MemberID",
+                    memberID);
+
+                memberCheckCmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
+
+                int memberExists =
+                    Convert.ToInt32(
+                        memberCheckCmd.ExecuteScalar());
+
+
+                if (memberExists == 0)
+                {
+                    ShowMessage(
+                        "Invalid member selection.",
+                        "alert alert-danger");
+
+                    return;
+                }
+            }
+
+
+            // =================================================
+            // INSERT LOAN
+            // =================================================
+
             string query = @"
                 INSERT INTO Loans
                 (
@@ -273,18 +385,17 @@ public partial class Loans : System.Web.UI.Page
                     GETDATE()
                 )";
 
+
             using (SqlCommand cmd =
                 new SqlCommand(query, con))
             {
                 cmd.Parameters.AddWithValue(
                     "@MemberID",
-                    Convert.ToInt32(
-                        ddlMember.SelectedValue));
+                    memberID);
 
                 cmd.Parameters.AddWithValue(
                     "@BachatGatID",
-                    Convert.ToInt32(
-                        ddlBachatGat.SelectedValue));
+                    bachatGatID);
 
                 cmd.Parameters.AddWithValue(
                     "@ApplicationDate",
@@ -314,8 +425,6 @@ public partial class Loans : System.Web.UI.Page
                     "@Remarks",
                     txtRemarks.Text.Trim());
 
-                con.Open();
-
                 cmd.ExecuteNonQuery();
             }
         }
@@ -324,6 +433,7 @@ public partial class Loans : System.Web.UI.Page
         ShowMessage(
             "Loan application submitted successfully.",
             "alert alert-success");
+
 
         ClearLoanForm();
 
@@ -339,6 +449,9 @@ public partial class Loans : System.Web.UI.Page
 
     private void LoadLoans()
     {
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
         string query = @"
             SELECT
                 l.LoanID,
@@ -356,6 +469,8 @@ public partial class Loans : System.Web.UI.Page
                 ON l.MemberID = m.MemberID
             INNER JOIN BachatGat b
                 ON l.BachatGatID = b.BachatGatID
+            WHERE
+                l.BachatGatID = @BachatGatID
             ORDER BY l.LoanID DESC";
 
 
@@ -365,11 +480,17 @@ public partial class Loans : System.Web.UI.Page
             using (SqlDataAdapter da =
                 new SqlDataAdapter(query, con))
             {
-                DataTable dt = new DataTable();
+                da.SelectCommand.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
+                DataTable dt =
+                    new DataTable();
 
                 da.Fill(dt);
 
-                gvLoans.DataSource = dt;
+                gvLoans.DataSource =
+                    dt;
 
                 gvLoans.DataBind();
             }
@@ -387,6 +508,9 @@ public partial class Loans : System.Web.UI.Page
     {
         string search =
             txtSearch.Text.Trim();
+
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
 
 
         using (SqlConnection con =
@@ -410,24 +534,37 @@ public partial class Loans : System.Web.UI.Page
                 INNER JOIN BachatGat b
                     ON l.BachatGatID = b.BachatGatID
                 WHERE
-                    m.MemberName LIKE @Search
-                    OR m.MemberCode LIKE @Search
-                    OR l.Status LIKE @Search
+                    l.BachatGatID = @BachatGatID
+                    AND
+                    (
+                        m.MemberName LIKE @Search
+                        OR m.MemberCode LIKE @Search
+                        OR l.Status LIKE @Search
+                    )
                 ORDER BY l.LoanID DESC";
 
 
             using (SqlDataAdapter da =
-                new SqlDataAdapter(query, con))
+                new SqlDataAdapter(
+                    query,
+                    con))
             {
                 da.SelectCommand.Parameters.AddWithValue(
                     "@Search",
                     "%" + search + "%");
 
-                DataTable dt = new DataTable();
+                da.SelectCommand.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
+
+                DataTable dt =
+                    new DataTable();
 
                 da.Fill(dt);
 
-                gvLoans.DataSource = dt;
+                gvLoans.DataSource =
+                    dt;
 
                 gvLoans.DataBind();
             }
@@ -487,6 +624,10 @@ public partial class Loans : System.Web.UI.Page
 
     private void ApproveLoan(int loanID)
     {
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
@@ -494,9 +635,12 @@ public partial class Loans : System.Web.UI.Page
                 UPDATE Loans
                 SET
                     Status = 'Approved',
-                    ApprovalDate = GETDATE()
-                WHERE LoanID = @LoanID
-                AND Status = 'Pending'";
+                    ApprovalDate = GETDATE(),
+                    ApprovedBy = @ApprovedBy
+                WHERE
+                    LoanID = @LoanID
+                    AND BachatGatID = @BachatGatID
+                    AND Status = 'Pending'";
 
 
             using (SqlCommand cmd =
@@ -506,15 +650,24 @@ public partial class Loans : System.Web.UI.Page
                     "@LoanID",
                     loanID);
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
+                cmd.Parameters.AddWithValue(
+                    "@ApprovedBy",
+                    RoleHelper.GetUserID());
+
                 con.Open();
 
                 int rows =
                     cmd.ExecuteNonQuery();
 
+
                 if (rows == 0)
                 {
                     ShowMessage(
-                        "Only pending loans can be approved.",
+                        "Only pending loans from your Bachat Gat can be approved.",
                         "alert alert-danger");
 
                     return;
@@ -539,6 +692,10 @@ public partial class Loans : System.Web.UI.Page
 
     private void RejectLoan(int loanID)
     {
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
@@ -546,8 +703,10 @@ public partial class Loans : System.Web.UI.Page
                 UPDATE Loans
                 SET
                     Status = 'Rejected'
-                WHERE LoanID = @LoanID
-                AND Status = 'Pending'";
+                WHERE
+                    LoanID = @LoanID
+                    AND BachatGatID = @BachatGatID
+                    AND Status = 'Pending'";
 
 
             using (SqlCommand cmd =
@@ -557,15 +716,21 @@ public partial class Loans : System.Web.UI.Page
                     "@LoanID",
                     loanID);
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
                 con.Open();
+
 
                 int rows =
                     cmd.ExecuteNonQuery();
 
+
                 if (rows == 0)
                 {
                     ShowMessage(
-                        "Only pending loans can be rejected.",
+                        "Only pending loans from your Bachat Gat can be rejected.",
                         "alert alert-danger");
 
                     return;
@@ -590,6 +755,10 @@ public partial class Loans : System.Web.UI.Page
 
     private void LoadDistributionDetails(int loanID)
     {
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
@@ -603,7 +772,9 @@ public partial class Loans : System.Web.UI.Page
                 FROM Loans l
                 INNER JOIN Members m
                     ON l.MemberID = m.MemberID
-                WHERE l.LoanID = @LoanID";
+                WHERE
+                    l.LoanID = @LoanID
+                    AND l.BachatGatID = @BachatGatID";
 
 
             using (SqlCommand cmd =
@@ -613,7 +784,12 @@ public partial class Loans : System.Web.UI.Page
                     "@LoanID",
                     loanID);
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
                 con.Open();
+
 
                 using (SqlDataReader dr =
                     cmd.ExecuteReader())
@@ -622,6 +798,7 @@ public partial class Loans : System.Web.UI.Page
                     {
                         string status =
                             dr["Status"].ToString();
+
 
                         if (status != "Approved")
                         {
@@ -646,7 +823,8 @@ public partial class Loans : System.Web.UI.Page
                         decimal approvedAmount = 0;
 
 
-                        if (dr["ApprovedAmount"] != DBNull.Value)
+                        if (dr["ApprovedAmount"] !=
+                            DBNull.Value)
                         {
                             approvedAmount =
                                 Convert.ToDecimal(
@@ -667,9 +845,17 @@ public partial class Loans : System.Web.UI.Page
                             approvedAmount.ToString("0.00");
 
                         txtDistributionDate.Text =
-                            DateTime.Today.ToString("yyyy-MM-dd");
+                            DateTime.Today.ToString(
+                                "yyyy-MM-dd");
 
-                        txtDistributionRemarks.Text = "";
+                        txtDistributionRemarks.Text =
+                            "";
+                    }
+                    else
+                    {
+                        ShowMessage(
+                            "Loan not found or you do not have permission to access it.",
+                            "alert alert-danger");
                     }
                 }
             }
@@ -700,6 +886,7 @@ public partial class Loans : System.Web.UI.Page
 
         DateTime distributionDate;
 
+
         if (!DateTime.TryParse(
             txtDistributionDate.Text.Trim(),
             out distributionDate))
@@ -713,6 +900,7 @@ public partial class Loans : System.Web.UI.Page
 
 
         decimal approvedAmount;
+
 
         if (!decimal.TryParse(
             txtApprovedAmount.Text.Trim(),
@@ -728,6 +916,7 @@ public partial class Loans : System.Web.UI.Page
 
         decimal distributionAmount;
 
+
         if (!decimal.TryParse(
             txtDistributionAmount.Text.Trim(),
             out distributionAmount) ||
@@ -741,7 +930,8 @@ public partial class Loans : System.Web.UI.Page
         }
 
 
-        if (distributionAmount > approvedAmount)
+        if (distributionAmount >
+            approvedAmount)
         {
             ShowMessage(
                 "Distribution amount cannot be greater than approved amount.",
@@ -756,6 +946,10 @@ public partial class Loans : System.Web.UI.Page
                 hfDistributionLoanID.Value);
 
 
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
@@ -766,8 +960,10 @@ public partial class Loans : System.Web.UI.Page
                     ApprovedAmount = @DistributionAmount,
                     Status = 'Distributed',
                     Remarks = @Remarks
-                WHERE LoanID = @LoanID
-                AND Status = 'Approved'";
+                WHERE
+                    LoanID = @LoanID
+                    AND BachatGatID = @BachatGatID
+                    AND Status = 'Approved'";
 
 
             using (SqlCommand cmd =
@@ -789,15 +985,22 @@ public partial class Loans : System.Web.UI.Page
                     "@LoanID",
                     loanID);
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
+
                 con.Open();
+
 
                 int rows =
                     cmd.ExecuteNonQuery();
 
+
                 if (rows == 0)
                 {
                     ShowMessage(
-                        "Loan could not be distributed. Check its status.",
+                        "Loan could not be distributed. Check the loan status and Bachat Gat.",
                         "alert alert-danger");
 
                     return;
@@ -809,6 +1012,7 @@ public partial class Loans : System.Web.UI.Page
         ShowMessage(
             "Loan distributed successfully.",
             "alert alert-success");
+
 
         ClearDistributionForm();
 
@@ -857,6 +1061,10 @@ public partial class Loans : System.Web.UI.Page
 
     private void LoadSummary()
     {
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+
         using (SqlConnection con =
             DBHelper.GetConnection())
         {
@@ -885,13 +1093,20 @@ public partial class Loans : System.Web.UI.Page
                         0
                     ) AS TotalLoanAmount
 
-                FROM Loans";
+                FROM Loans
+
+                WHERE BachatGatID = @BachatGatID";
 
 
             using (SqlCommand cmd =
                 new SqlCommand(query, con))
             {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID);
+
                 con.Open();
+
 
                 using (SqlDataReader dr =
                     cmd.ExecuteReader())
@@ -937,14 +1152,17 @@ public partial class Loans : System.Web.UI.Page
     {
         hfLoanID.Value = "";
 
-        ddlBachatGat.SelectedIndex = 0;
+        // Keep the President/Secretary on
+        // their own Bachat Gat.
+        if (ddlBachatGat.Items.Count > 0)
+        {
+            ddlBachatGat.SelectedValue =
+                RoleHelper.GetBachatGatID().ToString();
+        }
 
-        ddlMember.Items.Clear();
 
-        ddlMember.Items.Add(
-            new System.Web.UI.WebControls.ListItem(
-                "-- Select Member --",
-                ""));
+        LoadMembers();
+
 
         txtApplicationDate.Text =
             DateTime.Today.ToString("yyyy-MM-dd");

@@ -8,6 +8,7 @@ public partial class Savings : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             SetDefaultDates();
@@ -48,11 +49,25 @@ public partial class Savings : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string query =
-                    "SELECT BachatGatID, GatName FROM BachatGat WHERE Status = 'Active' ORDER BY GatName";
+                string query = @"
+                    SELECT
+                        BachatGatID,
+                        GatName
+                    FROM BachatGat
+                    WHERE Status = 'Active'
+                    AND BachatGatID = @BachatGatID
+                    ORDER BY GatName";
+
+                SqlCommand cmd =
+                    new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
 
                 SqlDataAdapter da =
-                    new SqlDataAdapter(query, con);
+                    new SqlDataAdapter(cmd);
 
                 DataTable dt =
                     new DataTable();
@@ -70,13 +85,8 @@ public partial class Savings : System.Web.UI.Page
                 ddlBachatGat.DataBind();
             }
 
-            ddlBachatGat.Items.Insert(
-                0,
-                new ListItem(
-                    "-- Select Bachat Gat --",
-                    ""
-                )
-            );
+            // President/Secretary have only one
+            // Bachat Gat, so no "Select" option.
         }
         catch (Exception ex)
         {
@@ -89,7 +99,7 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
-    // LOAD ALL ACTIVE MEMBERS
+    // LOAD MEMBERS
     // ==========================================
 
     private void LoadMembers()
@@ -102,73 +112,8 @@ public partial class Savings : System.Web.UI.Page
                 string query = @"
                     SELECT
                         MemberID,
-                        MemberCode + ' - ' + MemberName AS MemberDisplay
-                    FROM Members
-                    WHERE Status = 'Active'
-                    ORDER BY MemberName";
-
-                SqlDataAdapter da =
-                    new SqlDataAdapter(query, con);
-
-                DataTable dt =
-                    new DataTable();
-
-                da.Fill(dt);
-
-                ddlMember.DataSource = dt;
-
-                ddlMember.DataTextField =
-                    "MemberDisplay";
-
-                ddlMember.DataValueField =
-                    "MemberID";
-
-                ddlMember.DataBind();
-            }
-
-            ddlMember.Items.Insert(
-                0,
-                new ListItem(
-                    "-- Select Member --",
-                    ""
-                )
-            );
-        }
-        catch (Exception ex)
-        {
-            ShowMessage(
-                "Error loading members: " + ex.Message,
-                System.Drawing.Color.Red
-            );
-        }
-    }
-
-
-    // ==========================================
-    // LOAD MEMBERS BY BACHAT GAT
-    // ==========================================
-
-    protected void ddlBachatGat_SelectedIndexChanged(
-        object sender,
-        EventArgs e)
-    {
-        if (ddlBachatGat.SelectedValue == "")
-        {
-            LoadMembers();
-
-            return;
-        }
-
-
-        try
-        {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
-            {
-                string query = @"
-                    SELECT
-                        MemberID,
-                        MemberCode + ' - ' + MemberName AS MemberDisplay
+                        MemberCode + ' - ' + MemberName
+                        AS MemberDisplay
                     FROM Members
                     WHERE
                         BachatGatID = @BachatGatID
@@ -180,7 +125,7 @@ public partial class Savings : System.Web.UI.Page
 
                 cmd.Parameters.AddWithValue(
                     "@BachatGatID",
-                    ddlBachatGat.SelectedValue
+                    RoleHelper.GetBachatGatID()
                 );
 
                 SqlDataAdapter da =
@@ -221,6 +166,37 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
+    // BACHAT GAT CHANGED
+    // ==========================================
+
+    protected void ddlBachatGat_SelectedIndexChanged(
+        object sender,
+        EventArgs e)
+    {
+        // President / Secretary cannot switch
+        // to another Bachat Gat.
+
+        if (ddlBachatGat.SelectedValue !=
+            RoleHelper.GetBachatGatID().ToString())
+        {
+            ShowMessage(
+                "You cannot select another Bachat Gat.",
+                System.Drawing.Color.Red
+            );
+
+            ddlBachatGat.SelectedValue =
+                RoleHelper.GetBachatGatID().ToString();
+
+            LoadMembers();
+
+            return;
+        }
+
+        LoadMembers();
+    }
+
+
+    // ==========================================
     // SAVE SAVINGS
     // ==========================================
 
@@ -228,17 +204,6 @@ public partial class Savings : System.Web.UI.Page
         object sender,
         EventArgs e)
     {
-        if (ddlBachatGat.SelectedValue == "")
-        {
-            ShowMessage(
-                "Please select Bachat Gat.",
-                System.Drawing.Color.Red
-            );
-
-            return;
-        }
-
-
         if (ddlMember.SelectedValue == "")
         {
             ShowMessage(
@@ -248,7 +213,6 @@ public partial class Savings : System.Web.UI.Page
 
             return;
         }
-
 
         if (string.IsNullOrWhiteSpace(
             txtSavingMonth.Text))
@@ -261,9 +225,7 @@ public partial class Savings : System.Web.UI.Page
             return;
         }
 
-
         decimal amount;
-
 
         if (!decimal.TryParse(
             txtAmount.Text.Trim(),
@@ -277,7 +239,6 @@ public partial class Savings : System.Web.UI.Page
             return;
         }
 
-
         if (amount <= 0)
         {
             ShowMessage(
@@ -289,11 +250,72 @@ public partial class Savings : System.Web.UI.Page
         }
 
 
+        int bachatGatID =
+            RoleHelper.GetBachatGatID();
+
+        int memberID =
+            Convert.ToInt32(
+                ddlMember.SelectedValue
+            );
+
+
         try
         {
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
+                con.Open();
+
+
+                // ==================================
+                // VERIFY MEMBER BELONGS TO GAT
+                // ==================================
+
+                string checkQuery = @"
+                    SELECT COUNT(*)
+                    FROM Members
+                    WHERE
+                        MemberID = @MemberID
+                        AND BachatGatID = @BachatGatID
+                        AND Status = 'Active'";
+
+                SqlCommand checkCmd =
+                    new SqlCommand(
+                        checkQuery,
+                        con
+                    );
+
+                checkCmd.Parameters.AddWithValue(
+                    "@MemberID",
+                    memberID
+                );
+
+                checkCmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID
+                );
+
+                int memberExists =
+                    Convert.ToInt32(
+                        checkCmd.ExecuteScalar()
+                    );
+
+
+                if (memberExists == 0)
+                {
+                    ShowMessage(
+                        "Invalid member selection.",
+                        System.Drawing.Color.Red
+                    );
+
+                    return;
+                }
+
+
+                // ==================================
+                // INSERT SAVINGS
+                // ==================================
+
                 string query = @"
                     INSERT INTO MemberSavings
                     (
@@ -325,12 +347,12 @@ public partial class Savings : System.Web.UI.Page
 
                 cmd.Parameters.AddWithValue(
                     "@MemberID",
-                    ddlMember.SelectedValue
+                    memberID
                 );
 
                 cmd.Parameters.AddWithValue(
                     "@BachatGatID",
-                    ddlBachatGat.SelectedValue
+                    bachatGatID
                 );
 
                 cmd.Parameters.AddWithValue(
@@ -381,8 +403,6 @@ public partial class Savings : System.Web.UI.Page
                 );
 
 
-                con.Open();
-
                 cmd.ExecuteNonQuery();
             }
 
@@ -410,7 +430,7 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
-    // LOAD SAVINGS LIST
+    // LOAD SAVINGS
     // ==========================================
 
     private void LoadSavings()
@@ -436,24 +456,34 @@ public partial class Savings : System.Web.UI.Page
                         ON S.MemberID = M.MemberID
                     INNER JOIN BachatGat B
                         ON S.BachatGatID = B.BachatGatID
+                    WHERE
+                        S.BachatGatID = @BachatGatID
                     ORDER BY S.SavingID DESC";
 
 
-                SqlDataAdapter da =
-                    new SqlDataAdapter(
+                SqlCommand cmd =
+                    new SqlCommand(
                         query,
                         con
                     );
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+
+
+                SqlDataAdapter da =
+                    new SqlDataAdapter(cmd);
 
                 DataTable dt =
                     new DataTable();
 
-
                 da.Fill(dt);
 
 
-                gvSavings.DataSource = dt;
+                gvSavings.DataSource =
+                    dt;
 
                 gvSavings.DataBind();
             }
@@ -498,19 +528,32 @@ public partial class Savings : System.Web.UI.Page
                     INNER JOIN BachatGat B
                         ON S.BachatGatID = B.BachatGatID
                     WHERE
-                        M.MemberName LIKE @Search
-                        OR M.MemberCode LIKE @Search
-                        OR S.ReceiptNumber LIKE @Search
+                        S.BachatGatID = @BachatGatID
+                        AND
+                        (
+                            M.MemberName LIKE @Search
+                            OR M.MemberCode LIKE @Search
+                            OR S.ReceiptNumber LIKE @Search
+                        )
                     ORDER BY S.SavingID DESC";
 
 
                 SqlCommand cmd =
-                    new SqlCommand(query, con);
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
 
                 cmd.Parameters.AddWithValue(
                     "@Search",
                     "%" + txtSearch.Text.Trim() + "%"
+                );
+
+
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
                 );
 
 
@@ -525,7 +568,8 @@ public partial class Savings : System.Web.UI.Page
                 da.Fill(dt);
 
 
-                gvSavings.DataSource = dt;
+                gvSavings.DataSource =
+                    dt;
 
                 gvSavings.DataBind();
             }
@@ -555,20 +599,20 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
-    // DELETE SAVINGS
+    // DELETE
     // ==========================================
 
     protected void gvSavings_RowCommand(
         object sender,
         GridViewCommandEventArgs e)
     {
-        if (e.CommandName == "DeleteSaving")
+        if (e.CommandName ==
+            "DeleteSaving")
         {
             int savingID =
                 Convert.ToInt32(
                     e.CommandArgument
                 );
-
 
             DeleteSaving(savingID);
         }
@@ -582,12 +626,18 @@ public partial class Savings : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string query =
-                    "DELETE FROM MemberSavings WHERE SavingID = @SavingID";
+                string query = @"
+                    DELETE FROM MemberSavings
+                    WHERE
+                        SavingID = @SavingID
+                        AND BachatGatID = @BachatGatID";
 
 
                 SqlCommand cmd =
-                    new SqlCommand(query, con);
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
 
                 cmd.Parameters.AddWithValue(
@@ -596,9 +646,28 @@ public partial class Savings : System.Web.UI.Page
                 );
 
 
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+
+
                 con.Open();
 
-                cmd.ExecuteNonQuery();
+
+                int rows =
+                    cmd.ExecuteNonQuery();
+
+
+                if (rows == 0)
+                {
+                    ShowMessage(
+                        "Savings record not found or you do not have permission to delete it.",
+                        System.Drawing.Color.Red
+                    );
+
+                    return;
+                }
             }
 
 
@@ -623,7 +692,7 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
-    // LOAD SUMMARY
+    // SUMMARY
     // ==========================================
 
     private void LoadSummary()
@@ -633,8 +702,27 @@ public partial class Savings : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string totalQuery =
-                    "SELECT ISNULL(SUM(Amount),0) FROM MemberSavings";
+                string totalQuery = @"
+                    SELECT ISNULL(SUM(Amount), 0)
+                    FROM MemberSavings
+                    WHERE BachatGatID = @BachatGatID";
+
+
+                string countQuery = @"
+                    SELECT COUNT(*)
+                    FROM MemberSavings
+                    WHERE BachatGatID = @BachatGatID";
+
+
+                string monthQuery = @"
+                    SELECT ISNULL(SUM(Amount), 0)
+                    FROM MemberSavings
+                    WHERE
+                        BachatGatID = @BachatGatID
+                        AND MONTH(SavingMonth) =
+                            MONTH(GETDATE())
+                        AND YEAR(SavingMonth) =
+                            YEAR(GETDATE())";
 
 
                 SqlCommand totalCmd =
@@ -643,31 +731,33 @@ public partial class Savings : System.Web.UI.Page
                         con
                     );
 
-
-                string countQuery =
-                    "SELECT COUNT(*) FROM MemberSavings";
-
-
                 SqlCommand countCmd =
                     new SqlCommand(
                         countQuery,
                         con
                     );
 
-
-                string monthQuery = @"
-                    SELECT ISNULL(SUM(Amount),0)
-                    FROM MemberSavings
-                    WHERE
-                        MONTH(SavingMonth) = MONTH(GETDATE())
-                        AND YEAR(SavingMonth) = YEAR(GETDATE())";
-
-
                 SqlCommand monthCmd =
                     new SqlCommand(
                         monthQuery,
                         con
                     );
+
+
+                totalCmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+
+                countCmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+
+                monthCmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
 
 
                 con.Open();
@@ -714,7 +804,7 @@ public partial class Savings : System.Web.UI.Page
 
 
     // ==========================================
-    // CLEAR FORM
+    // CLEAR BUTTON
     // ==========================================
 
     protected void btnClear_Click(
@@ -727,7 +817,9 @@ public partial class Savings : System.Web.UI.Page
 
     private void ClearForm()
     {
-        ddlBachatGat.SelectedIndex = 0;
+        // Do NOT allow changing Bachat Gat.
+        ddlBachatGat.SelectedValue =
+            RoleHelper.GetBachatGatID().ToString();
 
         LoadMembers();
 

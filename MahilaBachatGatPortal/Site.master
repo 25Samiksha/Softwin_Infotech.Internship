@@ -1,467 +1,249 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.Master.cs" Inherits="SiteMaster" %>
 
 <!DOCTYPE html>
-
 <html>
-
 <head id="Head1" runat="server">
-
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0" />
+    <title>Mahila Bachat Gat Management Portal</title>
 
-    <title>
-        Mahila Bachat Gat Management Portal
-    </title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link href="CSS/style.css" rel="stylesheet" />
 
-
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
-        rel="stylesheet" />
-
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-
-
-    <link href="CSS/style.css"
-        rel="stylesheet" />
-
-
-    <asp:ContentPlaceHolder ID="head"
-        runat="server">
+    <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
-
 </head>
 
-
 <body>
-
 <form id="form1" runat="server">
 
     <nav class="navbar navbar-default top-navbar">
-
         <div class="container-fluid">
 
-
             <div class="navbar-header">
-
                 <button type="button"
                     class="navbar-toggle collapsed"
                     data-toggle="collapse"
                     data-target="#mainNavbar">
-
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
-
                 </button>
 
-
-                <a class="navbar-brand"
-                    href="Dashboard.aspx">
-
+                <a class="navbar-brand" href="Dashboard.aspx">
                     <span class="glyphicon glyphicon-home"></span>
-
                     Mahila Bachat Gat
-
                 </a>
-
             </div>
 
-
-            <div class="collapse navbar-collapse"
-                id="mainNavbar">
-
-
+            <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="nav navbar-nav navbar-right">
-
-
                     <li>
-
-                        <a href="Users.aspx"
-                            runat="server"
-                            id="lnkUser">
-
+                        <a href="Users.aspx" runat="server" id="lnkUser">
                             <span class="glyphicon glyphicon-user"></span>
-
-                            <asp:Label ID="lblUser"
-                                runat="server"
-                                Text="User">
-                            </asp:Label>
-
+                            <asp:Label ID="lblUser" runat="server" Text="User"></asp:Label>
                         </a>
-
                     </li>
 
-                    <a href="Logout.aspx">
-    <span class="glyphicon glyphicon-log-out"></span>
-    Logout
-</a>
-
-
+                    <li>
+                        <a href="Logout.aspx">
+                            <span class="glyphicon glyphicon-log-out"></span>
+                            Logout
+                        </a>
+                    </li>
                 </ul>
-
             </div>
 
         </div>
-
     </nav>
 
     <div class="container-fluid">
-
         <div class="row">
 
             <div class="col-sm-3 col-md-2 sidebar">
-
                 <ul class="nav nav-pills nav-stacked">
 
-                    <li class="sidebar-title">
-
-                        MAIN MENU
-
-                    </li>
+                    <li class="sidebar-title">MAIN MENU</li>
 
                     <li>
-
                         <a href="Dashboard.aspx">
-
                             <span class="glyphicon glyphicon-dashboard"></span>
-
                             Dashboard
-
                         </a>
-
                     </li>
-                    <!-- =================================================
-     MEMBER ACCOUNT
-================================================== -->
 
-<li id="menuMemberAccountTitle"
-    runat="server"
-    class="sidebar-title">
+                    <li id="menuMemberAccountTitle" runat="server" class="sidebar-title">
+                        MY ACCOUNT
+                    </li>
 
-    MY ACCOUNT
+                    <li id="menuMyProfile" runat="server">
+                        <a href="MemberProfile.aspx">
+                            <span class="glyphicon glyphicon-user"></span>
+                            My Profile
+                        </a>
+                    </li>
 
-</li>
-
-
-<li id="menuMyProfile"
-    runat="server">
-
-    <a href="MemberProfile.aspx">
-
-        <span class="glyphicon glyphicon-user"></span>
-
-        My Profile
-
-    </a>
-
-</li>
-                    <li id="menuBachatGatTitle"
-                        runat="server"
-                        class="sidebar-title">
-
+                    <li id="menuBachatGatTitle" runat="server" class="sidebar-title">
                         BACHAT GAT
-
                     </li>
 
-
-                    <li id="menuBachatGat"
-                        runat="server">
-
+                    <li id="menuBachatGat" runat="server">
                         <a href="BachatGat.aspx">
-
                             <span class="glyphicon glyphicon-home"></span>
-
                             Bachat Gat
-
                         </a>
-
                     </li>
-                    <li id="menuMemberTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuMemberTitle" runat="server" class="sidebar-title">
                         MEMBER MANAGEMENT
-
                     </li>
 
-
-                    <li id="menuMembers"
-                        runat="server">
-
+                    <li id="menuMembers" runat="server">
                         <a href="Members.aspx">
-
                             <span class="glyphicon glyphicon-user"></span>
-
                             Members
-
                         </a>
-
                     </li>
-                    <li id="menuSavingsTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuSavingsTitle" runat="server" class="sidebar-title">
                         SAVINGS
-
                     </li>
 
-
-                    <li id="menuSavings"
-                        runat="server">
-
+                    <li id="menuSavings" runat="server">
                         <a href="Savings.aspx">
-
                             <span class="glyphicon glyphicon-credit-card"></span>
-
                             Savings
-
                         </a>
-
                     </li>
-                    <li id="menuMeetingsTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuMeetingsTitle" runat="server" class="sidebar-title">
                         MEETINGS
-
                     </li>
 
-
-                    <li id="menuMeetings"
-                        runat="server">
-
+                    <li id="menuMeetings" runat="server">
                         <a href="Meetings.aspx">
-
                             <span class="glyphicon glyphicon-calendar"></span>
-
                             Meetings
-
                         </a>
-
                     </li>
-                    <li id="menuAttendance"
-                        runat="server">
 
+                    <li id="menuAttendance" runat="server">
                         <a href="MeetingAttendance.aspx">
-
                             <span class="glyphicon glyphicon-check"></span>
-
                             Attendance
-
                         </a>
-
                     </li>
-                    <li id="menuLoanTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuLoanTitle" runat="server" class="sidebar-title">
                         LOAN MANAGEMENT
-
                     </li>
 
-
-                    <li id="menuLoans"
-                        runat="server">
-
+                    <li id="menuLoans" runat="server">
                         <a href="Loans.aspx">
-
                             <span class="glyphicon glyphicon-usd"></span>
-
                             Loans
-
                         </a>
-
                     </li>
 
-
-                    <li id="menuRepayment"
-                        runat="server">
-
+                    <li id="menuRepayment" runat="server">
                         <a href="Repayment.aspx">
-
                             <span class="glyphicon glyphicon-refresh"></span>
-
                             EMI / Repayment
-
                         </a>
-
                     </li>
-                    <li id="menuFinanceTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuFinanceTitle" runat="server" class="sidebar-title">
                         FINANCE
-
                     </li>
 
-
-                    <li id="menuIncome"
-                        runat="server">
-
+                    <li id="menuIncome" runat="server">
                         <a href="Income.aspx">
-
                             <span class="glyphicon glyphicon-plus"></span>
-
                             Income
-
                         </a>
-
                     </li>
 
-
-                    <li id="menuExpenses"
-                        runat="server">
-
+                    <li id="menuExpenses" runat="server">
                         <a href="Expenses.aspx">
-
                             <span class="glyphicon glyphicon-minus"></span>
-
                             Expenses
-
                         </a>
-
                     </li>
-                    <li id="menuSchemeTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuSchemeTitle" runat="server" class="sidebar-title">
                         GOVERNMENT SCHEMES
-
                     </li>
 
-
-                    <li id="menuSchemes"
-                        runat="server">
-
+                    <li id="menuSchemes" runat="server">
                         <a href="Schemes.aspx">
-
                             <span class="glyphicon glyphicon-list-alt"></span>
-
                             Government Schemes
-
                         </a>
-
                     </li>
 
-
-                    <li id="menuApplications"
-                        runat="server">
-
+                    <li id="menuApplications" runat="server">
                         <a href="SchemeApplication.aspx">
-
                             <span class="glyphicon glyphicon-file"></span>
-
                             Scheme Applications
-
                         </a>
-
-                    </li>
-                    <li id="menuProductsTitle"
-                        runat="server"
-                        class="sidebar-title">
-
-                        PRODUCTS & SALES
-
                     </li>
 
+                    <li id="menuProductsTitle" runat="server" class="sidebar-title">
+                        PRODUCTS &amp; SALES
+                    </li>
 
-                    <li id="menuProducts"
-                        runat="server">
-
+                    <li id="menuProducts" runat="server">
                         <a href="Products.aspx">
-
                             <span class="glyphicon glyphicon-shopping-cart"></span>
-
                             Products
-
                         </a>
-
                     </li>
 
-
-                    <li id="menuSales"
-                        runat="server">
-
+                    <li id="menuSales" runat="server">
                         <a href="Sales.aspx">
-
                             <span class="glyphicon glyphicon-stats"></span>
-
                             Sales
-
                         </a>
-
                     </li>
-                    <li id="menuReportsTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuReportsTitle" runat="server" class="sidebar-title">
                         REPORTS
-
                     </li>
 
-
-                    <li id="menuReports"
-                        runat="server">
-
+                    <li id="menuReports" runat="server">
                         <a href="Reports.aspx">
-
                             <span class="glyphicon glyphicon-file"></span>
-
                             Reports
-
                         </a>
-
                     </li>
-                    <li id="menuAdminTitle"
-                        runat="server"
-                        class="sidebar-title">
 
+                    <li id="menuAdminTitle" runat="server" class="sidebar-title">
                         ADMIN
-
                     </li>
 
-
-                    <li id="menuUsers"
-                        runat="server">
-
+                    <li id="menuUsers" runat="server">
                         <a href="Users.aspx">
-
                             <span class="glyphicon glyphicon-user"></span>
-
                             User Management
-
                         </a>
-
                     </li>
-
 
                 </ul>
-
             </div>
+
             <div class="col-sm-9 col-md-10 main-content">
-
-                <asp:ContentPlaceHolder ID="MainContent"
-                    runat="server">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server">
                 </asp:ContentPlaceHolder>
-
             </div>
 
         </div>
-
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js">
-    </script>
-
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js">
-    </script>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
 </form>
-
 </body>
-
 </html>

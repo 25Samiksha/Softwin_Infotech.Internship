@@ -8,11 +8,18 @@ public partial class BachatGat : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         RoleHelper.RequireAdmin(this);
+
         if (!IsPostBack)
         {
             LoadBachatGat();
         }
     }
+
+
+    // =========================================================
+    // LOAD ALL BACHAT GATS
+    // =========================================================
+
     private void LoadBachatGat()
     {
         try
@@ -34,14 +41,20 @@ public partial class BachatGat : System.Web.UI.Page
                     FROM BachatGat
                     ORDER BY BachatGatID DESC";
 
+
                 SqlDataAdapter da =
                     new SqlDataAdapter(query, con);
 
-                DataTable dt = new DataTable();
+
+                DataTable dt =
+                    new DataTable();
+
 
                 da.Fill(dt);
 
+
                 gvBachatGat.DataSource = dt;
+
                 gvBachatGat.DataBind();
             }
         }
@@ -53,8 +66,18 @@ public partial class BachatGat : System.Web.UI.Page
             );
         }
     }
+
+
+    // =========================================================
+    // SAVE / UPDATE
+    // =========================================================
+
     protected void btnSave_Click(object sender, EventArgs e)
     {
+        // -----------------------------------------------------
+        // Gat Name validation
+        // -----------------------------------------------------
+
         if (string.IsNullOrWhiteSpace(txtGatName.Text))
         {
             ShowMessage(
@@ -64,6 +87,11 @@ public partial class BachatGat : System.Web.UI.Page
 
             return;
         }
+
+
+        // -----------------------------------------------------
+        // Formation Date validation
+        // -----------------------------------------------------
 
         if (string.IsNullOrWhiteSpace(txtFormationDate.Text))
         {
@@ -75,6 +103,40 @@ public partial class BachatGat : System.Web.UI.Page
             return;
         }
 
+
+        DateTime formationDate;
+
+        if (!DateTime.TryParse(
+            txtFormationDate.Text.Trim(),
+            out formationDate))
+        {
+            ShowMessage(
+                "Please enter a valid Formation Date.",
+                System.Drawing.Color.Red
+            );
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // President Name validation
+        // -----------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(txtPresidentName.Text))
+        {
+            ShowMessage(
+                "Please enter President Name.",
+                System.Drawing.Color.Red
+            );
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // Monthly Saving validation
+        // -----------------------------------------------------
 
         decimal monthlySaving = 0;
 
@@ -94,6 +156,47 @@ public partial class BachatGat : System.Web.UI.Page
         }
 
 
+        // -----------------------------------------------------
+        // Determine New or Update
+        // -----------------------------------------------------
+
+        bool isNewGat =
+            string.IsNullOrWhiteSpace(
+                hfBachatGatID.Value
+            );
+
+
+        // -----------------------------------------------------
+        // President login details required for NEW Gat
+        // -----------------------------------------------------
+
+        if (isNewGat)
+        {
+            if (string.IsNullOrWhiteSpace(
+                txtPresidentUsername.Text))
+            {
+                ShowMessage(
+                    "Please enter President Username.",
+                    System.Drawing.Color.Red
+                );
+
+                return;
+            }
+
+
+            if (string.IsNullOrWhiteSpace(
+                txtPresidentPassword.Text))
+            {
+                ShowMessage(
+                    "Please enter President Password.",
+                    System.Drawing.Color.Red
+                );
+
+                return;
+            }
+        }
+
+
         try
         {
             using (SqlConnection con =
@@ -102,114 +205,65 @@ public partial class BachatGat : System.Web.UI.Page
                 con.Open();
 
 
-                // ==================================
-                // UPDATE
-                // ==================================
+                // ------------------------------------------------
+                // Start transaction
+                // ------------------------------------------------
 
-                if (hfBachatGatID.Value != "")
+                SqlTransaction transaction =
+                    con.BeginTransaction();
+
+
+                try
                 {
-                    string query = @"
-                        UPDATE BachatGat
-                        SET
-                            GatName = @GatName,
-                            RegistrationNumber = @RegistrationNumber,
-                            FormationDate = @FormationDate,
-                            Village = @Village,
-                            Taluka = @Taluka,
-                            District = @District,
-                            Address = @Address,
-                            PresidentName = @PresidentName,
-                            SecretaryName = @SecretaryName,
-                            BankName = @BankName,
-                            BankAccountNumber = @BankAccountNumber,
-                            IFSCCode = @IFSCCode,
-                            MonthlySavingAmount = @MonthlySavingAmount,
-                            Status = @Status
-                        WHERE BachatGatID = @BachatGatID";
+                    if (isNewGat)
+                    {
+                        // -----------------------------------------
+                        // NEW BACHAT GAT
+                        // -----------------------------------------
+
+                        int newBachatGatID =
+                            InsertBachatGatAndPresident(
+                                con,
+                                transaction
+                            );
 
 
-                    SqlCommand cmd =
-                        new SqlCommand(query, con);
+                        transaction.Commit();
 
 
-                    AddParameters(cmd);
+                        ShowMessage(
+                            "Bachat Gat created successfully! President account created and assigned to Bachat Gat ID "
+                            + newBachatGatID
+                            + ".",
+                            System.Drawing.Color.Green
+                        );
+                    }
+                    else
+                    {
+                        // -----------------------------------------
+                        // UPDATE EXISTING BACHAT GAT
+                        // -----------------------------------------
+
+                        UpdateBachatGat(
+                            con,
+                            transaction
+                        );
 
 
-                    cmd.Parameters.AddWithValue(
-                        "@BachatGatID",
-                        hfBachatGatID.Value
-                    );
+                        transaction.Commit();
 
 
-                    cmd.ExecuteNonQuery();
-
-
-                    ShowMessage(
-                        "Bachat Gat updated successfully!",
-                        System.Drawing.Color.Green
-                    );
+                        ShowMessage(
+                            "Bachat Gat updated successfully!",
+                            System.Drawing.Color.Green
+                        );
+                    }
                 }
-
-
-                // ==================================
-                // INSERT
-                // ==================================
-
-                else
+                catch
                 {
-                    string query = @"
-                        INSERT INTO BachatGat
-                        (
-                            GatName,
-                            RegistrationNumber,
-                            FormationDate,
-                            Village,
-                            Taluka,
-                            District,
-                            Address,
-                            PresidentName,
-                            SecretaryName,
-                            BankName,
-                            BankAccountNumber,
-                            IFSCCode,
-                            TotalMembers,
-                            MonthlySavingAmount,
-                            Status
-                        )
-                        VALUES
-                        (
-                            @GatName,
-                            @RegistrationNumber,
-                            @FormationDate,
-                            @Village,
-                            @Taluka,
-                            @District,
-                            @Address,
-                            @PresidentName,
-                            @SecretaryName,
-                            @BankName,
-                            @BankAccountNumber,
-                            @IFSCCode,
-                            0,
-                            @MonthlySavingAmount,
-                            @Status
-                        )";
+                    transaction.Rollback();
 
-
-                    SqlCommand cmd =
-                        new SqlCommand(query, con);
-
-
-                    AddParameters(cmd);
-
-
-                    cmd.ExecuteNonQuery();
-
-
-                    ShowMessage(
-                        "Bachat Gat added successfully!",
-                        System.Drawing.Color.Green
-                    );
+                    throw;
                 }
             }
 
@@ -228,9 +282,298 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
-    // ADD PARAMETERS
-    // ==========================================
+    // =========================================================
+    // INSERT BACHAT GAT + PRESIDENT
+    // =========================================================
+
+    private int InsertBachatGatAndPresident(
+        SqlConnection con,
+        SqlTransaction transaction)
+    {
+        // -----------------------------------------------------
+        // STEP 1:
+        // Insert Bachat Gat
+        // -----------------------------------------------------
+
+        string gatQuery = @"
+            INSERT INTO BachatGat
+            (
+                GatName,
+                RegistrationNumber,
+                FormationDate,
+                Village,
+                Taluka,
+                District,
+                Address,
+                PresidentName,
+                SecretaryName,
+                BankName,
+                BankAccountNumber,
+                IFSCCode,
+                TotalMembers,
+                MonthlySavingAmount,
+                Status
+            )
+            VALUES
+            (
+                @GatName,
+                @RegistrationNumber,
+                @FormationDate,
+                @Village,
+                @Taluka,
+                @District,
+                @Address,
+                @PresidentName,
+                @SecretaryName,
+                @BankName,
+                @BankAccountNumber,
+                @IFSCCode,
+                0,
+                @MonthlySavingAmount,
+                @Status
+            );
+
+            SELECT CAST(SCOPE_IDENTITY() AS INT);
+        ";
+
+
+        SqlCommand gatCmd =
+            new SqlCommand(
+                gatQuery,
+                con,
+                transaction
+            );
+
+
+        AddParameters(gatCmd);
+
+
+        // -----------------------------------------------------
+        // Get newly generated BachatGatID
+        // -----------------------------------------------------
+
+        int newBachatGatID =
+            Convert.ToInt32(
+                gatCmd.ExecuteScalar()
+            );
+
+
+        // -----------------------------------------------------
+        // STEP 2:
+        // Check President username
+        // -----------------------------------------------------
+
+        string checkUsernameQuery = @"
+            SELECT COUNT(*)
+            FROM Users
+            WHERE Username = @Username";
+
+
+        SqlCommand checkCmd =
+            new SqlCommand(
+                checkUsernameQuery,
+                con,
+                transaction
+            );
+
+
+        checkCmd.Parameters.AddWithValue(
+            "@Username",
+            txtPresidentUsername.Text.Trim()
+        );
+
+
+        int existingUserCount =
+            Convert.ToInt32(
+                checkCmd.ExecuteScalar()
+            );
+
+
+        if (existingUserCount > 0)
+        {
+            throw new Exception(
+                "President username already exists. Please enter a different username."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // STEP 3:
+        // Create President User
+        // -----------------------------------------------------
+
+        string userQuery = @"
+            INSERT INTO Users
+            (
+                Username,
+                Password,
+                FullName,
+                Role,
+                Mobile,
+                Email,
+                IsActive,
+                BachatGatID,
+                CreatedDate
+            )
+            VALUES
+            (
+                @Username,
+                @Password,
+                @FullName,
+                'President',
+                NULL,
+                NULL,
+                1,
+                @BachatGatID,
+                GETDATE()
+            )";
+
+
+        SqlCommand userCmd =
+            new SqlCommand(
+                userQuery,
+                con,
+                transaction
+            );
+
+
+        userCmd.Parameters.AddWithValue(
+            "@Username",
+            txtPresidentUsername.Text.Trim()
+        );
+
+
+        userCmd.Parameters.AddWithValue(
+            "@Password",
+            txtPresidentPassword.Text.Trim()
+        );
+
+
+        userCmd.Parameters.AddWithValue(
+            "@FullName",
+            txtPresidentName.Text.Trim()
+        );
+
+
+        // -----------------------------------------------------
+        // THIS IS THE IMPORTANT LINK
+        // -----------------------------------------------------
+
+        userCmd.Parameters.AddWithValue(
+            "@BachatGatID",
+            newBachatGatID
+        );
+
+
+        userCmd.ExecuteNonQuery();
+
+
+        // -----------------------------------------------------
+        // Return newly generated Gat ID
+        // -----------------------------------------------------
+
+        return newBachatGatID;
+    }
+
+
+    // =========================================================
+    // UPDATE BACHAT GAT
+    // =========================================================
+
+    private void UpdateBachatGat(
+        SqlConnection con,
+        SqlTransaction transaction)
+    {
+        int gatID =
+            Convert.ToInt32(
+                hfBachatGatID.Value
+            );
+
+
+        // -----------------------------------------------------
+        // Update Bachat Gat
+        // -----------------------------------------------------
+
+        string query = @"
+            UPDATE BachatGat
+            SET
+                GatName = @GatName,
+                RegistrationNumber = @RegistrationNumber,
+                FormationDate = @FormationDate,
+                Village = @Village,
+                Taluka = @Taluka,
+                District = @District,
+                Address = @Address,
+                PresidentName = @PresidentName,
+                SecretaryName = @SecretaryName,
+                BankName = @BankName,
+                BankAccountNumber = @BankAccountNumber,
+                IFSCCode = @IFSCCode,
+                MonthlySavingAmount = @MonthlySavingAmount,
+                Status = @Status
+            WHERE BachatGatID = @BachatGatID";
+
+
+        SqlCommand cmd =
+            new SqlCommand(
+                query,
+                con,
+                transaction
+            );
+
+
+        AddParameters(cmd);
+
+
+        cmd.Parameters.AddWithValue(
+            "@BachatGatID",
+            gatID
+        );
+
+
+        cmd.ExecuteNonQuery();
+
+
+        // -----------------------------------------------------
+        // Update existing President's name
+        // -----------------------------------------------------
+
+        string presidentQuery = @"
+            UPDATE Users
+            SET
+                FullName = @FullName
+            WHERE
+                BachatGatID = @BachatGatID
+                AND Role = 'President'";
+
+
+        SqlCommand presidentCmd =
+            new SqlCommand(
+                presidentQuery,
+                con,
+                transaction
+            );
+
+
+        presidentCmd.Parameters.AddWithValue(
+            "@FullName",
+            txtPresidentName.Text.Trim()
+        );
+
+
+        presidentCmd.Parameters.AddWithValue(
+            "@BachatGatID",
+            gatID
+        );
+
+
+        presidentCmd.ExecuteNonQuery();
+    }
+
+
+    // =========================================================
+    // COMMON PARAMETERS
+    // =========================================================
 
     private void AddParameters(SqlCommand cmd)
     {
@@ -239,55 +582,68 @@ public partial class BachatGat : System.Web.UI.Page
             txtGatName.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@RegistrationNumber",
             txtRegistrationNumber.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@FormationDate",
-            Convert.ToDateTime(txtFormationDate.Text)
+            Convert.ToDateTime(
+                txtFormationDate.Text.Trim()
+            )
         );
+
 
         cmd.Parameters.AddWithValue(
             "@Village",
             txtVillage.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@Taluka",
             txtTaluka.Text.Trim()
         );
+
 
         cmd.Parameters.AddWithValue(
             "@District",
             txtDistrict.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@Address",
             txtAddress.Text.Trim()
         );
+
 
         cmd.Parameters.AddWithValue(
             "@PresidentName",
             txtPresidentName.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@SecretaryName",
             txtSecretaryName.Text.Trim()
         );
+
 
         cmd.Parameters.AddWithValue(
             "@BankName",
             txtBankName.Text.Trim()
         );
 
+
         cmd.Parameters.AddWithValue(
             "@BankAccountNumber",
             txtBankAccount.Text.Trim()
         );
+
 
         cmd.Parameters.AddWithValue(
             "@IFSCCode",
@@ -296,6 +652,7 @@ public partial class BachatGat : System.Web.UI.Page
 
 
         decimal monthlySaving = 0;
+
 
         decimal.TryParse(
             txtMonthlySaving.Text.Trim(),
@@ -308,6 +665,7 @@ public partial class BachatGat : System.Web.UI.Page
             monthlySaving
         );
 
+
         cmd.Parameters.AddWithValue(
             "@Status",
             ddlStatus.SelectedValue
@@ -315,11 +673,13 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
+    // =========================================================
     // SEARCH
-    // ==========================================
+    // =========================================================
 
-    protected void btnSearch_Click(object sender, EventArgs e)
+    protected void btnSearch_Click(
+        object sender,
+        EventArgs e)
     {
         try
         {
@@ -347,7 +707,10 @@ public partial class BachatGat : System.Web.UI.Page
 
 
                 SqlCommand cmd =
-                    new SqlCommand(query, con);
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
 
                 cmd.Parameters.AddWithValue(
@@ -359,13 +722,16 @@ public partial class BachatGat : System.Web.UI.Page
                 SqlDataAdapter da =
                     new SqlDataAdapter(cmd);
 
+
                 DataTable dt =
                     new DataTable();
+
 
                 da.Fill(dt);
 
 
                 gvBachatGat.DataSource = dt;
+
                 gvBachatGat.DataBind();
             }
         }
@@ -379,16 +745,18 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
-    // EDIT / DELETE
-    // ==========================================
+    // =========================================================
+    // GRID ROW COMMAND
+    // =========================================================
 
     protected void gvBachatGat_RowCommand(
         object sender,
         GridViewCommandEventArgs e)
     {
         int gatID =
-            Convert.ToInt32(e.CommandArgument);
+            Convert.ToInt32(
+                e.CommandArgument
+            );
 
 
         if (e.CommandName == "EditGat")
@@ -404,9 +772,9 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
-    // LOAD FOR EDIT
-    // ==========================================
+    // =========================================================
+    // LOAD GAT FOR EDIT
+    // =========================================================
 
     private void LoadGatForEdit(int gatID)
     {
@@ -422,7 +790,10 @@ public partial class BachatGat : System.Web.UI.Page
 
 
                 SqlCommand cmd =
-                    new SqlCommand(query, con);
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
 
                 cmd.Parameters.AddWithValue(
@@ -443,8 +814,10 @@ public partial class BachatGat : System.Web.UI.Page
                     hfBachatGatID.Value =
                         dr["BachatGatID"].ToString();
 
+
                     txtGatName.Text =
                         dr["GatName"].ToString();
+
 
                     txtRegistrationNumber.Text =
                         dr["RegistrationNumber"].ToString();
@@ -462,35 +835,60 @@ public partial class BachatGat : System.Web.UI.Page
                     txtVillage.Text =
                         dr["Village"].ToString();
 
+
                     txtTaluka.Text =
                         dr["Taluka"].ToString();
+
 
                     txtDistrict.Text =
                         dr["District"].ToString();
 
+
                     txtAddress.Text =
                         dr["Address"].ToString();
+
 
                     txtPresidentName.Text =
                         dr["PresidentName"].ToString();
 
+
                     txtSecretaryName.Text =
                         dr["SecretaryName"].ToString();
+
 
                     txtBankName.Text =
                         dr["BankName"].ToString();
 
+
                     txtBankAccount.Text =
                         dr["BankAccountNumber"].ToString();
+
 
                     txtIFSC.Text =
                         dr["IFSCCode"].ToString();
 
+
                     txtMonthlySaving.Text =
                         dr["MonthlySavingAmount"].ToString();
 
+
                     ddlStatus.SelectedValue =
                         dr["Status"].ToString();
+
+
+                    // -----------------------------------------
+                    // Load existing President username
+                    // -----------------------------------------
+
+                    LoadPresidentUsername(gatID);
+
+
+                    // -----------------------------------------
+                    // Never load existing password
+                    // -----------------------------------------
+
+                    txtPresidentPassword.Text = "";
+
 
                     btnSave.Text =
                         "Update Bachat Gat";
@@ -516,9 +914,60 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
+    // =========================================================
+    // LOAD PRESIDENT USERNAME
+    // =========================================================
+
+    private void LoadPresidentUsername(int gatID)
+    {
+        using (SqlConnection con =
+            DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT TOP 1 Username
+                FROM Users
+                WHERE
+                    BachatGatID = @BachatGatID
+                    AND Role = 'President'";
+
+
+            SqlCommand cmd =
+                new SqlCommand(
+                    query,
+                    con
+                );
+
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                gatID
+            );
+
+
+            con.Open();
+
+
+            object result =
+                cmd.ExecuteScalar();
+
+
+            if (result != null &&
+                result != DBNull.Value)
+            {
+                txtPresidentUsername.Text =
+                    result.ToString();
+            }
+            else
+            {
+                txtPresidentUsername.Text = "";
+            }
+        }
+    }
+
+
+    // =========================================================
     // DELETE
-    // ==========================================
+    // =========================================================
 
     private void DeleteGat(int gatID)
     {
@@ -527,30 +976,83 @@ public partial class BachatGat : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string query =
-                    "DELETE FROM BachatGat WHERE BachatGatID = @BachatGatID";
-
-
-                SqlCommand cmd =
-                    new SqlCommand(query, con);
-
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    gatID
-                );
-
-
                 con.Open();
 
 
-                cmd.ExecuteNonQuery();
+                SqlTransaction transaction =
+                    con.BeginTransaction();
 
 
-                ShowMessage(
-                    "Bachat Gat deleted successfully!",
-                    System.Drawing.Color.Green
-                );
+                try
+                {
+                    // -----------------------------------------
+                    // Delete President account first
+                    // -----------------------------------------
+
+                    string userQuery = @"
+                        DELETE FROM Users
+                        WHERE
+                            BachatGatID = @BachatGatID
+                            AND Role = 'President'";
+
+
+                    SqlCommand userCmd =
+                        new SqlCommand(
+                            userQuery,
+                            con,
+                            transaction
+                        );
+
+
+                    userCmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        gatID
+                    );
+
+
+                    userCmd.ExecuteNonQuery();
+
+
+                    // -----------------------------------------
+                    // Delete Bachat Gat
+                    // -----------------------------------------
+
+                    string gatQuery = @"
+                        DELETE FROM BachatGat
+                        WHERE BachatGatID = @BachatGatID";
+
+
+                    SqlCommand gatCmd =
+                        new SqlCommand(
+                            gatQuery,
+                            con,
+                            transaction
+                        );
+
+
+                    gatCmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        gatID
+                    );
+
+
+                    gatCmd.ExecuteNonQuery();
+
+
+                    transaction.Commit();
+
+
+                    ShowMessage(
+                        "Bachat Gat and its President account deleted successfully!",
+                        System.Drawing.Color.Green
+                    );
+                }
+                catch
+                {
+                    transaction.Rollback();
+
+                    throw;
+                }
             }
 
 
@@ -566,11 +1068,13 @@ public partial class BachatGat : System.Web.UI.Page
     }
 
 
-    // ==========================================
+    // =========================================================
     // CLEAR
-    // ==========================================
+    // =========================================================
 
-    protected void btnClear_Click(object sender, EventArgs e)
+    protected void btnClear_Click(
+        object sender,
+        EventArgs e)
     {
         ClearForm();
     }
@@ -580,35 +1084,61 @@ public partial class BachatGat : System.Web.UI.Page
     {
         hfBachatGatID.Value = "";
 
+
         txtGatName.Text = "";
+
         txtRegistrationNumber.Text = "";
+
         txtFormationDate.Text = "";
+
         txtVillage.Text = "";
+
         txtTaluka.Text = "";
+
         txtDistrict.Text = "";
+
         txtAddress.Text = "";
+
+
         txtPresidentName.Text = "";
+
+        txtPresidentUsername.Text = "";
+
+        txtPresidentPassword.Text = "";
+
+
         txtSecretaryName.Text = "";
+
+
         txtBankName.Text = "";
+
         txtBankAccount.Text = "";
+
         txtIFSC.Text = "";
+
+
         txtMonthlySaving.Text = "";
 
-        ddlStatus.SelectedValue = "Active";
 
-        btnSave.Text = "Save Bachat Gat";
+        ddlStatus.SelectedValue =
+            "Active";
+
+
+        btnSave.Text =
+            "Save Bachat Gat";
     }
 
 
-    // ==========================================
+    // =========================================================
     // MESSAGE
-    // ==========================================
+    // =========================================================
 
     private void ShowMessage(
         string message,
         System.Drawing.Color color)
     {
         lblMessage.Text = message;
+
         lblMessage.ForeColor = color;
     }
 }

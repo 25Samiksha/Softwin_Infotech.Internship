@@ -28,9 +28,9 @@ public partial class Reports : System.Web.UI.Page
         {
             SqlDataAdapter da =
                 new SqlDataAdapter(
-                "SELECT BachatGatID, GatName " +
-                "FROM BachatGat " +
-                "ORDER BY GatName", con);
+                    "SELECT BachatGatID, GatName " +
+                    "FROM BachatGat " +
+                    "ORDER BY GatName", con);
 
             DataTable dt = new DataTable();
 
@@ -38,12 +38,12 @@ public partial class Reports : System.Web.UI.Page
 
             ddlBachatGat.DataSource = dt;
             ddlBachatGat.DataTextField = "GatName";
-            ddlBachatGat.DataValueField =
-                "BachatGatID";
+            ddlBachatGat.DataValueField = "BachatGatID";
 
             ddlBachatGat.DataBind();
 
-            ddlBachatGat.Items.Insert(0,
+            ddlBachatGat.Items.Insert(
+                0,
                 new System.Web.UI.WebControls.ListItem(
                     "-- All Bachat Gats --", ""));
         }
@@ -64,12 +64,12 @@ public partial class Reports : System.Web.UI.Page
                 M.Status
             FROM Members M
             INNER JOIN BachatGat BG
-                ON M.BachatGatID=BG.BachatGatID
+                ON M.BachatGatID = BG.BachatGatID
             WHERE M.JoinDate BETWEEN @FromDate AND @ToDate";
 
         if (ddlBachatGat.SelectedValue != "")
         {
-            query += " AND M.BachatGatID=@BachatGatID";
+            query += " AND M.BachatGatID = @BachatGatID";
         }
 
         query += " ORDER BY M.MemberID DESC";
@@ -96,14 +96,14 @@ public partial class Reports : System.Web.UI.Page
                 S.ReceiptNumber
             FROM MemberSavings S
             INNER JOIN Members M
-                ON S.MemberID=M.MemberID
+                ON S.MemberID = M.MemberID
             INNER JOIN BachatGat BG
-                ON S.BachatGatID=BG.BachatGatID
+                ON S.BachatGatID = BG.BachatGatID
             WHERE S.PaymentDate BETWEEN @FromDate AND @ToDate";
 
         if (ddlBachatGat.SelectedValue != "")
         {
-            query += " AND S.BachatGatID=@BachatGatID";
+            query += " AND S.BachatGatID = @BachatGatID";
         }
 
         query += " ORDER BY S.PaymentDate DESC";
@@ -132,15 +132,14 @@ public partial class Reports : System.Web.UI.Page
                 L.Status
             FROM Loans L
             INNER JOIN Members M
-                ON L.MemberID=M.MemberID
+                ON L.MemberID = M.MemberID
             INNER JOIN BachatGat BG
-                ON L.BachatGatID=BG.BachatGatID
-            WHERE L.ApplicationDate
-                  BETWEEN @FromDate AND @ToDate";
+                ON L.BachatGatID = BG.BachatGatID
+            WHERE L.ApplicationDate BETWEEN @FromDate AND @ToDate";
 
         if (ddlBachatGat.SelectedValue != "")
         {
-            query += " AND L.BachatGatID=@BachatGatID";
+            query += " AND L.BachatGatID = @BachatGatID";
         }
 
         query += " ORDER BY L.LoanID DESC";
@@ -167,13 +166,12 @@ public partial class Reports : System.Web.UI.Page
                 M.NextMeetingDate
             FROM Meetings M
             INNER JOIN BachatGat BG
-                ON M.BachatGatID=BG.BachatGatID
-            WHERE M.MeetingDate
-                  BETWEEN @FromDate AND @ToDate";
+                ON M.BachatGatID = BG.BachatGatID
+            WHERE M.MeetingDate BETWEEN @FromDate AND @ToDate";
 
         if (ddlBachatGat.SelectedValue != "")
         {
-            query += " AND M.BachatGatID=@BachatGatID";
+            query += " AND M.BachatGatID = @BachatGatID";
         }
 
         query += " ORDER BY M.MeetingDate DESC";
@@ -184,10 +182,8 @@ public partial class Reports : System.Web.UI.Page
             false);
     }
 
-    private void GenerateReport(
-        string query,
-        string title,
-        bool unused)
+    protected void btnFinancialReport_Click(
+        object sender, EventArgs e)
     {
         DateTime fromDate;
         DateTime toDate;
@@ -199,7 +195,6 @@ public partial class Reports : System.Web.UI.Page
             ShowMessage(
                 "Invalid From Date.",
                 "danger");
-
             return;
         }
 
@@ -210,7 +205,6 @@ public partial class Reports : System.Web.UI.Page
             ShowMessage(
                 "Invalid To Date.",
                 "danger");
-
             return;
         }
 
@@ -219,21 +213,64 @@ public partial class Reports : System.Web.UI.Page
             ShowMessage(
                 "From Date cannot be greater than To Date.",
                 "danger");
-
             return;
         }
 
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        string query = @"
+            SELECT
+                BG.GatName,
+
+                ISNULL((
+                    SELECT SUM(I.Amount)
+                    FROM Income I
+                    WHERE I.BachatGatID = BG.BachatGatID
+                    AND I.IncomeDate BETWEEN @FromDate AND @ToDate
+                ), 0) AS TotalIncome,
+
+                ISNULL((
+                    SELECT SUM(E.Amount)
+                    FROM Expenses E
+                    WHERE E.BachatGatID = BG.BachatGatID
+                    AND E.ExpenseDate BETWEEN @FromDate AND @ToDate
+                ), 0) AS TotalExpenses,
+
+                ISNULL((
+                    SELECT SUM(I.Amount)
+                    FROM Income I
+                    WHERE I.BachatGatID = BG.BachatGatID
+                    AND I.IncomeDate BETWEEN @FromDate AND @ToDate
+                ), 0)
+                -
+                ISNULL((
+                    SELECT SUM(E.Amount)
+                    FROM Expenses E
+                    WHERE E.BachatGatID = BG.BachatGatID
+                    AND E.ExpenseDate BETWEEN @FromDate AND @ToDate
+                ), 0) AS ProfitLoss
+
+            FROM BachatGat BG
+            WHERE 1 = 1";
+
+        if (ddlBachatGat.SelectedValue != "")
+        {
+            query +=
+                " AND BG.BachatGatID = @BachatGatID";
+        }
+
+        query += " ORDER BY BG.GatName";
+
+        using (SqlConnection con = DBHelper.GetConnection())
         {
             SqlDataAdapter da =
                 new SqlDataAdapter(query, con);
 
             da.SelectCommand.Parameters.AddWithValue(
-                "@FromDate", fromDate);
+                "@FromDate",
+                fromDate);
 
             da.SelectCommand.Parameters.AddWithValue(
-                "@ToDate", toDate);
+                "@ToDate",
+                toDate);
 
             if (ddlBachatGat.SelectedValue != "")
             {
@@ -251,7 +288,82 @@ public partial class Reports : System.Web.UI.Page
             gvReport.DataBind();
 
             lblReportTitle.Text =
-                title + " (" + dt.Rows.Count +
+                "Financial Report (" +
+                dt.Rows.Count +
+                " records)";
+
+            pnlReport.Visible = true;
+        }
+    }
+
+    private void GenerateReport(
+        string query,
+        string title,
+        bool unused)
+    {
+        DateTime fromDate;
+        DateTime toDate;
+
+        if (!DateTime.TryParse(
+            txtFromDate.Text,
+            out fromDate))
+        {
+            ShowMessage(
+                "Invalid From Date.",
+                "danger");
+            return;
+        }
+
+        if (!DateTime.TryParse(
+            txtToDate.Text,
+            out toDate))
+        {
+            ShowMessage(
+                "Invalid To Date.",
+                "danger");
+            return;
+        }
+
+        if (fromDate > toDate)
+        {
+            ShowMessage(
+                "From Date cannot be greater than To Date.",
+                "danger");
+            return;
+        }
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            SqlDataAdapter da =
+                new SqlDataAdapter(query, con);
+
+            da.SelectCommand.Parameters.AddWithValue(
+                "@FromDate",
+                fromDate);
+
+            da.SelectCommand.Parameters.AddWithValue(
+                "@ToDate",
+                toDate);
+
+            if (ddlBachatGat.SelectedValue != "")
+            {
+                da.SelectCommand.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    Convert.ToInt32(
+                        ddlBachatGat.SelectedValue));
+            }
+
+            DataTable dt = new DataTable();
+
+            da.Fill(dt);
+
+            gvReport.DataSource = dt;
+            gvReport.DataBind();
+
+            lblReportTitle.Text =
+                title +
+                " (" +
+                dt.Rows.Count +
                 " records)";
 
             pnlReport.Visible = true;
@@ -263,8 +375,11 @@ public partial class Reports : System.Web.UI.Page
         string type)
     {
         lblMessage.Text =
-            "<div class='alert alert-" + type + "'>" +
+            "<div class='alert alert-" +
+            type +
+            "'>" +
             message +
             "</div>";
     }
 }
+

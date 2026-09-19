@@ -20,38 +20,29 @@
             <div class="row">
 
                 <div class="col-md-4">
-
                     <label>Bachat Gat</label>
-
                     <asp:DropDownList ID="ddlBachatGat"
                         runat="server"
                         CssClass="form-control">
                     </asp:DropDownList>
-
                 </div>
 
                 <div class="col-md-4">
-
                     <label>From Date</label>
-
                     <asp:TextBox ID="txtFromDate"
                         runat="server"
                         CssClass="form-control"
                         TextMode="SingleLine">
                     </asp:TextBox>
-
                 </div>
 
                 <div class="col-md-4">
-
                     <label>To Date</label>
-
                     <asp:TextBox ID="txtToDate"
                         runat="server"
                         CssClass="form-control"
                         TextMode="SingleLine">
                     </asp:TextBox>
-
                 </div>
 
             </div>
@@ -82,23 +73,30 @@
                 CssClass="btn btn-info"
                 OnClick="btnMeetingReport_Click" />
 
-            <a href="FinancialReport.aspx"
-               class="btn btn-danger">
-                Financial Report
-            </a>
+            <asp:Button ID="btnFinancialReport"
+                runat="server"
+                Text="Financial Report"
+                CssClass="btn btn-danger"
+                OnClick="btnFinancialReport_Click" />
 
         </div>
     </div>
 
-
     <asp:Panel ID="pnlReport"
         runat="server"
-        Visible="false">
+        Visible="false"
+        ClientIDMode="Static">
 
         <div class="panel panel-default">
 
-            <div class="panel-heading">
-                Report Result
+            <div class="panel-heading clearfix">
+                <span>Report Result</span>
+
+                <button type="button"
+                    class="btn btn-danger btn-sm pull-right"
+                    onclick="printReport()">
+                    Download PDF
+                </button>
             </div>
 
             <div class="panel-body">
@@ -124,4 +122,75 @@
 
 </div>
 
+<script type="text/javascript">
+
+    function printReport() {
+
+        var report = document.getElementById("pnlReport");
+
+        if (!report) {
+            alert("Please generate a report first.");
+            return;
+        }
+
+        var printWindow = window.open(
+            "",
+            "",
+            "width=1000,height=700"
+        );
+
+        printWindow.document.write(
+            "<html>" +
+            "<head>" +
+            "<title>Mahila Bachat Gat Report</title>" +
+            "<style>" +
+            "body {" +
+                "font-family: Arial, sans-serif;" +
+                "padding: 30px;" +
+            "}" +
+            "h2 {" +
+                "text-align: center;" +
+                "margin-bottom: 20px;" +
+            "}" +
+            "table {" +
+                "width: 100%;" +
+                "border-collapse: collapse;" +
+                "font-size: 12px;" +
+            "}" +
+            "th, td {" +
+                "border: 1px solid #000;" +
+                "padding: 6px;" +
+                "text-align: left;" +
+            "}" +
+            "th {" +
+                "font-weight: bold;" +
+            "}" +
+            ".panel-heading {" +
+                "display: none;" +
+            "}" +
+            ".btn {" +
+                "display: none;" +
+            "}" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<h2>Mahila Bachat Gat Portal</h2>" +
+            report.innerHTML +
+            "</body>" +
+            "</html>"
+        );
+
+        printWindow.document.close();
+
+        printWindow.focus();
+
+        setTimeout(function () {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    }
+
+</script>
+
 </asp:Content>
+

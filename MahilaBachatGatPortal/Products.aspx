@@ -115,6 +115,23 @@
 
             <br />
 
+            <div class="form-group">
+
+                <label>Product Photo</label>
+
+                <asp:FileUpload ID="fuProductImage"
+                    runat="server"
+                    CssClass="form-control" />
+
+                <asp:Label ID="lblImageMessage"
+                    runat="server"
+                    CssClass="text-danger">
+                </asp:Label>
+
+            </div>
+
+            <br />
+
             <label>Description</label>
 
             <asp:TextBox ID="txtDescription"
@@ -203,6 +220,21 @@
 
             <asp:BoundField DataField="ProductName"
                 HeaderText="Product" />
+
+            <asp:TemplateField HeaderText="Photo">
+
+                <ItemTemplate>
+
+                    <asp:Image ID="imgProduct"
+                        runat="server"
+                        ImageUrl='<%# Eval("ProductImage") %>'
+                        Width="70px"
+                        Height="70px"
+                        Style="object-fit:cover;" />
+
+                </ItemTemplate>
+
+            </asp:TemplateField>
 
             <asp:BoundField DataField="Category"
                 HeaderText="Category" />
