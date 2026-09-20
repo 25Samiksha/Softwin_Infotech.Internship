@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI.WebControls;
@@ -7,7 +7,7 @@ public partial class BachatGat : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        RoleHelper.RequireAdmin(this);
+        RoleHelper.RequireManagement(this);
 
         if (!IsPostBack)
         {
@@ -26,35 +26,56 @@ public partial class BachatGat : System.Web.UI.Page
         {
             using (SqlConnection con = DBHelper.GetConnection())
             {
-                string query = @"
-                    SELECT
-                        BachatGatID,
-                        GatName,
-                        RegistrationNumber,
-                        Village,
-                        Taluka,
-                        District,
-                        PresidentName,
-                        TotalMembers,
-                        MonthlySavingAmount,
-                        Status
-                    FROM BachatGat
-                    ORDER BY BachatGatID DESC";
+                string query = "";
+                if (RoleHelper.IsAdmin())
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName,
+                            RegistrationNumber,
+                            Village,
+                            Taluka,
+                            District,
+                            PresidentName,
+                            TotalMembers,
+                            MonthlySavingAmount,
+                            Status
+                        FROM BachatGat
+                        ORDER BY BachatGatID DESC";
+                }
+                else
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName,
+                            RegistrationNumber,
+                            Village,
+                            Taluka,
+                            District,
+                            PresidentName,
+                            TotalMembers,
+                            MonthlySavingAmount,
+                            Status
+                        FROM BachatGat
+                        WHERE BachatGatID = @BachatGatID
+                        ORDER BY BachatGatID DESC";
+                }
 
+                SqlCommand cmd = new SqlCommand(query, con);
+                if (!RoleHelper.IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+                }
 
-                SqlDataAdapter da =
-                    new SqlDataAdapter(query, con);
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
 
-
-                DataTable dt =
-                    new DataTable();
-
+                DataTable dt = new DataTable();
 
                 da.Fill(dt);
 
-
                 gvBachatGat.DataSource = dt;
-
                 gvBachatGat.DataBind();
             }
         }
@@ -164,6 +185,20 @@ public partial class BachatGat : System.Web.UI.Page
             string.IsNullOrWhiteSpace(
                 hfBachatGatID.Value
             );
+
+        if (!RoleHelper.IsAdmin())
+        {
+            if (isNewGat)
+            {
+                ShowMessage("Only Admins can create new Bachat Gats.", System.Drawing.Color.Red);
+                return;
+            }
+            else if (hfBachatGatID.Value != RoleHelper.GetBachatGatID().ToString())
+            {
+                ShowMessage("You can only edit your own Bachat Gat.", System.Drawing.Color.Red);
+                return;
+            }
+        }
 
 
         // -----------------------------------------------------
@@ -686,24 +721,51 @@ public partial class BachatGat : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string query = @"
-                    SELECT
-                        BachatGatID,
-                        GatName,
-                        RegistrationNumber,
-                        Village,
-                        Taluka,
-                        District,
-                        PresidentName,
-                        TotalMembers,
-                        MonthlySavingAmount,
-                        Status
-                    FROM BachatGat
-                    WHERE
-                        GatName LIKE @Search
-                        OR RegistrationNumber LIKE @Search
-                        OR Village LIKE @Search
-                    ORDER BY BachatGatID DESC";
+                string query = "";
+                if (RoleHelper.IsAdmin())
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName,
+                            RegistrationNumber,
+                            Village,
+                            Taluka,
+                            District,
+                            PresidentName,
+                            TotalMembers,
+                            MonthlySavingAmount,
+                            Status
+                        FROM BachatGat
+                        WHERE
+                            GatName LIKE @Search
+                            OR RegistrationNumber LIKE @Search
+                            OR Village LIKE @Search
+                        ORDER BY BachatGatID DESC";
+                }
+                else
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName,
+                            RegistrationNumber,
+                            Village,
+                            Taluka,
+                            District,
+                            PresidentName,
+                            TotalMembers,
+                            MonthlySavingAmount,
+                            Status
+                        FROM BachatGat
+                        WHERE BachatGatID = @BachatGatID
+                        AND (
+                            GatName LIKE @Search
+                            OR RegistrationNumber LIKE @Search
+                            OR Village LIKE @Search
+                        )
+                        ORDER BY BachatGatID DESC";
+                }
 
 
                 SqlCommand cmd =
@@ -712,6 +774,10 @@ public partial class BachatGat : System.Web.UI.Page
                         con
                     );
 
+                if (!RoleHelper.IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+                }
 
                 cmd.Parameters.AddWithValue(
                     "@Search",
@@ -778,6 +844,12 @@ public partial class BachatGat : System.Web.UI.Page
 
     private void LoadGatForEdit(int gatID)
     {
+        if (!RoleHelper.IsAdmin() && gatID != RoleHelper.GetBachatGatID())
+        {
+            ShowMessage("You can only edit your own Bachat Gat.", System.Drawing.Color.Red);
+            return;
+        }
+
         try
         {
             using (SqlConnection con =
@@ -971,6 +1043,12 @@ public partial class BachatGat : System.Web.UI.Page
 
     private void DeleteGat(int gatID)
     {
+        if (!RoleHelper.IsAdmin())
+        {
+            ShowMessage("Only Admins can delete a Bachat Gat.", System.Drawing.Color.Red);
+            return;
+        }
+
         try
         {
             using (SqlConnection con =

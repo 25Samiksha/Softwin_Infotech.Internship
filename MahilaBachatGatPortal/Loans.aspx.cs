@@ -1,580 +1,775 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web.UI;
+using System.Web.UI.WebControls;
 
 public partial class Loans : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        RoleHelper.RequirePresidentSecretary(this);
+        RoleHelper.RequireLogin(this);
+
+        pnlLoanDistribution.Visible = IsManagementUser();
 
         if (!IsPostBack)
         {
             LoadBachatGats();
-
-            txtApplicationDate.Text =
-                DateTime.Today.ToString("yyyy-MM-dd");
-
-            txtDistributionDate.Text =
-                DateTime.Today.ToString("yyyy-MM-dd");
-
+            LoadMembers();
             LoadLoans();
-
             LoadSummary();
+            SetDefaultDates();
         }
     }
 
+    protected bool IsManagementUser()
+    {
+        return RoleHelper.IsAdmin() || RoleHelper.IsPresidentOrSecretary();
+    }
 
-    // =========================================================
-    // LOAD BACHAT GAT
-    // =========================================================
+    private void SetDefaultDates()
+    {
+        if (string.IsNullOrWhiteSpace(txtApplicationDate.Text))
+        {
+            txtApplicationDate.Text = DateTime.Now.ToString("yyyy-MM-dd");
+        }
+
+        if (string.IsNullOrWhiteSpace(txtDistributionDate.Text))
+        {
+            txtDistributionDate.Text = DateTime.Now.ToString("yyyy-MM-dd");
+        }
+    }
 
     private void LoadBachatGats()
     {
-        ddlBachatGat.Items.Clear();
-
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                SELECT
-                    BachatGatID,
-                    GatName
-                FROM BachatGat
-                WHERE
-                    BachatGatID = @BachatGatID
-                    AND Status = 'Active'
-                ORDER BY GatName";
+            ddlBachatGat.Items.Clear();
 
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
+                string query;
 
-                con.Open();
-
-                using (SqlDataReader dr =
-                    cmd.ExecuteReader())
+                if (RoleHelper.IsAdmin())
                 {
-                    while (dr.Read())
+                    query = @"
+                        SELECT BachatGatID, GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        ORDER BY GatName";
+                }
+                else
+                {
+                    query = @"
+                        SELECT BachatGatID, GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        AND BachatGatID = @BachatGatID
+                        ORDER BY GatName";
+                }
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    if (!RoleHelper.IsAdmin())
                     {
-                        ddlBachatGat.Items.Add(
-                            new System.Web.UI.WebControls.ListItem(
-                                dr["GatName"].ToString(),
-                                dr["BachatGatID"].ToString()));
+                        cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+                    }
+
+                    con.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        ddlBachatGat.DataSource = dr;
+                        ddlBachatGat.DataTextField = "GatName";
+                        ddlBachatGat.DataValueField = "BachatGatID";
+                        ddlBachatGat.DataBind();
+                    }
+                }
+            }
+
+            if (RoleHelper.IsAdmin())
+            {
+                ddlBachatGat.Items.Insert(
+                    0,
+                    new ListItem("-- Select Bachat Gat --", "")
+                );
+            }
+            else if (ddlBachatGat.Items.Count > 0)
+            {
+                ddlBachatGat.SelectedValue =
+                    RoleHelper.GetBachatGatID().ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading Bachat Gat: " + ex.Message,
+                true
+            );
+        }
+    }
+
+    private void LoadMembers()
+    {
+        try
+        {
+            ddlMember.Items.Clear();
+
+            using (SqlConnection con = DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        MemberID,
+                        MemberName
+                    FROM Members
+                    WHERE Status = 'Active'
+                    AND BachatGatID = @BachatGatID";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += @"
+                        AND MemberID = @MemberID";
+                }
+
+                query += " ORDER BY MemberName";
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    if (RoleHelper.IsMember())
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            RoleHelper.GetMemberID()
+                        );
+                    }
+
+                    con.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        ddlMember.DataSource = dr;
+                        ddlMember.DataTextField = "MemberName";
+                        ddlMember.DataValueField = "MemberID";
+                        ddlMember.DataBind();
+                    }
+                }
+            }
+
+            if (RoleHelper.IsMember() && ddlMember.Items.Count > 0)
+            {
+                ddlMember.SelectedValue =
+                    RoleHelper.GetMemberID().ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading members: " + ex.Message,
+                true
+            );
+        }
+    }
+
+    private void LoadLoans()
+    {
+        try
+        {
+            using (SqlConnection con = DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        L.LoanID,
+                        M.MemberName,
+                        B.GatName,
+                        L.ApplicationDate,
+                        L.LoanAmount,
+                        L.ApprovedAmount,
+                        L.InterestRate,
+                        L.LoanTermMonths,
+                        L.Status
+                    FROM Loans L
+                    INNER JOIN Members M
+                        ON L.MemberID = M.MemberID
+                    INNER JOIN BachatGat B
+                        ON L.BachatGatID = B.BachatGatID
+                    WHERE L.BachatGatID = @BachatGatID";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += @"
+                        AND L.MemberID = @MemberID";
+                }
+
+                query += " ORDER BY L.LoanID DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    if (RoleHelper.IsMember())
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            RoleHelper.GetMemberID()
+                        );
+                    }
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable();
+
+                    da.Fill(dt);
+
+                    gvLoans.DataSource = dt;
+                    gvLoans.DataBind();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading loans: " + ex.Message,
+                true
+            );
+        }
+    }
+
+    private void LoadSummary()
+    {
+        try
+        {
+            using (SqlConnection con = DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        COUNT(*) AS TotalLoans,
+                        SUM(CASE WHEN Status = 'Pending' THEN 1 ELSE 0 END) AS PendingLoans,
+                        SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) AS ApprovedLoans,
+                        ISNULL(SUM(LoanAmount), 0) AS TotalLoanAmount
+                    FROM Loans
+                    WHERE BachatGatID = @BachatGatID";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += " AND MemberID = @MemberID";
+                }
+
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    if (RoleHelper.IsMember())
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            RoleHelper.GetMemberID()
+                        );
+                    }
+
+                    con.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            lblTotalLoans.Text =
+                                dr["TotalLoans"].ToString();
+
+                            lblPendingLoans.Text =
+                                dr["PendingLoans"].ToString();
+
+                            lblApprovedLoans.Text =
+                                dr["ApprovedLoans"].ToString();
+
+                            lblTotalLoanAmount.Text =
+                                Convert.ToDecimal(
+                                    dr["TotalLoanAmount"]
+                                ).ToString("N2");
+                        }
                     }
                 }
             }
         }
-
-        // Automatically select the user's Bachat Gat
-        if (ddlBachatGat.Items.Count > 0)
+        catch (Exception ex)
         {
-            ddlBachatGat.SelectedValue =
-                bachatGatID.ToString();
-
-            LoadMembers();
+            ShowMessage(
+                "Error loading loan summary: " + ex.Message,
+                true
+            );
         }
     }
-
-
-    // =========================================================
-    // BACHAT GAT CHANGE
-    // =========================================================
 
     protected void ddlBachatGat_SelectedIndexChanged(
         object sender,
         EventArgs e)
     {
-        int assignedBachatGatID =
-            RoleHelper.GetBachatGatID();
-
-        // Prevent President/Secretary from selecting
-        // another Bachat Gat.
-        if (ddlBachatGat.SelectedValue !=
-            assignedBachatGatID.ToString())
+        if (!RoleHelper.IsAdmin())
         {
-            ShowMessage(
-                "You cannot select another Bachat Gat.",
-                "alert alert-danger");
-
             ddlBachatGat.SelectedValue =
-                assignedBachatGatID.ToString();
+                RoleHelper.GetBachatGatID().ToString();
         }
 
         LoadMembers();
     }
 
-
-    // =========================================================
-    // LOAD MEMBERS
-    // =========================================================
-
-    private void LoadMembers()
+    protected void btnSave_Click(object sender, EventArgs e)
     {
-        ddlMember.Items.Clear();
-
-        ddlMember.Items.Add(
-            new System.Web.UI.WebControls.ListItem(
-                "-- Select Member --",
-                ""));
-
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
         if (ddlBachatGat.SelectedValue == "")
         {
-            return;
-        }
-
-        // Extra server-side protection
-        if (Convert.ToInt32(
-                ddlBachatGat.SelectedValue) !=
-            bachatGatID)
-        {
-            return;
-        }
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
-        {
-            string query = @"
-                SELECT
-                    MemberID,
-                    MemberCode,
-                    MemberName
-                FROM Members
-                WHERE
-                    BachatGatID = @BachatGatID
-                    AND Status = 'Active'
-                ORDER BY MemberName";
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                con.Open();
-
-                using (SqlDataReader dr =
-                    cmd.ExecuteReader())
-                {
-                    while (dr.Read())
-                    {
-                        ddlMember.Items.Add(
-                            new System.Web.UI.WebControls.ListItem(
-                                dr["MemberCode"].ToString()
-                                + " - "
-                                + dr["MemberName"].ToString(),
-                                dr["MemberID"].ToString()));
-                    }
-                }
-            }
-        }
-    }
-
-
-    // =========================================================
-    // SAVE LOAN
-    // =========================================================
-
-    protected void btnSave_Click(
-        object sender,
-        EventArgs e)
-    {
-        lblMessage.Visible = false;
-
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-        if (ddlBachatGat.SelectedValue == "")
-        {
-            ShowMessage(
-                "Please select Bachat Gat.",
-                "alert alert-danger");
-
-            return;
-        }
-
-        // Make sure selected Gat is user's Gat
-        if (Convert.ToInt32(
-                ddlBachatGat.SelectedValue) !=
-            bachatGatID)
-        {
-            ShowMessage(
-                "You cannot create a loan for another Bachat Gat.",
-                "alert alert-danger");
-
+            ShowMessage("Please select Bachat Gat.", true);
             return;
         }
 
         if (ddlMember.SelectedValue == "")
         {
-            ShowMessage(
-                "Please select member.",
-                "alert alert-danger");
-
+            ShowMessage("Please select member.", true);
             return;
         }
 
+        int selectedBachatGatID =
+            Convert.ToInt32(ddlBachatGat.SelectedValue);
 
-        int memberID =
-            Convert.ToInt32(
-                ddlMember.SelectedValue);
+        int selectedMemberID =
+            Convert.ToInt32(ddlMember.SelectedValue);
 
+        if (!RoleHelper.IsAdmin() &&
+            selectedBachatGatID != RoleHelper.GetBachatGatID())
+        {
+            ShowMessage(
+                "You cannot select another Bachat Gat.",
+                true
+            );
+            return;
+        }
 
+        if (RoleHelper.IsMember() &&
+            selectedMemberID != RoleHelper.GetMemberID())
+        {
+            ShowMessage(
+                "You can apply only for yourself.",
+                true
+            );
+            return;
+        }
+
+        decimal loanAmount;
+        decimal interestRate;
+        decimal emiAmount;
+        int loanTermMonths;
         DateTime applicationDate;
+
+        if (!decimal.TryParse(
+            txtLoanAmount.Text.Trim(),
+            out loanAmount))
+        {
+            ShowMessage(
+                "Please enter valid loan amount.",
+                true
+            );
+            return;
+        }
+
+        if (!decimal.TryParse(
+            txtInterestRate.Text.Trim(),
+            out interestRate))
+        {
+            ShowMessage(
+                "Please enter valid interest rate.",
+                true
+            );
+            return;
+        }
+
+        if (!int.TryParse(
+            txtLoanTermMonths.Text.Trim(),
+            out loanTermMonths))
+        {
+            ShowMessage(
+                "Please enter valid loan term.",
+                true
+            );
+            return;
+        }
+
+        if (!decimal.TryParse(
+            txtEMIAmount.Text.Trim(),
+            out emiAmount))
+        {
+            ShowMessage(
+                "Please enter valid EMI amount.",
+                true
+            );
+            return;
+        }
 
         if (!DateTime.TryParse(
             txtApplicationDate.Text.Trim(),
             out applicationDate))
         {
             ShowMessage(
-                "Please enter a valid application date.",
-                "alert alert-danger");
-
+                "Please enter valid application date.",
+                true
+            );
             return;
         }
 
-
-        decimal loanAmount;
-        decimal interestRate;
-        int loanTerm;
-        decimal emiAmount;
-
-
-        if (!decimal.TryParse(
-            txtLoanAmount.Text.Trim(),
-            out loanAmount) ||
-            loanAmount <= 0)
+        try
         {
-            ShowMessage(
-                "Please enter a valid loan amount.",
-                "alert alert-danger");
-
-            return;
-        }
-
-
-        if (!decimal.TryParse(
-            txtInterestRate.Text.Trim(),
-            out interestRate) ||
-            interestRate < 0)
-        {
-            ShowMessage(
-                "Please enter a valid interest rate.",
-                "alert alert-danger");
-
-            return;
-        }
-
-
-        if (!int.TryParse(
-            txtLoanTermMonths.Text.Trim(),
-            out loanTerm) ||
-            loanTerm <= 0)
-        {
-            ShowMessage(
-                "Please enter a valid loan term.",
-                "alert alert-danger");
-
-            return;
-        }
-
-
-        if (!decimal.TryParse(
-            txtEMIAmount.Text.Trim(),
-            out emiAmount) ||
-            emiAmount <= 0)
-        {
-            ShowMessage(
-                "Please enter a valid EMI amount.",
-                "alert alert-danger");
-
-            return;
-        }
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
-        {
-            con.Open();
-
-
-            // =================================================
-            // VERIFY MEMBER BELONGS TO CURRENT BACHAT GAT
-            // =================================================
-
-            string memberCheckQuery = @"
-                SELECT COUNT(*)
-                FROM Members
-                WHERE
-                    MemberID = @MemberID
-                    AND BachatGatID = @BachatGatID
-                    AND Status = 'Active'";
-
-
-            using (SqlCommand memberCheckCmd =
-                new SqlCommand(
-                    memberCheckQuery,
-                    con))
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                memberCheckCmd.Parameters.AddWithValue(
-                    "@MemberID",
-                    memberID);
+                con.Open();
 
-                memberCheckCmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-
-                int memberExists =
-                    Convert.ToInt32(
-                        memberCheckCmd.ExecuteScalar());
-
-
-                if (memberExists == 0)
+                if (!string.IsNullOrEmpty(hfLoanID.Value))
                 {
-                    ShowMessage(
-                        "Invalid member selection.",
-                        "alert alert-danger");
+                    int loanID =
+                        Convert.ToInt32(hfLoanID.Value);
 
-                    return;
+                    string query = @"
+                        UPDATE Loans
+                        SET
+                            MemberID = @MemberID,
+                            BachatGatID = @BachatGatID,
+                            ApplicationDate = @ApplicationDate,
+                            LoanAmount = @LoanAmount,
+                            InterestRate = @InterestRate,
+                            LoanPurpose = @LoanPurpose,
+                            LoanTermMonths = @LoanTermMonths,
+                            EMIAmount = @EMIAmount,
+                            Status = @Status,
+                            Remarks = @Remarks
+                        WHERE LoanID = @LoanID
+                        AND BachatGatID = @BachatGatID";
+
+                    if (RoleHelper.IsMember())
+                    {
+                        query +=
+                            " AND MemberID = @CurrentMemberID";
+                    }
+
+                    using (SqlCommand cmd =
+                        new SqlCommand(query, con))
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@LoanID",
+                            loanID
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            selectedMemberID
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@BachatGatID",
+                            selectedBachatGatID
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@ApplicationDate",
+                            applicationDate
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanAmount",
+                            loanAmount
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@InterestRate",
+                            interestRate
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanPurpose",
+                            txtLoanPurpose.Text.Trim()
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanTermMonths",
+                            loanTermMonths
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@EMIAmount",
+                            emiAmount
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@Status",
+                            RoleHelper.IsMember()
+                                ? "Pending"
+                                : ddlLoanStatus.SelectedValue
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@Remarks",
+                            txtRemarks.Text.Trim()
+                        );
+
+                        if (RoleHelper.IsMember())
+                        {
+                            cmd.Parameters.AddWithValue(
+                                "@CurrentMemberID",
+                                RoleHelper.GetMemberID()
+                            );
+                        }
+
+                        int rows =
+                            cmd.ExecuteNonQuery();
+
+                        if (rows == 0)
+                        {
+                            ShowMessage(
+                                "Loan not found or you do not have permission to update it.",
+                                true
+                            );
+                            return;
+                        }
+                    }
+
+                    ShowMessage(
+                        "Loan application updated successfully.",
+                        false
+                    );
+                }
+                else
+                {
+                    string query = @"
+                        INSERT INTO Loans
+                        (
+                            MemberID,
+                            BachatGatID,
+                            ApplicationDate,
+                            LoanAmount,
+                            InterestRate,
+                            LoanPurpose,
+                            LoanTermMonths,
+                            EMIAmount,
+                            Status,
+                            Remarks,
+                            CreatedDate
+                        )
+                        VALUES
+                        (
+                            @MemberID,
+                            @BachatGatID,
+                            @ApplicationDate,
+                            @LoanAmount,
+                            @InterestRate,
+                            @LoanPurpose,
+                            @LoanTermMonths,
+                            @EMIAmount,
+                            'Pending',
+                            @Remarks,
+                            GETDATE()
+                        )";
+
+                    using (SqlCommand cmd =
+                        new SqlCommand(query, con))
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            selectedMemberID
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@BachatGatID",
+                            selectedBachatGatID
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@ApplicationDate",
+                            applicationDate
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanAmount",
+                            loanAmount
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@InterestRate",
+                            interestRate
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanPurpose",
+                            txtLoanPurpose.Text.Trim()
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@LoanTermMonths",
+                            loanTermMonths
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@EMIAmount",
+                            emiAmount
+                        );
+
+                        cmd.Parameters.AddWithValue(
+                            "@Remarks",
+                            txtRemarks.Text.Trim()
+                        );
+
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    ShowMessage(
+                        "Loan application submitted successfully.",
+                        false
+                    );
                 }
             }
 
-
-            // =================================================
-            // INSERT LOAN
-            // =================================================
-
-            string query = @"
-                INSERT INTO Loans
-                (
-                    MemberID,
-                    BachatGatID,
-                    ApplicationDate,
-                    LoanAmount,
-                    InterestRate,
-                    LoanPurpose,
-                    LoanTermMonths,
-                    EMIAmount,
-                    Status,
-                    Remarks,
-                    CreatedDate
-                )
-                VALUES
-                (
-                    @MemberID,
-                    @BachatGatID,
-                    @ApplicationDate,
-                    @LoanAmount,
-                    @InterestRate,
-                    @LoanPurpose,
-                    @LoanTermMonths,
-                    @EMIAmount,
-                    'Pending',
-                    @Remarks,
-                    GETDATE()
-                )";
-
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@MemberID",
-                    memberID);
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                cmd.Parameters.AddWithValue(
-                    "@ApplicationDate",
-                    applicationDate);
-
-                cmd.Parameters.AddWithValue(
-                    "@LoanAmount",
-                    loanAmount);
-
-                cmd.Parameters.AddWithValue(
-                    "@InterestRate",
-                    interestRate);
-
-                cmd.Parameters.AddWithValue(
-                    "@LoanPurpose",
-                    txtLoanPurpose.Text.Trim());
-
-                cmd.Parameters.AddWithValue(
-                    "@LoanTermMonths",
-                    loanTerm);
-
-                cmd.Parameters.AddWithValue(
-                    "@EMIAmount",
-                    emiAmount);
-
-                cmd.Parameters.AddWithValue(
-                    "@Remarks",
-                    txtRemarks.Text.Trim());
-
-                cmd.ExecuteNonQuery();
-            }
+            ClearForm();
+            LoadLoans();
+            LoadSummary();
         }
-
-
-        ShowMessage(
-            "Loan application submitted successfully.",
-            "alert alert-success");
-
-
-        ClearLoanForm();
-
-        LoadLoans();
-
-        LoadSummary();
-    }
-
-
-    // =========================================================
-    // LOAD LOANS
-    // =========================================================
-
-    private void LoadLoans()
-    {
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-        string query = @"
-            SELECT
-                l.LoanID,
-                m.MemberCode,
-                m.MemberName,
-                b.GatName,
-                l.ApplicationDate,
-                l.LoanAmount,
-                l.ApprovedAmount,
-                l.InterestRate,
-                l.LoanTermMonths,
-                l.Status
-            FROM Loans l
-            INNER JOIN Members m
-                ON l.MemberID = m.MemberID
-            INNER JOIN BachatGat b
-                ON l.BachatGatID = b.BachatGatID
-            WHERE
-                l.BachatGatID = @BachatGatID
-            ORDER BY l.LoanID DESC";
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        catch (Exception ex)
         {
-            using (SqlDataAdapter da =
-                new SqlDataAdapter(query, con))
-            {
-                da.SelectCommand.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                DataTable dt =
-                    new DataTable();
-
-                da.Fill(dt);
-
-                gvLoans.DataSource =
-                    dt;
-
-                gvLoans.DataBind();
-            }
+            ShowMessage(
+                "Error saving loan: " + ex.Message,
+                true
+            );
         }
     }
 
+    protected void btnClear_Click(
+        object sender,
+        EventArgs e)
+    {
+        ClearForm();
+    }
 
-    // =========================================================
-    // SEARCH
-    // =========================================================
+    private void ClearForm()
+    {
+        hfLoanID.Value = "";
+
+        txtApplicationDate.Text =
+            DateTime.Now.ToString("yyyy-MM-dd");
+
+        txtLoanAmount.Text = "";
+        txtInterestRate.Text = "";
+        txtLoanTermMonths.Text = "";
+        txtEMIAmount.Text = "";
+        txtLoanPurpose.Text = "";
+        txtRemarks.Text = "";
+
+        ddlLoanStatus.SelectedValue = "Pending";
+
+        LoadBachatGats();
+        LoadMembers();
+
+        if (RoleHelper.IsMember())
+        {
+            if (ddlBachatGat.Items.Count > 0)
+            {
+                ddlBachatGat.SelectedValue =
+                    RoleHelper.GetBachatGatID().ToString();
+            }
+
+            if (ddlMember.Items.Count > 0)
+            {
+                ddlMember.SelectedValue =
+                    RoleHelper.GetMemberID().ToString();
+            }
+        }
+    }
 
     protected void btnSearch_Click(
         object sender,
         EventArgs e)
     {
-        string search =
-            txtSearch.Text.Trim();
-
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                SELECT
-                    l.LoanID,
-                    m.MemberCode,
-                    m.MemberName,
-                    b.GatName,
-                    l.ApplicationDate,
-                    l.LoanAmount,
-                    l.ApprovedAmount,
-                    l.InterestRate,
-                    l.LoanTermMonths,
-                    l.Status
-                FROM Loans l
-                INNER JOIN Members m
-                    ON l.MemberID = m.MemberID
-                INNER JOIN BachatGat b
-                    ON l.BachatGatID = b.BachatGatID
-                WHERE
-                    l.BachatGatID = @BachatGatID
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        L.LoanID,
+                        M.MemberName,
+                        B.GatName,
+                        L.ApplicationDate,
+                        L.LoanAmount,
+                        L.ApprovedAmount,
+                        L.InterestRate,
+                        L.LoanTermMonths,
+                        L.Status
+                    FROM Loans L
+                    INNER JOIN Members M
+                        ON L.MemberID = M.MemberID
+                    INNER JOIN BachatGat B
+                        ON L.BachatGatID = B.BachatGatID
+                    WHERE L.BachatGatID = @BachatGatID
                     AND
                     (
-                        m.MemberName LIKE @Search
-                        OR m.MemberCode LIKE @Search
-                        OR l.Status LIKE @Search
-                    )
-                ORDER BY l.LoanID DESC";
+                        M.MemberName LIKE @Search
+                        OR L.Status LIKE @Search
+                    )";
 
+                if (RoleHelper.IsMember())
+                {
+                    query +=
+                        " AND L.MemberID = @MemberID";
+                }
 
-            using (SqlDataAdapter da =
-                new SqlDataAdapter(
-                    query,
-                    con))
-            {
-                da.SelectCommand.Parameters.AddWithValue(
-                    "@Search",
-                    "%" + search + "%");
+                query +=
+                    " ORDER BY L.LoanID DESC";
 
-                da.SelectCommand.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
+                using (SqlCommand cmd =
+                    new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
 
+                    cmd.Parameters.AddWithValue(
+                        "@Search",
+                        "%" + txtSearch.Text.Trim() + "%"
+                    );
 
-                DataTable dt =
-                    new DataTable();
+                    if (RoleHelper.IsMember())
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@MemberID",
+                            RoleHelper.GetMemberID()
+                        );
+                    }
 
-                da.Fill(dt);
+                    SqlDataAdapter da =
+                        new SqlDataAdapter(cmd);
 
-                gvLoans.DataSource =
-                    dt;
+                    DataTable dt =
+                        new DataTable();
 
-                gvLoans.DataBind();
+                    da.Fill(dt);
+
+                    gvLoans.DataSource = dt;
+                    gvLoans.DataBind();
+                }
             }
         }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Search error: " + ex.Message,
+                true
+            );
+        }
     }
-
-
-    // =========================================================
-    // SHOW ALL
-    // =========================================================
 
     protected void btnShowAll_Click(
         object sender,
@@ -583,324 +778,344 @@ public partial class Loans : System.Web.UI.Page
         txtSearch.Text = "";
 
         LoadLoans();
-
         LoadSummary();
     }
 
-
-    // =========================================================
-    // ROW COMMAND
-    // =========================================================
-
     protected void gvLoans_RowCommand(
         object sender,
-        System.Web.UI.WebControls.GridViewCommandEventArgs e)
+        GridViewCommandEventArgs e)
     {
-        int loanID =
-            Convert.ToInt32(
-                e.CommandArgument);
+        int loanID;
 
+        if (!int.TryParse(
+            e.CommandArgument.ToString(),
+            out loanID))
+        {
+            ShowMessage(
+                "Invalid loan ID.",
+                true
+            );
+            return;
+        }
 
         if (e.CommandName == "ApproveLoan")
         {
+            if (!IsManagementUser())
+            {
+                Response.Redirect("Dashboard.aspx");
+                return;
+            }
+
             ApproveLoan(loanID);
         }
-
         else if (e.CommandName == "RejectLoan")
         {
+            if (!IsManagementUser())
+            {
+                Response.Redirect("Dashboard.aspx");
+                return;
+            }
+
             RejectLoan(loanID);
         }
-
         else if (e.CommandName == "SelectDistribution")
         {
+            if (!IsManagementUser())
+            {
+                Response.Redirect("Dashboard.aspx");
+                return;
+            }
+
             LoadDistributionDetails(loanID);
         }
     }
 
-
-    // =========================================================
-    // APPROVE LOAN
-    // =========================================================
-
     private void ApproveLoan(int loanID)
     {
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                UPDATE Loans
-                SET
-                    Status = 'Approved',
-                    ApprovalDate = GETDATE(),
-                    ApprovedBy = @ApprovedBy
-                WHERE
-                    LoanID = @LoanID
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    UPDATE Loans
+                    SET
+                        Status = 'Approved',
+                        ApprovalDate = GETDATE(),
+                        ApprovedAmount = LoanAmount,
+                        ApprovedBy = @ApprovedBy
+                    WHERE LoanID = @LoanID
                     AND BachatGatID = @BachatGatID
                     AND Status = 'Pending'";
 
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@LoanID",
-                    loanID);
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                cmd.Parameters.AddWithValue(
-                    "@ApprovedBy",
-                    RoleHelper.GetUserID());
-
-                con.Open();
-
-                int rows =
-                    cmd.ExecuteNonQuery();
-
-
-                if (rows == 0)
+                using (SqlCommand cmd =
+                    new SqlCommand(query, con))
                 {
-                    ShowMessage(
-                        "Only pending loans from your Bachat Gat can be approved.",
-                        "alert alert-danger");
+                    cmd.Parameters.AddWithValue(
+                        "@LoanID",
+                        loanID
+                    );
 
-                    return;
-                }
-            }
-        }
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
 
+                    cmd.Parameters.AddWithValue(
+                        "@ApprovedBy",
+                        RoleHelper.GetUserID()
+                    );
 
-        ShowMessage(
-            "Loan approved successfully.",
-            "alert alert-success");
+                    con.Open();
 
-        LoadLoans();
+                    int rows =
+                        cmd.ExecuteNonQuery();
 
-        LoadSummary();
-    }
-
-
-    // =========================================================
-    // REJECT LOAN
-    // =========================================================
-
-    private void RejectLoan(int loanID)
-    {
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
-        {
-            string query = @"
-                UPDATE Loans
-                SET
-                    Status = 'Rejected'
-                WHERE
-                    LoanID = @LoanID
-                    AND BachatGatID = @BachatGatID
-                    AND Status = 'Pending'";
-
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@LoanID",
-                    loanID);
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                con.Open();
-
-
-                int rows =
-                    cmd.ExecuteNonQuery();
-
-
-                if (rows == 0)
-                {
-                    ShowMessage(
-                        "Only pending loans from your Bachat Gat can be rejected.",
-                        "alert alert-danger");
-
-                    return;
-                }
-            }
-        }
-
-
-        ShowMessage(
-            "Loan rejected.",
-            "alert alert-warning");
-
-        LoadLoans();
-
-        LoadSummary();
-    }
-
-
-    // =========================================================
-    // LOAD DISTRIBUTION DETAILS
-    // =========================================================
-
-    private void LoadDistributionDetails(int loanID)
-    {
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
-        {
-            string query = @"
-                SELECT
-                    l.LoanID,
-                    m.MemberName,
-                    l.LoanAmount,
-                    l.ApprovedAmount,
-                    l.Status
-                FROM Loans l
-                INNER JOIN Members m
-                    ON l.MemberID = m.MemberID
-                WHERE
-                    l.LoanID = @LoanID
-                    AND l.BachatGatID = @BachatGatID";
-
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@LoanID",
-                    loanID);
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                con.Open();
-
-
-                using (SqlDataReader dr =
-                    cmd.ExecuteReader())
-                {
-                    if (dr.Read())
+                    if (rows > 0)
                     {
-                        string status =
-                            dr["Status"].ToString();
-
-
-                        if (status != "Approved")
-                        {
-                            ShowMessage(
-                                "Only approved loans can be distributed.",
-                                "alert alert-danger");
-
-                            return;
-                        }
-
-
-                        hfDistributionLoanID.Value =
-                            dr["LoanID"].ToString();
-
-                        txtDistributionLoanID.Text =
-                            dr["LoanID"].ToString();
-
-                        txtDistributionMember.Text =
-                            dr["MemberName"].ToString();
-
-
-                        decimal approvedAmount = 0;
-
-
-                        if (dr["ApprovedAmount"] !=
-                            DBNull.Value)
-                        {
-                            approvedAmount =
-                                Convert.ToDecimal(
-                                    dr["ApprovedAmount"]);
-                        }
-                        else
-                        {
-                            approvedAmount =
-                                Convert.ToDecimal(
-                                    dr["LoanAmount"]);
-                        }
-
-
-                        txtApprovedAmount.Text =
-                            approvedAmount.ToString("0.00");
-
-                        txtDistributionAmount.Text =
-                            approvedAmount.ToString("0.00");
-
-                        txtDistributionDate.Text =
-                            DateTime.Today.ToString(
-                                "yyyy-MM-dd");
-
-                        txtDistributionRemarks.Text =
-                            "";
+                        ShowMessage(
+                            "Loan approved successfully.",
+                            false
+                        );
                     }
                     else
                     {
                         ShowMessage(
-                            "Loan not found or you do not have permission to access it.",
-                            "alert alert-danger");
+                            "Loan could not be approved.",
+                            true
+                        );
+                    }
+                }
+            }
+
+            LoadLoans();
+            LoadSummary();
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error approving loan: " + ex.Message,
+                true
+            );
+        }
+    }
+
+    private void RejectLoan(int loanID)
+    {
+        try
+        {
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    UPDATE Loans
+                    SET Status = 'Rejected'
+                    WHERE LoanID = @LoanID
+                    AND BachatGatID = @BachatGatID
+                    AND Status = 'Pending'";
+
+                using (SqlCommand cmd =
+                    new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@LoanID",
+                        loanID
+                    );
+
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    con.Open();
+
+                    int rows =
+                        cmd.ExecuteNonQuery();
+
+                    if (rows > 0)
+                    {
+                        ShowMessage(
+                            "Loan rejected successfully.",
+                            false
+                        );
+                    }
+                    else
+                    {
+                        ShowMessage(
+                            "Loan could not be rejected.",
+                            true
+                        );
+                    }
+                }
+            }
+
+            LoadLoans();
+            LoadSummary();
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error rejecting loan: " + ex.Message,
+                true
+            );
+        }
+    }
+
+    private void LoadDistributionDetails(
+        int loanID)
+    {
+        try
+        {
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        L.LoanID,
+                        M.MemberName,
+                        L.ApprovedAmount,
+                        L.DistributionDate,
+                        L.DistributionAmount,
+                        L.Remarks
+                    FROM Loans L
+                    INNER JOIN Members M
+                        ON L.MemberID = M.MemberID
+                    WHERE L.LoanID = @LoanID
+                    AND L.BachatGatID = @BachatGatID
+                    AND L.Status = 'Approved'";
+
+                using (SqlCommand cmd =
+                    new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@LoanID",
+                        loanID
+                    );
+
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    con.Open();
+
+                    using (SqlDataReader dr =
+                        cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            hfDistributionLoanID.Value =
+                                dr["LoanID"].ToString();
+
+                            txtDistributionLoanID.Text =
+                                dr["LoanID"].ToString();
+
+                            txtDistributionMember.Text =
+                                dr["MemberName"].ToString();
+
+                            txtApprovedAmount.Text =
+                                dr["ApprovedAmount"].ToString();
+
+                            if (dr["DistributionDate"] !=
+                                DBNull.Value)
+                            {
+                                txtDistributionDate.Text =
+                                    Convert.ToDateTime(
+                                        dr["DistributionDate"]
+                                    ).ToString("yyyy-MM-dd");
+                            }
+                            else
+                            {
+                                txtDistributionDate.Text =
+                                    DateTime.Now.ToString("yyyy-MM-dd");
+                            }
+
+                            if (dr["DistributionAmount"] !=
+                                DBNull.Value)
+                            {
+                                txtDistributionAmount.Text =
+                                    dr["DistributionAmount"].ToString();
+                            }
+                            else
+                            {
+                                txtDistributionAmount.Text =
+                                    dr["ApprovedAmount"].ToString();
+                            }
+
+                            txtDistributionRemarks.Text =
+                                dr["Remarks"].ToString();
+                        }
+                        else
+                        {
+                            ShowMessage(
+                                "Only approved loans can be distributed.",
+                                true
+                            );
+                        }
                     }
                 }
             }
         }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading distribution details: " +
+                ex.Message,
+                true
+            );
+        }
     }
-
-
-    // =========================================================
-    // DISTRIBUTE LOAN
-    // =========================================================
 
     protected void btnDistributeLoan_Click(
         object sender,
         EventArgs e)
     {
-        lblMessage.Visible = false;
-
-
-        if (hfDistributionLoanID.Value == "")
+        if (!IsManagementUser())
         {
-            ShowMessage(
-                "Please select an approved loan first.",
-                "alert alert-danger");
-
+            Response.Redirect("Dashboard.aspx");
             return;
         }
 
+        int loanID;
+
+        if (!int.TryParse(
+            hfDistributionLoanID.Value,
+            out loanID))
+        {
+            ShowMessage(
+                "Please select an approved loan.",
+                true
+            );
+            return;
+        }
 
         DateTime distributionDate;
-
 
         if (!DateTime.TryParse(
             txtDistributionDate.Text.Trim(),
             out distributionDate))
         {
             ShowMessage(
-                "Please enter a valid distribution date.",
-                "alert alert-danger");
-
+                "Please enter valid distribution date.",
+                true
+            );
             return;
         }
 
+        decimal distributionAmount;
+
+        if (!decimal.TryParse(
+            txtDistributionAmount.Text.Trim(),
+            out distributionAmount))
+        {
+            ShowMessage(
+                "Please enter valid distribution amount.",
+                true
+            );
+            return;
+        }
 
         decimal approvedAmount;
-
 
         if (!decimal.TryParse(
             txtApprovedAmount.Text.Trim(),
@@ -908,298 +1123,128 @@ public partial class Loans : System.Web.UI.Page
         {
             ShowMessage(
                 "Invalid approved amount.",
-                "alert alert-danger");
-
+                true
+            );
             return;
         }
 
-
-        decimal distributionAmount;
-
-
-        if (!decimal.TryParse(
-            txtDistributionAmount.Text.Trim(),
-            out distributionAmount) ||
-            distributionAmount <= 0)
-        {
-            ShowMessage(
-                "Please enter a valid distribution amount.",
-                "alert alert-danger");
-
-            return;
-        }
-
-
-        if (distributionAmount >
-            approvedAmount)
+        if (distributionAmount > approvedAmount)
         {
             ShowMessage(
                 "Distribution amount cannot be greater than approved amount.",
-                "alert alert-danger");
-
+                true
+            );
             return;
         }
 
-
-        int loanID =
-            Convert.ToInt32(
-                hfDistributionLoanID.Value);
-
-
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                UPDATE Loans
-                SET
-                    DistributionDate = @DistributionDate,
-                    ApprovedAmount = @DistributionAmount,
-                    Status = 'Distributed',
-                    Remarks = @Remarks
-                WHERE
-                    LoanID = @LoanID
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    UPDATE Loans
+                    SET
+                        DistributionDate = @DistributionDate,
+                        DistributionAmount = @DistributionAmount,
+                        Remarks = @Remarks,
+                        Status = 'Distributed'
+                    WHERE LoanID = @LoanID
                     AND BachatGatID = @BachatGatID
                     AND Status = 'Approved'";
 
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@DistributionDate",
-                    distributionDate);
-
-                cmd.Parameters.AddWithValue(
-                    "@DistributionAmount",
-                    distributionAmount);
-
-                cmd.Parameters.AddWithValue(
-                    "@Remarks",
-                    txtDistributionRemarks.Text.Trim());
-
-                cmd.Parameters.AddWithValue(
-                    "@LoanID",
-                    loanID);
-
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-
-                con.Open();
-
-
-                int rows =
-                    cmd.ExecuteNonQuery();
-
-
-                if (rows == 0)
+                using (SqlCommand cmd =
+                    new SqlCommand(query, con))
                 {
-                    ShowMessage(
-                        "Loan could not be distributed. Check the loan status and Bachat Gat.",
-                        "alert alert-danger");
+                    cmd.Parameters.AddWithValue(
+                        "@LoanID",
+                        loanID
+                    );
 
-                    return;
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID()
+                    );
+
+                    cmd.Parameters.AddWithValue(
+                        "@DistributionDate",
+                        distributionDate
+                    );
+
+                    cmd.Parameters.AddWithValue(
+                        "@DistributionAmount",
+                        distributionAmount
+                    );
+
+                    cmd.Parameters.AddWithValue(
+                        "@Remarks",
+                        txtDistributionRemarks.Text.Trim()
+                    );
+
+                    con.Open();
+
+                    int rows =
+                        cmd.ExecuteNonQuery();
+
+                    if (rows > 0)
+                    {
+                        ShowMessage(
+                            "Loan distributed successfully.",
+                            false
+                        );
+                    }
+                    else
+                    {
+                        ShowMessage(
+                            "Loan could not be distributed.",
+                            true
+                        );
+                    }
                 }
             }
+
+            ClearDistribution();
+            LoadLoans();
+            LoadSummary();
         }
-
-
-        ShowMessage(
-            "Loan distributed successfully.",
-            "alert alert-success");
-
-
-        ClearDistributionForm();
-
-        LoadLoans();
-
-        LoadSummary();
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error distributing loan: " + ex.Message,
+                true
+            );
+        }
     }
-
-
-    // =========================================================
-    // CLEAR DISTRIBUTION
-    // =========================================================
 
     protected void btnClearDistribution_Click(
         object sender,
         EventArgs e)
     {
-        ClearDistributionForm();
-
-        lblMessage.Visible = false;
+        ClearDistribution();
     }
 
-
-    private void ClearDistributionForm()
+    private void ClearDistribution()
     {
         hfDistributionLoanID.Value = "";
-
         txtDistributionLoanID.Text = "";
-
         txtDistributionMember.Text = "";
-
         txtApprovedAmount.Text = "";
-
-        txtDistributionAmount.Text = "";
-
         txtDistributionDate.Text =
-            DateTime.Today.ToString("yyyy-MM-dd");
-
+            DateTime.Now.ToString("yyyy-MM-dd");
+        txtDistributionAmount.Text = "";
         txtDistributionRemarks.Text = "";
     }
 
-
-    // =========================================================
-    // SUMMARY
-    // =========================================================
-
-    private void LoadSummary()
-    {
-        int bachatGatID =
-            RoleHelper.GetBachatGatID();
-
-
-        using (SqlConnection con =
-            DBHelper.GetConnection())
-        {
-            string query = @"
-                SELECT
-                    COUNT(*) AS TotalLoans,
-
-                    SUM(
-                        CASE
-                            WHEN Status = 'Pending'
-                            THEN 1
-                            ELSE 0
-                        END
-                    ) AS PendingLoans,
-
-                    SUM(
-                        CASE
-                            WHEN Status = 'Approved'
-                            THEN 1
-                            ELSE 0
-                        END
-                    ) AS ApprovedLoans,
-
-                    ISNULL(
-                        SUM(LoanAmount),
-                        0
-                    ) AS TotalLoanAmount
-
-                FROM Loans
-
-                WHERE BachatGatID = @BachatGatID";
-
-
-            using (SqlCommand cmd =
-                new SqlCommand(query, con))
-            {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    bachatGatID);
-
-                con.Open();
-
-
-                using (SqlDataReader dr =
-                    cmd.ExecuteReader())
-                {
-                    if (dr.Read())
-                    {
-                        lblTotalLoans.Text =
-                            dr["TotalLoans"].ToString();
-
-                        lblPendingLoans.Text =
-                            dr["PendingLoans"].ToString();
-
-                        lblApprovedLoans.Text =
-                            dr["ApprovedLoans"].ToString();
-
-                        lblTotalLoanAmount.Text =
-                            "₹ "
-                            + Convert.ToDecimal(
-                                dr["TotalLoanAmount"])
-                                .ToString("N2");
-                    }
-                }
-            }
-        }
-    }
-
-
-    // =========================================================
-    // CLEAR LOAN FORM
-    // =========================================================
-
-    protected void btnClear_Click(
-        object sender,
-        EventArgs e)
-    {
-        ClearLoanForm();
-
-        lblMessage.Visible = false;
-    }
-
-
-    private void ClearLoanForm()
-    {
-        hfLoanID.Value = "";
-
-        // Keep the President/Secretary on
-        // their own Bachat Gat.
-        if (ddlBachatGat.Items.Count > 0)
-        {
-            ddlBachatGat.SelectedValue =
-                RoleHelper.GetBachatGatID().ToString();
-        }
-
-
-        LoadMembers();
-
-
-        txtApplicationDate.Text =
-            DateTime.Today.ToString("yyyy-MM-dd");
-
-        txtLoanAmount.Text = "";
-
-        txtInterestRate.Text = "";
-
-        txtLoanTermMonths.Text = "";
-
-        txtEMIAmount.Text = "";
-
-        txtLoanPurpose.Text = "";
-
-        txtRemarks.Text = "";
-
-        ddlLoanStatus.SelectedValue =
-            "Pending";
-
-        btnSave.Text =
-            "Submit Loan Application";
-    }
-
-
-    // =========================================================
-    // MESSAGE
-    // =========================================================
-
     private void ShowMessage(
         string message,
-        string cssClass)
+        bool error)
     {
         lblMessage.Text = message;
+        lblMessage.Visible = true;
 
         lblMessage.CssClass =
-            cssClass;
-
-        lblMessage.Visible = true;
+            error
+                ? "alert alert-danger"
+                : "alert alert-success";
     }
 }

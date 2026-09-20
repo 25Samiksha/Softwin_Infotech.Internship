@@ -7,52 +7,123 @@ public partial class MemberProfile : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("User.aspx");
-            return;
-        }
+        RoleHelper.RequireLogin(this);
 
         if (!IsPostBack)
         {
-            LoadBachatGat();
+            if (RoleHelper.IsMember())
+            {
+                LoadMemberProfileForLoggedInMember();
+            }
+            else
+            {
+                LoadBachatGat();
+            }
         }
     }
 
     private void LoadBachatGat()
     {
-        string query = @"SELECT BachatGatID, GatName FROM BachatGat WHERE Status = 'Active' ORDER BY GatName";
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        using (SqlCommand cmd = new SqlCommand(query, con))
+        try
         {
-            con.Open();
+            string query;
 
-            using (SqlDataReader dr = cmd.ExecuteReader())
+            if (RoleHelper.IsAdmin())
             {
-                ddlBachatGat.Items.Clear();
-                ddlBachatGat.Items.Add(new ListItem("-- Select Bachat Gat --", ""));
+                query = @"
+                    SELECT BachatGatID, GatName
+                    FROM BachatGat
+                    WHERE Status = 'Active'
+                    ORDER BY GatName";
+            }
+            else
+            {
+                query = @"
+                    SELECT BachatGatID, GatName
+                    FROM BachatGat
+                    WHERE BachatGatID = @BachatGatID
+                    AND Status = 'Active'
+                    ORDER BY GatName";
+            }
 
-                while (dr.Read())
+            using (SqlConnection con = DBHelper.GetConnection())
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                if (!RoleHelper.IsAdmin())
                 {
-                    ddlBachatGat.Items.Add(new ListItem(dr["GatName"].ToString(), dr["BachatGatID"].ToString()));
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        RoleHelper.GetBachatGatID());
+                }
+
+                con.Open();
+
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    ddlBachatGat.Items.Clear();
+                    ddlBachatGat.Items.Add(
+                        new ListItem("-- Select Bachat Gat --", ""));
+
+                    while (dr.Read())
+                    {
+                        ddlBachatGat.Items.Add(
+                            new ListItem(
+                                dr["GatName"].ToString(),
+                                dr["BachatGatID"].ToString()));
+                    }
                 }
             }
-        }
 
-        ddlMember.Items.Clear();
-        ddlMember.Items.Add(new ListItem("-- Select Member --", ""));
+            ddlMember.Items.Clear();
+            ddlMember.Items.Add(
+                new ListItem("-- Select Member --", ""));
+
+            if (!RoleHelper.IsAdmin() &&
+                ddlBachatGat.Items.Count > 1)
+            {
+                ddlBachatGat.SelectedValue =
+                    RoleHelper.GetBachatGatID().ToString();
+
+                LoadMembers();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading Bachat Gat: " + ex.Message,
+                System.Drawing.Color.Red);
+        }
     }
 
-    protected void ddlBachatGat_SelectedIndexChanged(object sender, EventArgs e)
+    protected void ddlBachatGat_SelectedIndexChanged(
+        object sender,
+        EventArgs e)
     {
         ddlMember.Items.Clear();
-        ddlMember.Items.Add(new ListItem("-- Select Member --", ""));
+
+        ddlMember.Items.Add(
+            new ListItem("-- Select Member --", ""));
+
         pnlProfile.Visible = false;
         lblMessage.Text = "";
 
         if (ddlBachatGat.SelectedValue == "")
         {
+            return;
+        }
+
+        if (!RoleHelper.IsAdmin() &&
+            Convert.ToInt32(ddlBachatGat.SelectedValue) !=
+            RoleHelper.GetBachatGatID())
+        {
+            ShowMessage(
+                "You cannot view members of another Bachat Gat.",
+                System.Drawing.Color.Red);
+
+            ddlBachatGat.SelectedValue =
+                RoleHelper.GetBachatGatID().ToString();
+
+            LoadMembers();
             return;
         }
 
@@ -61,142 +132,413 @@ public partial class MemberProfile : System.Web.UI.Page
 
     private void LoadMembers()
     {
-        int bachatGatID = Convert.ToInt32(ddlBachatGat.SelectedValue);
+        if (ddlBachatGat.SelectedValue == "")
+        {
+            return;
+        }
 
-        string query = @"SELECT MemberID, MemberName FROM Members WHERE BachatGatID = @BachatGatID AND Status = 'Active' ORDER BY MemberName";
+        int bachatGatID =
+            Convert.ToInt32(ddlBachatGat.SelectedValue);
+
+        if (!RoleHelper.IsAdmin() &&
+            bachatGatID != RoleHelper.GetBachatGatID())
+        {
+            return;
+        }
+
+        string query = @"
+            SELECT MemberID, MemberName
+            FROM Members
+            WHERE BachatGatID = @BachatGatID
+            AND Status = 'Active'
+            ORDER BY MemberName";
 
         using (SqlConnection con = DBHelper.GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, con))
         {
-            cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
             con.Open();
 
             using (SqlDataReader dr = cmd.ExecuteReader())
             {
                 while (dr.Read())
                 {
-                    ddlMember.Items.Add(new ListItem(dr["MemberName"].ToString(), dr["MemberID"].ToString()));
+                    ddlMember.Items.Add(
+                        new ListItem(
+                            dr["MemberName"].ToString(),
+                            dr["MemberID"].ToString()));
                 }
             }
         }
     }
 
-    protected void btnViewProfile_Click(object sender, EventArgs e)
+    protected void btnViewProfile_Click(
+        object sender,
+        EventArgs e)
     {
         lblMessage.Text = "";
         pnlProfile.Visible = false;
 
+        if (RoleHelper.IsMember())
+        {
+            LoadMemberProfileForLoggedInMember();
+            return;
+        }
+
         if (ddlBachatGat.SelectedValue == "")
         {
-            lblMessage.ForeColor = System.Drawing.Color.Red;
-            lblMessage.Text = "Please select Bachat Gat.";
+            ShowMessage(
+                "Please select Bachat Gat.",
+                System.Drawing.Color.Red);
             return;
         }
 
         if (ddlMember.SelectedValue == "")
         {
-            lblMessage.ForeColor = System.Drawing.Color.Red;
-            lblMessage.Text = "Please select Member.";
+            ShowMessage(
+                "Please select Member.",
+                System.Drawing.Color.Red);
             return;
         }
 
-        int memberID = Convert.ToInt32(ddlMember.SelectedValue);
-        int bachatGatID = Convert.ToInt32(ddlBachatGat.SelectedValue);
+        int memberID =
+            Convert.ToInt32(ddlMember.SelectedValue);
 
-        if (!IsMemberInSelectedGat(memberID, bachatGatID))
+        int bachatGatID =
+            Convert.ToInt32(ddlBachatGat.SelectedValue);
+
+        if (!RoleHelper.IsAdmin() &&
+            bachatGatID != RoleHelper.GetBachatGatID())
         {
-            lblMessage.ForeColor = System.Drawing.Color.Red;
-            lblMessage.Text = "Invalid member selection.";
+            ShowMessage(
+                "You cannot view members of another Bachat Gat.",
+                System.Drawing.Color.Red);
             return;
         }
 
-        LoadProfile(memberID);
-    }
-
-    private bool IsMemberInSelectedGat(int memberID, int bachatGatID)
-    {
-        string query = @"SELECT COUNT(*) FROM Members WHERE MemberID = @MemberID AND BachatGatID = @BachatGatID";
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        using (SqlCommand cmd = new SqlCommand(query, con))
+        if (!IsMemberInSelectedGat(
+            memberID,
+            bachatGatID))
         {
-            cmd.Parameters.AddWithValue("@MemberID", memberID);
-            cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
-            con.Open();
-
-            int count = Convert.ToInt32(cmd.ExecuteScalar());
-            return count > 0;
+            ShowMessage(
+                "Invalid member selection.",
+                System.Drawing.Color.Red);
+            return;
         }
+
+        LoadProfile(
+            memberID,
+            bachatGatID);
     }
 
-    private void LoadProfile(int memberID)
+    private void LoadMemberProfileForLoggedInMember()
     {
-        string query = @"
-            SELECT M.MemberID, M.MemberCode, M.MemberName, M.FatherOrHusbandName, M.Gender, M.DateOfBirth, M.Mobile, M.Email, M.Address, M.Village, M.Taluka, M.District, M.JoinDate, M.Occupation, M.BankName, M.BankAccountNumber, M.IFSCCode, M.Status, B.GatName
-            FROM Members M
-            LEFT JOIN BachatGat B ON M.BachatGatID = B.BachatGatID
-            WHERE M.MemberID = @MemberID";
+        int memberID = RoleHelper.GetMemberID();
+        int bachatGatID = RoleHelper.GetBachatGatID();
+
+        if (memberID <= 0 || bachatGatID <= 0)
+        {
+            Session.Clear();
+            Response.Redirect("Login.aspx");
+            return;
+        }
+
+        ddlBachatGat.Items.Clear();
+
+        string gatQuery = @"
+            SELECT BachatGatID, GatName
+            FROM BachatGat
+            WHERE BachatGatID = @BachatGatID
+            AND Status = 'Active'";
 
         using (SqlConnection con = DBHelper.GetConnection())
-        using (SqlCommand cmd = new SqlCommand(query, con))
+        using (SqlCommand cmd = new SqlCommand(gatQuery, con))
         {
-            cmd.Parameters.AddWithValue("@MemberID", memberID);
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
             con.Open();
 
             using (SqlDataReader dr = cmd.ExecuteReader())
             {
                 if (dr.Read())
                 {
-                    lblMemberCode.Text = GetValue(dr["MemberCode"]);
-                    lblMemberName.Text = GetValue(dr["MemberName"]);
-                    lblFatherHusband.Text = GetValue(dr["FatherOrHusbandName"]);
-                    lblGender.Text = GetValue(dr["Gender"]);
-                    lblDOB.Text = FormatDate(dr["DateOfBirth"]);
-                    lblMobile.Text = GetValue(dr["Mobile"]);
-                    lblEmail.Text = GetValue(dr["Email"]);
-                    lblGatName.Text = GetValue(dr["GatName"]);
-                    lblJoinDate.Text = FormatDate(dr["JoinDate"]);
-                    lblOccupation.Text = GetValue(dr["Occupation"]);
-                    lblVillage.Text = GetValue(dr["Village"]);
-                    lblTaluka.Text = GetValue(dr["Taluka"]);
-                    lblDistrict.Text = GetValue(dr["District"]);
-                    lblBankName.Text = GetValue(dr["BankName"]);
-                    lblAccountNumber.Text = GetValue(dr["BankAccountNumber"]);
-                    lblIFSC.Text = GetValue(dr["IFSCCode"]);
-                    lblStatus.Text = GetValue(dr["Status"]);
+                    ddlBachatGat.Items.Add(
+                        new ListItem(
+                            dr["GatName"].ToString(),
+                            dr["BachatGatID"].ToString()));
+                }
+            }
+        }
 
-                    LoadSavings(memberID);
-                    LoadLoans(memberID);
-                    LoadRepayments(memberID);
+        ddlMember.Items.Clear();
+
+        string memberQuery = @"
+            SELECT MemberID, MemberName
+            FROM Members
+            WHERE MemberID = @MemberID
+            AND BachatGatID = @BachatGatID
+            AND UserID = @UserID
+            AND Status = 'Active'";
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlCommand cmd = new SqlCommand(memberQuery, con))
+        {
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            cmd.Parameters.AddWithValue(
+                "@UserID",
+                RoleHelper.GetUserID());
+
+            con.Open();
+
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                if (dr.Read())
+                {
+                    ddlMember.Items.Add(
+                        new ListItem(
+                            dr["MemberName"].ToString(),
+                            dr["MemberID"].ToString()));
+                }
+                else
+                {
+                    ShowMessage(
+                        "Your member profile is not properly assigned.",
+                        System.Drawing.Color.Red);
+                    return;
+                }
+            }
+        }
+
+        LoadProfile(
+            memberID,
+            bachatGatID);
+    }
+
+    private bool IsMemberInSelectedGat(
+        int memberID,
+        int bachatGatID)
+    {
+        string query;
+
+        if (RoleHelper.IsAdmin())
+        {
+            query = @"
+                SELECT COUNT(*)
+                FROM Members
+                WHERE MemberID = @MemberID
+                AND BachatGatID = @BachatGatID";
+        }
+        else
+        {
+            query = @"
+                SELECT COUNT(*)
+                FROM Members
+                WHERE MemberID = @MemberID
+                AND BachatGatID = @BachatGatID";
+        }
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlCommand cmd = new SqlCommand(query, con))
+        {
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            con.Open();
+
+            return Convert.ToInt32(
+                cmd.ExecuteScalar()) > 0;
+        }
+    }
+
+    private void LoadProfile(
+        int memberID,
+        int bachatGatID)
+    {
+        string query = @"
+            SELECT
+                M.MemberID,
+                M.MemberCode,
+                M.MemberName,
+                M.FatherOrHusbandName,
+                M.Gender,
+                M.DateOfBirth,
+                M.Mobile,
+                M.Email,
+                M.Address,
+                M.Village,
+                M.Taluka,
+                M.District,
+                M.JoinDate,
+                M.Occupation,
+                M.BankName,
+                M.BankAccountNumber,
+                M.IFSCCode,
+                M.Status,
+                B.GatName
+            FROM Members M
+            LEFT JOIN BachatGat B
+                ON M.BachatGatID = B.BachatGatID
+            WHERE M.MemberID = @MemberID
+            AND M.BachatGatID = @BachatGatID";
+
+        if (RoleHelper.IsMember())
+        {
+            query += @"
+                AND M.UserID = @UserID";
+        }
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlCommand cmd = new SqlCommand(query, con))
+        {
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            if (RoleHelper.IsMember())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@UserID",
+                    RoleHelper.GetUserID());
+            }
+
+            con.Open();
+
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                if (dr.Read())
+                {
+                    lblMemberCode.Text =
+                        GetValue(dr["MemberCode"]);
+
+                    lblMemberName.Text =
+                        GetValue(dr["MemberName"]);
+
+                    lblFatherHusband.Text =
+                        GetValue(dr["FatherOrHusbandName"]);
+
+                    lblGender.Text =
+                        GetValue(dr["Gender"]);
+
+                    lblDOB.Text =
+                        FormatDate(dr["DateOfBirth"]);
+
+                    lblMobile.Text =
+                        GetValue(dr["Mobile"]);
+
+                    lblEmail.Text =
+                        GetValue(dr["Email"]);
+
+                    lblGatName.Text =
+                        GetValue(dr["GatName"]);
+
+                    lblJoinDate.Text =
+                        FormatDate(dr["JoinDate"]);
+
+                    lblOccupation.Text =
+                        GetValue(dr["Occupation"]);
+
+                    lblVillage.Text =
+                        GetValue(dr["Village"]);
+
+                    lblTaluka.Text =
+                        GetValue(dr["Taluka"]);
+
+                    lblDistrict.Text =
+                        GetValue(dr["District"]);
+
+                    lblBankName.Text =
+                        GetValue(dr["BankName"]);
+
+                    lblAccountNumber.Text =
+                        GetValue(dr["BankAccountNumber"]);
+
+                    lblIFSC.Text =
+                        GetValue(dr["IFSCCode"]);
+
+                    lblStatus.Text =
+                        GetValue(dr["Status"]);
+
+                    LoadSavings(
+                        memberID,
+                        bachatGatID);
+
+                    LoadLoans(
+                        memberID,
+                        bachatGatID);
+
+                    LoadRepayments(
+                        memberID,
+                        bachatGatID);
 
                     pnlProfile.Visible = true;
                 }
                 else
                 {
-                    lblMessage.ForeColor = System.Drawing.Color.Red;
-                    lblMessage.Text = "Profile not found.";
+                    ShowMessage(
+                        "Profile not found.",
+                        System.Drawing.Color.Red);
+
                     pnlProfile.Visible = false;
                 }
             }
         }
     }
 
-    private void LoadSavings(int memberID)
+    private void LoadSavings(
+        int memberID,
+        int bachatGatID)
     {
         string query = @"
-            SELECT SavingID, SavingMonth, Amount, PaymentDate, PaymentMode, ReceiptNumber, Remarks
+            SELECT
+                SavingID,
+                SavingMonth,
+                Amount,
+                PaymentDate,
+                PaymentMode,
+                ReceiptNumber,
+                Remarks
             FROM MemberSavings
             WHERE MemberID = @MemberID
+            AND BachatGatID = @BachatGatID
             ORDER BY PaymentDate DESC";
 
         using (SqlConnection con = DBHelper.GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, con))
         {
-            cmd.Parameters.AddWithValue("@MemberID", memberID);
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
 
-            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            using (SqlDataAdapter da =
+                new SqlDataAdapter(cmd))
             {
                 DataTable dt = new DataTable();
+
                 da.Fill(dt);
 
                 gvSavings.DataSource = dt;
@@ -208,31 +550,56 @@ public partial class MemberProfile : System.Web.UI.Page
                 {
                     if (row["Amount"] != DBNull.Value)
                     {
-                        totalSavings += Convert.ToDecimal(row["Amount"]);
+                        totalSavings +=
+                            Convert.ToDecimal(
+                                row["Amount"]);
                     }
                 }
 
-                lblTotalSavings.Text = totalSavings.ToString("N2");
+                lblTotalSavings.Text =
+                    totalSavings.ToString("N2");
             }
         }
     }
 
-    private void LoadLoans(int memberID)
+    private void LoadLoans(
+        int memberID,
+        int bachatGatID)
     {
         string query = @"
-            SELECT LoanID, ApplicationDate, LoanAmount, ApprovedAmount, InterestRate, LoanPurpose, LoanTermMonths, EMIAmount, ApprovalDate, DistributionDate, Status
+            SELECT
+                LoanID,
+                ApplicationDate,
+                LoanAmount,
+                ApprovedAmount,
+                InterestRate,
+                LoanPurpose,
+                LoanTermMonths,
+                EMIAmount,
+                ApprovalDate,
+                DistributionDate,
+                Status
             FROM Loans
             WHERE MemberID = @MemberID
+            AND BachatGatID = @BachatGatID
             ORDER BY LoanID DESC";
 
         using (SqlConnection con = DBHelper.GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, con))
         {
-            cmd.Parameters.AddWithValue("@MemberID", memberID);
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
 
-            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            using (SqlDataAdapter da =
+                new SqlDataAdapter(cmd))
             {
                 DataTable dt = new DataTable();
+
                 da.Fill(dt);
 
                 gvLoans.DataSource = dt;
@@ -241,23 +608,46 @@ public partial class MemberProfile : System.Web.UI.Page
         }
     }
 
-    private void LoadRepayments(int memberID)
+    private void LoadRepayments(
+        int memberID,
+        int bachatGatID)
     {
         string query = @"
-            SELECT LR.LoanID, LR.EMIInstallmentNo, LR.DueDate, LR.PaymentDate, LR.EMIAmount, LR.PrincipalAmount, LR.InterestAmount, LR.PaidAmount, LR.PaymentMode, LR.ReceiptNumber, LR.Status
+            SELECT
+                LR.LoanID,
+                LR.EMIInstallmentNo,
+                LR.DueDate,
+                LR.PaymentDate,
+                LR.EMIAmount,
+                LR.PrincipalAmount,
+                LR.InterestAmount,
+                LR.PaidAmount,
+                LR.PaymentMode,
+                LR.ReceiptNumber,
+                LR.Status
             FROM LoanRepayments LR
-            INNER JOIN Loans L ON LR.LoanID = L.LoanID
+            INNER JOIN Loans L
+                ON LR.LoanID = L.LoanID
             WHERE L.MemberID = @MemberID
+            AND L.BachatGatID = @BachatGatID
             ORDER BY LR.PaymentDate DESC";
 
         using (SqlConnection con = DBHelper.GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, con))
         {
-            cmd.Parameters.AddWithValue("@MemberID", memberID);
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID);
 
-            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                bachatGatID);
+
+            using (SqlDataAdapter da =
+                new SqlDataAdapter(cmd))
             {
                 DataTable dt = new DataTable();
+
                 da.Fill(dt);
 
                 gvRepayments.DataSource = dt;
@@ -268,12 +658,14 @@ public partial class MemberProfile : System.Web.UI.Page
 
     private string GetValue(object value)
     {
-        if (value == null || value == DBNull.Value)
+        if (value == null ||
+            value == DBNull.Value)
         {
             return "-";
         }
 
-        string text = value.ToString().Trim();
+        string text =
+            value.ToString().Trim();
 
         if (text == "")
         {
@@ -285,11 +677,21 @@ public partial class MemberProfile : System.Web.UI.Page
 
     private string FormatDate(object value)
     {
-        if (value == null || value == DBNull.Value)
+        if (value == null ||
+            value == DBNull.Value)
         {
             return "-";
         }
 
-        return Convert.ToDateTime(value).ToString("dd-MM-yyyy");
+        return Convert.ToDateTime(value)
+            .ToString("dd-MM-yyyy");
+    }
+
+    private void ShowMessage(
+        string message,
+        System.Drawing.Color color)
+    {
+        lblMessage.Text = message;
+        lblMessage.ForeColor = color;
     }
 }

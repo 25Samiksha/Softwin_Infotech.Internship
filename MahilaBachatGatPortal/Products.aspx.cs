@@ -141,7 +141,7 @@ public partial class Products : System.Web.UI.Page
             }
 
             string folderPath =
-                Server.MapPath("~/ProductImages/");
+                Server.MapPath("~/Images/");
 
             if (!Directory.Exists(folderPath))
             {
@@ -156,7 +156,7 @@ public partial class Products : System.Web.UI.Page
 
             fuProductImage.SaveAs(filePath);
 
-            imagePath = "ProductImages/" + fileName;
+            imagePath = "Images/" + fileName;
         }
 
         using (SqlConnection con = DBHelper.GetConnection())
@@ -198,7 +198,7 @@ public partial class Products : System.Web.UI.Page
             else
             {
                 SqlCommand oldImageCmd = new SqlCommand(
-                    "SELECT ProductImage FROM Products " +
+                    "SELECT Images FROM Products " +
                     "WHERE ProductID=@ProductID", con);
 
                 oldImageCmd.Parameters.AddWithValue(

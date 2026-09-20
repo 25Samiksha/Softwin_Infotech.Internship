@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 public partial class SiteMaster : System.Web.UI.MasterPage
 {
@@ -70,9 +70,9 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuSchemes.Visible = false;
         menuApplications.Visible = false;
 
-        menuProductsTitle.Visible = true;
-        menuProducts.Visible = true;
-        menuSales.Visible = true;
+        menuProductsTitle.Visible = false;
+        menuProducts.Visible = false;
+        menuSales.Visible = false;
 
         menuReportsTitle.Visible = false;
         menuReports.Visible = false;
@@ -98,9 +98,9 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuSchemes.Visible = true;
         menuApplications.Visible = true;
 
-        menuProductsTitle.Visible = false;
-        menuProducts.Visible = false;
-        menuSales.Visible = false;
+        menuProductsTitle.Visible = true;
+        menuProducts.Visible = true;
+        menuSales.Visible = true;
 
         menuReportsTitle.Visible = true;
         menuReports.Visible = true;
@@ -138,6 +138,10 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuReportsTitle.Visible = true;
         menuReports.Visible = true;
 
+        menuProductsTitle.Visible = true;
+        menuProducts.Visible = true;
+        menuSales.Visible = true;
+
         lnkUser.HRef = "Dashboard.aspx";
     }
 
@@ -146,14 +150,20 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuMemberAccountTitle.Visible = true;
         menuMyProfile.Visible = true;
 
+        menuSavingsTitle.Visible = true;
+        menuSavings.Visible = true;
+
+        menuLoanTitle.Visible = true;
+        menuLoans.Visible = true;
+        menuRepayment.Visible = true;
+
         menuSchemeTitle.Visible = false;
         menuSchemes.Visible = false;
         menuApplications.Visible = true;
 
         menuProductsTitle.Visible = false;
         menuProducts.Visible = false;
-
-        menuSales.Visible = true;
+        menuSales.Visible = false;
 
         lnkUser.HRef = "Dashboard.aspx";
     }

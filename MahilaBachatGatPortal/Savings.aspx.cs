@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI.WebControls;
@@ -7,7 +7,12 @@ public partial class Savings : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        RoleHelper.RequirePresidentSecretary(this);
+        RoleHelper.RequireLogin(this);
+        if (!RoleHelper.IsPresidentOrSecretary() && !RoleHelper.IsMember())
+        {
+            Response.Redirect("Dashboard.aspx");
+            return;
+        }
 
         if (!IsPostBack)
         {
@@ -117,8 +122,14 @@ public partial class Savings : System.Web.UI.Page
                     FROM Members
                     WHERE
                         BachatGatID = @BachatGatID
-                        AND Status = 'Active'
-                    ORDER BY MemberName";
+                        AND Status = 'Active'";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += " AND MemberID = @MemberID";
+                }
+
+                query += " ORDER BY MemberName";
 
                 SqlCommand cmd =
                     new SqlCommand(query, con);
@@ -127,6 +138,14 @@ public partial class Savings : System.Web.UI.Page
                     "@BachatGatID",
                     RoleHelper.GetBachatGatID()
                 );
+
+                if (RoleHelper.IsMember())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@MemberID",
+                        RoleHelper.GetMemberID()
+                    );
+                }
 
                 SqlDataAdapter da =
                     new SqlDataAdapter(cmd);
@@ -208,6 +227,16 @@ public partial class Savings : System.Web.UI.Page
         {
             ShowMessage(
                 "Please select Member.",
+                System.Drawing.Color.Red
+            );
+
+            return;
+        }
+
+        if (RoleHelper.IsMember() && ddlMember.SelectedValue != RoleHelper.GetMemberID().ToString())
+        {
+            ShowMessage(
+                "You can only manage your own savings.",
                 System.Drawing.Color.Red
             );
 
@@ -457,8 +486,14 @@ public partial class Savings : System.Web.UI.Page
                     INNER JOIN BachatGat B
                         ON S.BachatGatID = B.BachatGatID
                     WHERE
-                        S.BachatGatID = @BachatGatID
-                    ORDER BY S.SavingID DESC";
+                        S.BachatGatID = @BachatGatID";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += " AND S.MemberID = @MemberID";
+                }
+
+                query += " ORDER BY S.SavingID DESC";
 
 
                 SqlCommand cmd =
@@ -471,6 +506,14 @@ public partial class Savings : System.Web.UI.Page
                     "@BachatGatID",
                     RoleHelper.GetBachatGatID()
                 );
+
+                if (RoleHelper.IsMember())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@MemberID",
+                        RoleHelper.GetMemberID()
+                    );
+                }
 
 
                 SqlDataAdapter da =
@@ -534,8 +577,14 @@ public partial class Savings : System.Web.UI.Page
                             M.MemberName LIKE @Search
                             OR M.MemberCode LIKE @Search
                             OR S.ReceiptNumber LIKE @Search
-                        )
-                    ORDER BY S.SavingID DESC";
+                        )";
+
+                if (RoleHelper.IsMember())
+                {
+                    query += " AND S.MemberID = @MemberID";
+                }
+
+                query += " ORDER BY S.SavingID DESC";
 
 
                 SqlCommand cmd =
@@ -555,6 +604,14 @@ public partial class Savings : System.Web.UI.Page
                     "@BachatGatID",
                     RoleHelper.GetBachatGatID()
                 );
+
+                if (RoleHelper.IsMember())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@MemberID",
+                        RoleHelper.GetMemberID()
+                    );
+                }
 
 
                 SqlDataAdapter da =
@@ -621,6 +678,12 @@ public partial class Savings : System.Web.UI.Page
 
     private void DeleteSaving(int savingID)
     {
+        if (RoleHelper.IsMember())
+        {
+            ShowMessage("Members cannot delete savings.", System.Drawing.Color.Red);
+            return;
+        }
+
         try
         {
             using (SqlConnection con =
@@ -707,12 +770,10 @@ public partial class Savings : System.Web.UI.Page
                     FROM MemberSavings
                     WHERE BachatGatID = @BachatGatID";
 
-
                 string countQuery = @"
                     SELECT COUNT(*)
                     FROM MemberSavings
                     WHERE BachatGatID = @BachatGatID";
-
 
                 string monthQuery = @"
                     SELECT ISNULL(SUM(Amount), 0)
@@ -724,6 +785,12 @@ public partial class Savings : System.Web.UI.Page
                         AND YEAR(SavingMonth) =
                             YEAR(GETDATE())";
 
+                if (RoleHelper.IsMember())
+                {
+                    totalQuery += " AND MemberID = @MemberID";
+                    countQuery += " AND MemberID = @MemberID";
+                    monthQuery += " AND MemberID = @MemberID";
+                }
 
                 SqlCommand totalCmd =
                     new SqlCommand(
@@ -743,7 +810,6 @@ public partial class Savings : System.Web.UI.Page
                         con
                     );
 
-
                 totalCmd.Parameters.AddWithValue(
                     "@BachatGatID",
                     RoleHelper.GetBachatGatID()
@@ -758,6 +824,13 @@ public partial class Savings : System.Web.UI.Page
                     "@BachatGatID",
                     RoleHelper.GetBachatGatID()
                 );
+
+                if (RoleHelper.IsMember())
+                {
+                    totalCmd.Parameters.AddWithValue("@MemberID", RoleHelper.GetMemberID());
+                    countCmd.Parameters.AddWithValue("@MemberID", RoleHelper.GetMemberID());
+                    monthCmd.Parameters.AddWithValue("@MemberID", RoleHelper.GetMemberID());
+                }
 
 
                 con.Open();

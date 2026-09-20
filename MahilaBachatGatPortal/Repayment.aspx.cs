@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -6,7 +6,12 @@ public partial class LoanRepayment : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        RoleHelper.RequirePresidentSecretary(this);
+        RoleHelper.RequireLogin(this);
+        if (!RoleHelper.IsPresidentOrSecretary() && !RoleHelper.IsMember())
+        {
+            Response.Redirect("Dashboard.aspx");
+            return;
+        }
         if (!IsPostBack)
         {
             LoadLoans();
@@ -42,13 +47,31 @@ public partial class LoanRepayment : System.Web.UI.Page
                 FROM Loans l
                 INNER JOIN Members m
                     ON l.MemberID = m.MemberID
-                WHERE l.Status = 'Distributed'
-                ORDER BY l.LoanID DESC";
+                WHERE l.Status = 'Distributed'";
+
+            if (RoleHelper.IsMember())
+            {
+                query += " AND l.MemberID = @MemberID";
+            }
+            else
+            {
+                query += " AND l.BachatGatID = @BachatGatID";
+            }
+
+            query += " ORDER BY l.LoanID DESC";
 
 
             using (SqlCommand cmd =
                 new SqlCommand(query, con))
             {
+                if (RoleHelper.IsMember())
+                {
+                    cmd.Parameters.AddWithValue("@MemberID", RoleHelper.GetMemberID());
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+                }
                 con.Open();
 
                 using (SqlDataReader dr =
@@ -581,6 +604,12 @@ public partial class LoanRepayment : System.Web.UI.Page
 
                 memberID =
                     Convert.ToInt32(result);
+
+                if (RoleHelper.IsMember() && memberID != RoleHelper.GetMemberID())
+                {
+                    ShowMessage("You can only manage your own repayments.", "alert alert-danger");
+                    return;
+                }
             }
         }
 

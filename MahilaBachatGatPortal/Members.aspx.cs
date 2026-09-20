@@ -11,1127 +11,766 @@ public partial class Members : System.Web.UI.Page
 
         if (!IsPostBack)
         {
-            LoadBachatGat();
+            LoadBachatGats();
+            LoadFilterBachatGats();
+            LoadFilterVillages();
             LoadMembers();
+            ClearForm();
         }
     }
 
-
-    // =========================================================
-    // LOAD BACHAT GAT
-    // =========================================================
-
-    private void LoadBachatGat()
+    private void LoadBachatGats()
     {
-        try
+        ddlBachatGat.Items.Clear();
+
+        using (SqlConnection con = DBHelper.GetConnection())
         {
-            using (SqlConnection con = DBHelper.GetConnection())
-            {
-                string query;
-
-                // ADMIN
-                if (RoleHelper.IsAdmin())
-                {
-                    query = @"
-                        SELECT
-                            BachatGatID,
-                            GatName
-                        FROM BachatGat
-                        WHERE Status = 'Active'
-                        ORDER BY GatName";
-                }
-
-                // PRESIDENT / SECRETARY
-                else
-                {
-                    query = @"
-                        SELECT
-                            BachatGatID,
-                            GatName
-                        FROM BachatGat
-                        WHERE BachatGatID = @BachatGatID
-                        AND Status = 'Active'
-                        ORDER BY GatName";
-                }
-
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
-                {
-                    if (!RoleHelper.IsAdmin())
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@BachatGatID",
-                            RoleHelper.GetBachatGatID());
-                    }
-
-                    con.Open();
-
-                    using (SqlDataReader dr =
-                        cmd.ExecuteReader())
-                    {
-                        ddlBachatGat.DataSource = dr;
-
-                        ddlBachatGat.DataTextField =
-                            "GatName";
-
-                        ddlBachatGat.DataValueField =
-                            "BachatGatID";
-
-                        ddlBachatGat.DataBind();
-                    }
-                }
-            }
-
-
-            // ADMIN
-            // Add Select option
+            string query;
 
             if (RoleHelper.IsAdmin())
             {
-                ddlBachatGat.Items.Insert(
-                    0,
-                    new ListItem(
-                        "-- Select Bachat Gat --",
-                        ""));
+                query = @"SELECT BachatGatID, GatName
+                          FROM BachatGat
+                          WHERE Status = 'Active'
+                          ORDER BY GatName";
             }
             else
             {
-                // PRESIDENT / SECRETARY
-                // Automatically select their Gat
-
-                if (ddlBachatGat.Items.Count > 0)
-                {
-                    ddlBachatGat.SelectedValue =
-                        RoleHelper.GetBachatGatID().ToString();
-                }
+                query = @"SELECT BachatGatID, GatName
+                          FROM BachatGat
+                          WHERE Status = 'Active'
+                          AND BachatGatID = @BachatGatID
+                          ORDER BY GatName";
             }
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+
+            con.Open();
+
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            ddlBachatGat.DataSource = dr;
+            ddlBachatGat.DataTextField = "GatName";
+            ddlBachatGat.DataValueField = "BachatGatID";
+            ddlBachatGat.DataBind();
+
+            dr.Close();
         }
-        catch (Exception ex)
+
+        if (ddlBachatGat.Items.Count > 0)
         {
-            ShowMessage(
-                "Error loading Bachat Gat: " + ex.Message,
-                System.Drawing.Color.Red);
+            ddlBachatGat.SelectedIndex = 0;
         }
     }
 
+    private void LoadFilterBachatGats()
+    {
+        ddlFilterBachatGat.Items.Clear();
 
+        ddlFilterBachatGat.Items.Add(
+            new ListItem("All Bachat Gats", "")
+        );
 
-    // =========================================================
-    // LOAD MEMBERS
-    // =========================================================
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query;
+
+            if (RoleHelper.IsAdmin())
+            {
+                query = @"SELECT BachatGatID, GatName
+                          FROM BachatGat
+                          WHERE Status = 'Active'
+                          ORDER BY GatName";
+            }
+            else
+            {
+                query = @"SELECT BachatGatID, GatName
+                          FROM BachatGat
+                          WHERE Status = 'Active'
+                          AND BachatGatID = @BachatGatID
+                          ORDER BY GatName";
+            }
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+
+            con.Open();
+
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                ddlFilterBachatGat.Items.Add(
+                    new ListItem(
+                        dr["GatName"].ToString(),
+                        dr["BachatGatID"].ToString()
+                    )
+                );
+            }
+
+            dr.Close();
+        }
+    }
+
+    private void LoadFilterVillages()
+    {
+        ddlFilterVillage.Items.Clear();
+
+        ddlFilterVillage.Items.Add(
+            new ListItem("All Villages", "")
+        );
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT DISTINCT Village
+                FROM Members
+                WHERE Village IS NOT NULL
+                AND Village <> ''";
+
+            if (!RoleHelper.IsAdmin())
+            {
+                query += " AND BachatGatID = @BachatGatID";
+            }
+
+            query += " ORDER BY Village";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+
+            con.Open();
+
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                ddlFilterVillage.Items.Add(
+                    new ListItem(
+                        dr["Village"].ToString(),
+                        dr["Village"].ToString()
+                    )
+                );
+            }
+
+            dr.Close();
+        }
+    }
 
     private void LoadMembers()
     {
-        try
+        using (SqlConnection con = DBHelper.GetConnection())
         {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
+            string query = @"
+                SELECT
+                    M.MemberID,
+                    M.MemberName,
+                    B.GatName,
+                    M.Mobile,
+                    M.Village,
+                    M.Status
+                FROM Members M
+                INNER JOIN BachatGat B
+                    ON M.BachatGatID = B.BachatGatID
+                WHERE 1 = 1";
+
+            if (!RoleHelper.IsAdmin())
             {
-                string query;
-
-
-                // ADMIN
-                if (RoleHelper.IsAdmin())
-                {
-                    query = @"
-                        SELECT
-                            M.MemberID,
-                            M.MemberCode,
-                            M.MemberName,
-                            B.GatName,
-                            M.Mobile,
-                            M.Village,
-                            M.Status
-                        FROM Members M
-                        INNER JOIN BachatGat B
-                            ON M.BachatGatID =
-                               B.BachatGatID
-                        ORDER BY M.MemberID DESC";
-                }
-
-                // PRESIDENT / SECRETARY
-                else
-                {
-                    query = @"
-                        SELECT
-                            M.MemberID,
-                            M.MemberCode,
-                            M.MemberName,
-                            B.GatName,
-                            M.Mobile,
-                            M.Village,
-                            M.Status
-                        FROM Members M
-                        INNER JOIN BachatGat B
-                            ON M.BachatGatID =
-                               B.BachatGatID
-                        WHERE M.BachatGatID =
-                              @BachatGatID
-                        ORDER BY M.MemberID DESC";
-                }
-
-
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
-                {
-                    if (!RoleHelper.IsAdmin())
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@BachatGatID",
-                            RoleHelper.GetBachatGatID());
-                    }
-
-
-                    SqlDataAdapter da =
-                        new SqlDataAdapter(cmd);
-
-                    DataTable dt =
-                        new DataTable();
-
-                    da.Fill(dt);
-
-                    gvMembers.DataSource = dt;
-
-                    gvMembers.DataBind();
-                }
+                query += " AND M.BachatGatID = @BachatGatID";
             }
-        }
-        catch (Exception ex)
-        {
-            ShowMessage(
-                "Error loading members: " + ex.Message,
-                System.Drawing.Color.Red);
+
+            query += " ORDER BY M.MemberID DESC";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+
+            da.Fill(dt);
+
+            gvMembers.DataSource = dt;
+            gvMembers.DataBind();
         }
     }
 
-
-
-    // =========================================================
-    // SAVE MEMBER
-    // =========================================================
-
-    protected void btnSave_Click(
-        object sender,
-        EventArgs e)
+    protected void btnSave_Click(object sender, EventArgs e)
     {
-        // -----------------------------------------
-        // VALIDATION
-        // -----------------------------------------
+        string memberName = txtMemberName.Text.Trim();
+        string joinDate = txtJoinDate.Text.Trim();
 
         if (ddlBachatGat.SelectedValue == "")
         {
-            ShowMessage(
-                "Please select Bachat Gat.",
-                System.Drawing.Color.Red);
-
+            ShowMessage("Please select Bachat Gat.", true);
             return;
         }
 
-
-        if (string.IsNullOrWhiteSpace(
-            txtMemberCode.Text))
+        if (memberName == "")
         {
-            ShowMessage(
-                "Please enter Member Code.",
-                System.Drawing.Color.Red);
-
+            ShowMessage("Please enter member name.", true);
             return;
         }
 
-
-        if (string.IsNullOrWhiteSpace(
-            txtMemberName.Text))
+        if (joinDate == "")
         {
-            ShowMessage(
-                "Please enter Member Name.",
-                System.Drawing.Color.Red);
-
+            ShowMessage("Please enter join date.", true);
             return;
         }
 
+        int selectedGatID =
+            Convert.ToInt32(ddlBachatGat.SelectedValue);
 
-        if (string.IsNullOrWhiteSpace(
-            txtJoinDate.Text))
+        if (!RoleHelper.IsAdmin() &&
+            selectedGatID != RoleHelper.GetBachatGatID())
         {
             ShowMessage(
-                "Please select Join Date.",
-                System.Drawing.Color.Red);
-
+                "You can manage members only from your assigned Bachat Gat.",
+                true
+            );
             return;
         }
 
+        int memberID = 0;
 
-        // -----------------------------------------
-        // DATE VALIDATION
-        // -----------------------------------------
-
-        DateTime joinDate;
-
-        if (!DateTime.TryParse(
-            txtJoinDate.Text.Trim(),
-            out joinDate))
+        if (hfMemberID.Value != "")
         {
-            ShowMessage(
-                "Please enter a valid Join Date.",
-                System.Drawing.Color.Red);
-
-            return;
+            memberID = Convert.ToInt32(hfMemberID.Value);
         }
 
-
-        DateTime? dateOfBirth = null;
-
-        if (!string.IsNullOrWhiteSpace(
-            txtDOB.Text))
+        using (SqlConnection con = DBHelper.GetConnection())
         {
-            DateTime dob;
+            con.Open();
 
-            if (!DateTime.TryParse(
-                txtDOB.Text.Trim(),
-                out dob))
-            {
-                ShowMessage(
-                    "Please enter a valid Date of Birth.",
-                    System.Drawing.Color.Red);
-
-                return;
-            }
-
-            dateOfBirth = dob;
-        }
-
-
-        try
-        {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
-            {
-                con.Open();
-
-
-                // -----------------------------------------
-                // SECURITY CHECK
-                // -----------------------------------------
-
-                int selectedBachatGatID =
-                    Convert.ToInt32(
-                        ddlBachatGat.SelectedValue);
-
-
-                // PRESIDENT / SECRETARY
-                // can ONLY use their own Gat
-
-                if (!RoleHelper.IsAdmin())
-                {
-                    if (selectedBachatGatID !=
-                        RoleHelper.GetBachatGatID())
-                    {
-                        ShowMessage(
-                            "You cannot manage members of another Bachat Gat.",
-                            System.Drawing.Color.Red);
-
-                        return;
-                    }
-                }
-
-
-                // -----------------------------------------
-                // UPDATE
-                // -----------------------------------------
-
-                if (!string.IsNullOrEmpty(
-                    hfMemberID.Value))
-                {
-                    string query;
-
-
-                    // ADMIN
-                    if (RoleHelper.IsAdmin())
-                    {
-                        query = @"
-                            UPDATE Members
-                            SET
-                                BachatGatID =
-                                    @BachatGatID,
-                                MemberCode =
-                                    @MemberCode,
-                                MemberName =
-                                    @MemberName,
-                                FatherOrHusbandName =
-                                    @FatherOrHusbandName,
-                                DateOfBirth =
-                                    @DateOfBirth,
-                                Mobile =
-                                    @Mobile,
-                                Email =
-                                    @Email,
-                                Address =
-                                    @Address,
-                                Village =
-                                    @Village,
-                                Taluka =
-                                    @Taluka,
-                                District =
-                                    @District,
-                                JoinDate =
-                                    @JoinDate,
-                                Occupation =
-                                    @Occupation,
-                                Status =
-                                    @Status
-                            WHERE MemberID =
-                                  @MemberID";
-                    }
-
-                    // PRESIDENT / SECRETARY
-                    else
-                    {
-                        query = @"
-                            UPDATE Members
-                            SET
-                                BachatGatID =
-                                    @BachatGatID,
-                                MemberCode =
-                                    @MemberCode,
-                                MemberName =
-                                    @MemberName,
-                                FatherOrHusbandName =
-                                    @FatherOrHusbandName,
-                                DateOfBirth =
-                                    @DateOfBirth,
-                                Mobile =
-                                    @Mobile,
-                                Email =
-                                    @Email,
-                                Address =
-                                    @Address,
-                                Village =
-                                    @Village,
-                                Taluka =
-                                    @Taluka,
-                                District =
-                                    @District,
-                                JoinDate =
-                                    @JoinDate,
-                                Occupation =
-                                    @Occupation,
-                                Status =
-                                    @Status
-                            WHERE MemberID =
-                                  @MemberID
-                            AND BachatGatID =
-                                  @BachatGatID";
-                    }
-
-
-                    using (SqlCommand cmd =
-                        new SqlCommand(query, con))
-                    {
-                        AddMemberParameters(
-                            cmd,
-                            joinDate,
-                            dateOfBirth);
-
-                        cmd.Parameters.AddWithValue(
-                            "@MemberID",
-                            Convert.ToInt32(
-                                hfMemberID.Value));
-
-
-                        int rows =
-                            cmd.ExecuteNonQuery();
-
-
-                        if (rows == 0)
-                        {
-                            ShowMessage(
-                                "Member not found or you do not have permission to update this member.",
-                                System.Drawing.Color.Red);
-
-                            return;
-                        }
-                    }
-
-
-                    ShowMessage(
-                        "Member updated successfully!",
-                        System.Drawing.Color.Green);
-                }
-
-
-                // -----------------------------------------
-                // INSERT
-                // -----------------------------------------
-
-                else
-                {
-                    string query = @"
-                        INSERT INTO Members
-                        (
-                            BachatGatID,
-                            MemberCode,
-                            MemberName,
-                            FatherOrHusbandName,
-                            Gender,
-                            DateOfBirth,
-                            Mobile,
-                            Email,
-                            Address,
-                            Village,
-                            Taluka,
-                            District,
-                            JoinDate,
-                            Occupation,
-                            Status,
-                            CreatedDate
-                        )
-                        VALUES
-                        (
-                            @BachatGatID,
-                            @MemberCode,
-                            @MemberName,
-                            @FatherOrHusbandName,
-                            'Female',
-                            @DateOfBirth,
-                            @Mobile,
-                            @Email,
-                            @Address,
-                            @Village,
-                            @Taluka,
-                            @District,
-                            @JoinDate,
-                            @Occupation,
-                            @Status,
-                            GETDATE()
-                        )";
-
-
-                    using (SqlCommand cmd =
-                        new SqlCommand(query, con))
-                    {
-                        AddMemberParameters(
-                            cmd,
-                            joinDate,
-                            dateOfBirth);
-
-                        cmd.ExecuteNonQuery();
-                    }
-
-
-                    ShowMessage(
-                        "Member added successfully!",
-                        System.Drawing.Color.Green);
-                }
-            }
-
-
-            ClearForm();
-
-            LoadMembers();
-        }
-        catch (Exception ex)
-        {
-            ShowMessage(
-                "Error saving member: " + ex.Message,
-                System.Drawing.Color.Red);
-        }
-    }
-
-
-
-    // =========================================================
-    // ADD PARAMETERS
-    // =========================================================
-
-    private void AddMemberParameters(
-        SqlCommand cmd,
-        DateTime joinDate,
-        DateTime? dateOfBirth)
-    {
-        cmd.Parameters.AddWithValue(
-            "@BachatGatID",
-            Convert.ToInt32(
-                ddlBachatGat.SelectedValue));
-
-
-        cmd.Parameters.AddWithValue(
-            "@MemberCode",
-            txtMemberCode.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@MemberName",
-            txtMemberName.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@FatherOrHusbandName",
-            txtFatherHusband.Text.Trim());
-
-
-        if (dateOfBirth.HasValue)
-        {
-            cmd.Parameters.AddWithValue(
-                "@DateOfBirth",
-                dateOfBirth.Value);
-        }
-        else
-        {
-            cmd.Parameters.AddWithValue(
-                "@DateOfBirth",
-                DBNull.Value);
-        }
-
-
-        cmd.Parameters.AddWithValue(
-            "@Mobile",
-            txtMobile.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@Email",
-            txtEmail.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@Address",
-            txtAddress.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@Village",
-            txtVillage.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@Taluka",
-            txtTaluka.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@District",
-            txtDistrict.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@JoinDate",
-            joinDate);
-
-
-        cmd.Parameters.AddWithValue(
-            "@Occupation",
-            txtOccupation.Text.Trim());
-
-
-        cmd.Parameters.AddWithValue(
-            "@Status",
-            ddlStatus.SelectedValue);
-    }
-
-
-
-    // =========================================================
-    // SEARCH MEMBER
-    // =========================================================
-
-    protected void btnSearch_Click(
-        object sender,
-        EventArgs e)
-    {
-        try
-        {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
+            if (memberID > 0)
             {
                 string query;
 
-
-                // ADMIN
                 if (RoleHelper.IsAdmin())
                 {
                     query = @"
-                        SELECT
-                            M.MemberID,
-                            M.MemberCode,
-                            M.MemberName,
-                            B.GatName,
-                            M.Mobile,
-                            M.Village,
-                            M.Status
-                        FROM Members M
-                        INNER JOIN BachatGat B
-                            ON M.BachatGatID =
-                               B.BachatGatID
-                        WHERE
-                            M.MemberName LIKE @Search
-                            OR M.Mobile LIKE @Search
-                            OR M.MemberCode LIKE @Search
-                        ORDER BY M.MemberID DESC";
+                        UPDATE Members SET
+                            BachatGatID = @BachatGatID,
+                            MemberName = @MemberName,
+                            FatherOrHusbandName = @FatherOrHusbandName,
+                            DateOfBirth = @DateOfBirth,
+                            Mobile = @Mobile,
+                            Email = @Email,
+                            Address = @Address,
+                            Village = @Village,
+                            Taluka = @Taluka,
+                            District = @District,
+                            JoinDate = @JoinDate,
+                            Occupation = @Occupation,
+                            Status = @Status
+                        WHERE MemberID = @MemberID";
                 }
-
-                // PRESIDENT / SECRETARY
                 else
                 {
                     query = @"
-                        SELECT
-                            M.MemberID,
-                            M.MemberCode,
-                            M.MemberName,
-                            B.GatName,
-                            M.Mobile,
-                            M.Village,
-                            M.Status
-                        FROM Members M
-                        INNER JOIN BachatGat B
-                            ON M.BachatGatID =
-                               B.BachatGatID
-                        WHERE
-                            M.BachatGatID =
-                                @BachatGatID
-                            AND
-                            (
-                                M.MemberName LIKE @Search
-                                OR M.Mobile LIKE @Search
-                                OR M.MemberCode LIKE @Search
-                            )
-                        ORDER BY M.MemberID DESC";
+                        UPDATE Members SET
+                            MemberName = @MemberName,
+                            FatherOrHusbandName = @FatherOrHusbandName,
+                            DateOfBirth = @DateOfBirth,
+                            Mobile = @Mobile,
+                            Email = @Email,
+                            Address = @Address,
+                            Village = @Village,
+                            Taluka = @Taluka,
+                            District = @District,
+                            JoinDate = @JoinDate,
+                            Occupation = @Occupation,
+                            Status = @Status
+                        WHERE MemberID = @MemberID
+                        AND BachatGatID = @BachatGatID";
                 }
 
+                SqlCommand cmd = new SqlCommand(query, con);
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
+                cmd.Parameters.AddWithValue("@MemberID", memberID);
+                cmd.Parameters.AddWithValue("@BachatGatID", selectedGatID);
+                cmd.Parameters.AddWithValue("@MemberName", memberName);
+                cmd.Parameters.AddWithValue("@FatherOrHusbandName", GetValue(txtFatherOrHusbandName.Text));
+                cmd.Parameters.AddWithValue("@DateOfBirth", GetDate(txtDateOfBirth.Text));
+                cmd.Parameters.AddWithValue("@Mobile", GetValue(txtMobile.Text));
+                cmd.Parameters.AddWithValue("@Email", GetValue(txtEmail.Text));
+                cmd.Parameters.AddWithValue("@Address", GetValue(txtAddress.Text));
+                cmd.Parameters.AddWithValue("@Village", GetValue(txtVillage.Text));
+                cmd.Parameters.AddWithValue("@Taluka", GetValue(txtTaluka.Text));
+                cmd.Parameters.AddWithValue("@District", GetValue(txtDistrict.Text));
+                cmd.Parameters.AddWithValue("@JoinDate", Convert.ToDateTime(txtJoinDate.Text));
+                cmd.Parameters.AddWithValue("@Occupation", GetValue(txtOccupation.Text));
+                cmd.Parameters.AddWithValue("@Status", ddlStatus.SelectedValue);
+
+                int rows = cmd.ExecuteNonQuery();
+
+                if (rows > 0)
                 {
-                    cmd.Parameters.AddWithValue(
-                        "@Search",
-                        "%" +
-                        txtSearch.Text.Trim() +
-                        "%");
-
-
-                    if (!RoleHelper.IsAdmin())
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@BachatGatID",
-                            RoleHelper.GetBachatGatID());
-                    }
-
-
-                    SqlDataAdapter da =
-                        new SqlDataAdapter(cmd);
-
-                    DataTable dt =
-                        new DataTable();
-
-                    da.Fill(dt);
-
-                    gvMembers.DataSource = dt;
-
-                    gvMembers.DataBind();
+                    ShowMessage("Member updated successfully.", false);
+                }
+                else
+                {
+                    ShowMessage("Member was not found or access was denied.", true);
                 }
             }
+            else
+            {
+                string insertQuery = @"
+                    INSERT INTO Members
+                    (
+                        BachatGatID,
+                        MemberName,
+                        FatherOrHusbandName,
+                        Gender,
+                        DateOfBirth,
+                        Mobile,
+                        Email,
+                        Address,
+                        Village,
+                        Taluka,
+                        District,
+                        JoinDate,
+                        Occupation,
+                        Status,
+                        CreatedDate
+                    )
+                    VALUES
+                    (
+                        @BachatGatID,
+                        @MemberName,
+                        @FatherOrHusbandName,
+                        'Female',
+                        @DateOfBirth,
+                        @Mobile,
+                        @Email,
+                        @Address,
+                        @Village,
+                        @Taluka,
+                        @District,
+                        @JoinDate,
+                        @Occupation,
+                        @Status,
+                        GETDATE()
+                    )";
+
+                SqlCommand cmd =
+                    new SqlCommand(insertQuery, con);
+
+                cmd.Parameters.AddWithValue("@BachatGatID", selectedGatID);
+                cmd.Parameters.AddWithValue("@MemberName", memberName);
+                cmd.Parameters.AddWithValue("@FatherOrHusbandName", GetValue(txtFatherOrHusbandName.Text));
+                cmd.Parameters.AddWithValue("@DateOfBirth", GetDate(txtDateOfBirth.Text));
+                cmd.Parameters.AddWithValue("@Mobile", GetValue(txtMobile.Text));
+                cmd.Parameters.AddWithValue("@Email", GetValue(txtEmail.Text));
+                cmd.Parameters.AddWithValue("@Address", GetValue(txtAddress.Text));
+                cmd.Parameters.AddWithValue("@Village", GetValue(txtVillage.Text));
+                cmd.Parameters.AddWithValue("@Taluka", GetValue(txtTaluka.Text));
+                cmd.Parameters.AddWithValue("@District", GetValue(txtDistrict.Text));
+                cmd.Parameters.AddWithValue("@JoinDate", Convert.ToDateTime(txtJoinDate.Text));
+                cmd.Parameters.AddWithValue("@Occupation", GetValue(txtOccupation.Text));
+                cmd.Parameters.AddWithValue("@Status", ddlStatus.SelectedValue);
+
+                cmd.ExecuteNonQuery();
+
+                ShowMessage("Member added successfully.", false);
+            }
         }
-        catch (Exception ex)
+
+        LoadMembers();
+        ClearForm();
+        LoadFilterVillages();
+    }
+
+    protected void btnClear_Click(object sender, EventArgs e)
+    {
+        ClearForm();
+    }
+
+    private void ClearForm()
+    {
+        hfMemberID.Value = "";
+        txtMemberName.Text = "";
+        txtFatherOrHusbandName.Text = "";
+        txtDateOfBirth.Text = "";
+        txtMobile.Text = "";
+        txtEmail.Text = "";
+        txtAddress.Text = "";
+        txtVillage.Text = "";
+        txtTaluka.Text = "";
+        txtDistrict.Text = "";
+        txtJoinDate.Text = "";
+        txtOccupation.Text = "";
+        ddlStatus.SelectedValue = "Active";
+        lblMessage.Text = "";
+
+        if (!RoleHelper.IsAdmin() &&
+            ddlBachatGat.Items.Count > 0)
         {
-            ShowMessage(
-                "Search error: " + ex.Message,
-                System.Drawing.Color.Red);
+            ddlBachatGat.SelectedValue =
+                RoleHelper.GetBachatGatID().ToString();
         }
     }
 
+    protected void btnSearch_Click(object sender, EventArgs e)
+    {
+        string search = txtSearch.Text.Trim();
+        string filterBachatGat = ddlFilterBachatGat.SelectedValue;
+        string filterVillage = ddlFilterVillage.SelectedValue;
 
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT
+                    M.MemberID,
+                    M.MemberName,
+                    B.GatName,
+                    M.Mobile,
+                    M.Village,
+                    M.Status
+                FROM Members M
+                INNER JOIN BachatGat B
+                    ON M.BachatGatID = B.BachatGatID
+                WHERE 1 = 1";
 
-    // =========================================================
-    // GRID COMMAND
-    // =========================================================
+            if (search != "")
+            {
+                query += @"
+                    AND
+                    (
+                        M.MemberName LIKE @Search
+                        OR M.Mobile LIKE @Search
+                        OR M.Village LIKE @Search
+                    )";
+            }
+
+            if (!RoleHelper.IsAdmin())
+            {
+                query += " AND M.BachatGatID = @UserBachatGatID";
+            }
+            else if (filterBachatGat != "")
+            {
+                query += " AND M.BachatGatID = @FilterBachatGatID";
+            }
+
+            if (filterVillage != "")
+            {
+                query += " AND M.Village = @Village";
+            }
+
+            query += " ORDER BY M.MemberID DESC";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (search != "")
+            {
+                cmd.Parameters.AddWithValue(
+                    "@Search",
+                    "%" + search + "%"
+                );
+            }
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@UserBachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+            else if (filterBachatGat != "")
+            {
+                cmd.Parameters.AddWithValue(
+                    "@FilterBachatGatID",
+                    Convert.ToInt32(filterBachatGat)
+                );
+            }
+
+            if (filterVillage != "")
+            {
+                cmd.Parameters.AddWithValue(
+                    "@Village",
+                    filterVillage
+                );
+            }
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(cmd);
+
+            DataTable dt =
+                new DataTable();
+
+            da.Fill(dt);
+
+            gvMembers.DataSource = dt;
+            gvMembers.DataBind();
+        }
+    }
+
+    protected void btnShowAll_Click(object sender, EventArgs e)
+    {
+        txtSearch.Text = "";
+
+        if (ddlFilterBachatGat.Items.Count > 0)
+        {
+            ddlFilterBachatGat.SelectedIndex = 0;
+        }
+
+        if (ddlFilterVillage.Items.Count > 0)
+        {
+            ddlFilterVillage.SelectedIndex = 0;
+        }
+
+        LoadMembers();
+    }
 
     protected void gvMembers_RowCommand(
         object sender,
         GridViewCommandEventArgs e)
     {
-        int memberID;
-
-
-        if (!int.TryParse(
-            e.CommandArgument.ToString(),
-            out memberID))
-        {
-            ShowMessage(
-                "Invalid member ID.",
-                System.Drawing.Color.Red);
-
-            return;
-        }
-
+        int memberID =
+            Convert.ToInt32(e.CommandArgument);
 
         if (e.CommandName == "EditMember")
         {
             LoadMemberForEdit(memberID);
         }
-
-
-        if (e.CommandName == "DeleteMember")
+        else if (e.CommandName == "DeleteMember")
         {
             DeactivateMember(memberID);
         }
     }
 
-
-
-    // =========================================================
-    // LOAD MEMBER FOR EDIT
-    // =========================================================
-
-    private void LoadMemberForEdit(
-        int memberID)
+    private void LoadMemberForEdit(int memberID)
     {
-        try
+        using (SqlConnection con = DBHelper.GetConnection())
         {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
+            string query = @"
+                SELECT
+                    MemberID,
+                    BachatGatID,
+                    MemberName,
+                    FatherOrHusbandName,
+                    DateOfBirth,
+                    Mobile,
+                    Email,
+                    Address,
+                    Village,
+                    Taluka,
+                    District,
+                    JoinDate,
+                    Occupation,
+                    Status
+                FROM Members
+                WHERE MemberID = @MemberID";
+
+            if (!RoleHelper.IsAdmin())
             {
-                string query;
-
-
-                // ADMIN
-                if (RoleHelper.IsAdmin())
-                {
-                    query = @"
-                        SELECT *
-                        FROM Members
-                        WHERE MemberID =
-                              @MemberID";
-                }
-
-                // PRESIDENT / SECRETARY
-                else
-                {
-                    query = @"
-                        SELECT *
-                        FROM Members
-                        WHERE MemberID =
-                              @MemberID
-                        AND BachatGatID =
-                              @BachatGatID";
-                }
-
-
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@MemberID",
-                        memberID);
-
-
-                    if (!RoleHelper.IsAdmin())
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@BachatGatID",
-                            RoleHelper.GetBachatGatID());
-                    }
-
-
-                    con.Open();
-
-
-                    using (SqlDataReader dr =
-                        cmd.ExecuteReader())
-                    {
-                        if (dr.Read())
-                        {
-                            hfMemberID.Value =
-                                dr["MemberID"].ToString();
-
-
-                            ddlBachatGat.SelectedValue =
-                                dr["BachatGatID"].ToString();
-
-
-                            txtMemberCode.Text =
-                                dr["MemberCode"].ToString();
-
-
-                            txtMemberName.Text =
-                                dr["MemberName"].ToString();
-
-
-                            txtFatherHusband.Text =
-                                dr[
-                                    "FatherOrHusbandName"
-                                ].ToString();
-
-
-                            if (dr["DateOfBirth"] !=
-                                DBNull.Value)
-                            {
-                                txtDOB.Text =
-                                    Convert.ToDateTime(
-                                        dr["DateOfBirth"])
-                                    .ToString(
-                                        "yyyy-MM-dd");
-                            }
-                            else
-                            {
-                                txtDOB.Text = "";
-                            }
-
-
-                            txtMobile.Text =
-                                dr["Mobile"].ToString();
-
-
-                            txtEmail.Text =
-                                dr["Email"].ToString();
-
-
-                            txtAddress.Text =
-                                dr["Address"].ToString();
-
-
-                            txtVillage.Text =
-                                dr["Village"].ToString();
-
-
-                            txtTaluka.Text =
-                                dr["Taluka"].ToString();
-
-
-                            txtDistrict.Text =
-                                dr["District"].ToString();
-
-
-                            if (dr["JoinDate"] !=
-                                DBNull.Value)
-                            {
-                                txtJoinDate.Text =
-                                    Convert.ToDateTime(
-                                        dr["JoinDate"])
-                                    .ToString(
-                                        "yyyy-MM-dd");
-                            }
-
-
-                            txtOccupation.Text =
-                                dr["Occupation"].ToString();
-
-
-                            ddlStatus.SelectedValue =
-                                dr["Status"].ToString();
-
-
-                            btnSave.Text =
-                                "Update Member";
-
-
-                            ShowMessage(
-                                "Member loaded for editing.",
-                                System.Drawing.Color.Blue);
-                        }
-                        else
-                        {
-                            ShowMessage(
-                                "Member not found or you do not have permission to edit this member.",
-                                System.Drawing.Color.Red);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowMessage(
-                "Error loading member: " +
-                ex.Message,
-                System.Drawing.Color.Red);
-        }
-    }
-
-
-
-    // =========================================================
-    // DEACTIVATE MEMBER
-    // =========================================================
-
-    private void DeactivateMember(
-        int memberID)
-    {
-        try
-        {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
-            {
-                string query;
-
-
-                // ADMIN
-                if (RoleHelper.IsAdmin())
-                {
-                    query = @"
-                        UPDATE Members
-                        SET Status = 'Inactive'
-                        WHERE MemberID =
-                              @MemberID";
-                }
-
-                // PRESIDENT / SECRETARY
-                else
-                {
-                    query = @"
-                        UPDATE Members
-                        SET Status = 'Inactive'
-                        WHERE MemberID =
-                              @MemberID
-                        AND BachatGatID =
-                              @BachatGatID";
-                }
-
-
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@MemberID",
-                        memberID);
-
-
-                    if (!RoleHelper.IsAdmin())
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@BachatGatID",
-                            RoleHelper.GetBachatGatID());
-                    }
-
-
-                    con.Open();
-
-
-                    int rows =
-                        cmd.ExecuteNonQuery();
-
-
-                    if (rows == 0)
-                    {
-                        ShowMessage(
-                            "Member not found or you do not have permission to deactivate this member.",
-                            System.Drawing.Color.Red);
-
-                        return;
-                    }
-                }
-
-
-                ShowMessage(
-                    "Member deactivated successfully!",
-                    System.Drawing.Color.Green);
+                query += " AND BachatGatID = @BachatGatID";
             }
 
+            SqlCommand cmd =
+                new SqlCommand(query, con);
 
-            ClearForm();
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID
+            );
 
-            LoadMembers();
-        }
-        catch (Exception ex)
-        {
-            ShowMessage(
-                "Error deactivating member: " +
-                ex.Message,
-                System.Drawing.Color.Red);
-        }
-    }
-
-
-
-    // =========================================================
-    // CLEAR BUTTON
-    // =========================================================
-
-    protected void btnClear_Click(
-        object sender,
-        EventArgs e)
-    {
-        ClearForm();
-    }
-
-
-
-    // =========================================================
-    // CLEAR FORM
-    // =========================================================
-
-    private void ClearForm()
-    {
-        hfMemberID.Value = "";
-
-
-        if (RoleHelper.IsAdmin())
-        {
-            if (ddlBachatGat.Items.Count > 0)
+            if (!RoleHelper.IsAdmin())
             {
-                ddlBachatGat.SelectedIndex = 0;
-            }
-        }
-        else
-        {
-            if (ddlBachatGat.Items.Count > 0)
-            {
-                ddlBachatGat.SelectedValue =
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
                     RoleHelper.GetBachatGatID()
-                    .ToString();
+                );
+            }
+
+            con.Open();
+
+            SqlDataReader dr =
+                cmd.ExecuteReader();
+
+            if (dr.Read())
+            {
+                hfMemberID.Value =
+                    dr["MemberID"].ToString();
+
+                ddlBachatGat.SelectedValue =
+                    dr["BachatGatID"].ToString();
+
+                txtMemberName.Text =
+                    dr["MemberName"].ToString();
+
+                txtFatherOrHusbandName.Text =
+                    dr["FatherOrHusbandName"].ToString();
+
+                if (dr["DateOfBirth"] != DBNull.Value)
+                {
+                    txtDateOfBirth.Text =
+                        Convert.ToDateTime(
+                            dr["DateOfBirth"]
+                        ).ToString("yyyy-MM-dd");
+                }
+                else
+                {
+                    txtDateOfBirth.Text = "";
+                }
+
+                txtMobile.Text =
+                    dr["Mobile"].ToString();
+
+                txtEmail.Text =
+                    dr["Email"].ToString();
+
+                txtAddress.Text =
+                    dr["Address"].ToString();
+
+                txtVillage.Text =
+                    dr["Village"].ToString();
+
+                txtTaluka.Text =
+                    dr["Taluka"].ToString();
+
+                txtDistrict.Text =
+                    dr["District"].ToString();
+
+                if (dr["JoinDate"] != DBNull.Value)
+                {
+                    txtJoinDate.Text =
+                        Convert.ToDateTime(
+                            dr["JoinDate"]
+                        ).ToString("yyyy-MM-dd");
+                }
+                else
+                {
+                    txtJoinDate.Text = "";
+                }
+
+                txtOccupation.Text =
+                    dr["Occupation"].ToString();
+
+                ddlStatus.SelectedValue =
+                    dr["Status"].ToString();
+            }
+
+            dr.Close();
+        }
+    }
+
+    private void DeactivateMember(int memberID)
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                UPDATE Members
+                SET Status = 'Inactive'
+                WHERE MemberID = @MemberID";
+
+            if (!RoleHelper.IsAdmin())
+            {
+                query += " AND BachatGatID = @BachatGatID";
+            }
+
+            SqlCommand cmd =
+                new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
+                memberID
+            );
+
+            if (!RoleHelper.IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    RoleHelper.GetBachatGatID()
+                );
+            }
+
+            con.Open();
+
+            int rows =
+                cmd.ExecuteNonQuery();
+
+            if (rows > 0)
+            {
+                ShowMessage(
+                    "Member deactivated successfully.",
+                    false
+                );
+            }
+            else
+            {
+                ShowMessage(
+                    "Member was not found or access was denied.",
+                    true
+                );
             }
         }
 
-
-        txtMemberCode.Text = "";
-
-        txtMemberName.Text = "";
-
-        txtFatherHusband.Text = "";
-
-        txtDOB.Text = "";
-
-        txtMobile.Text = "";
-
-        txtEmail.Text = "";
-
-        txtAddress.Text = "";
-
-        txtVillage.Text = "";
-
-        txtTaluka.Text = "";
-
-        txtDistrict.Text = "";
-
-        txtJoinDate.Text = "";
-
-        txtOccupation.Text = "";
-
-
-        if (ddlStatus.Items.FindByValue(
-            "Active") != null)
-        {
-            ddlStatus.SelectedValue =
-                "Active";
-        }
-
-
-        btnSave.Text =
-            "Save Member";
+        LoadMembers();
     }
 
+    private object GetValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return DBNull.Value;
+        }
 
+        return value.Trim();
+    }
 
-    // =========================================================
-    // SHOW MESSAGE
-    // =========================================================
+    private object GetDate(string value)
+    {
+        DateTime date;
+
+        if (DateTime.TryParse(value, out date))
+        {
+            return date;
+        }
+
+        return DBNull.Value;
+    }
 
     private void ShowMessage(
         string message,
-        System.Drawing.Color color)
+        bool isError)
     {
-        lblMessage.Text =
-            message;
+        lblMessage.Text = message;
 
-        lblMessage.ForeColor =
-            color;
+        if (isError)
+        {
+            lblMessage.CssClass = "text-danger";
+        }
+        else
+        {
+            lblMessage.CssClass = "text-success";
+        }
     }
 }
