@@ -227,7 +227,7 @@
 
                     <asp:Image ID="imgProduct"
                         runat="server"
-                        ImageUrl='<%# Eval("ProductImage") %>'
+                        ImageUrl='<%# GetImageUrl(Eval("ProductImage")) %>'
                         Width="70px"
                         Height="70px"
                         Style="object-fit:cover;" />

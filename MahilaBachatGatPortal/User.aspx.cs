@@ -5,9 +5,21 @@ public partial class User : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] != null)
+        if (!IsPostBack)
         {
-            Response.Redirect("Dashboard.aspx");
+            if (Session["UserID"] != null)
+            {
+                string returnUrl = Request.QueryString["returnUrl"];
+
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    Response.Redirect(returnUrl);
+                }
+                else
+                {
+                    Response.Redirect("Dashboard.aspx");
+                }
+            }
         }
     }
 
@@ -26,7 +38,7 @@ public partial class User : System.Web.UI.Page
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
-                SELECT 
+                SELECT
                     U.UserID,
                     U.Username,
                     U.Password,
@@ -42,7 +54,6 @@ public partial class User : System.Web.UI.Page
                 AND U.IsActive = 1";
 
             SqlCommand cmd = new SqlCommand(query, con);
-
             cmd.Parameters.AddWithValue("@Username", username);
             cmd.Parameters.AddWithValue("@Password", password);
 
@@ -54,75 +65,71 @@ public partial class User : System.Web.UI.Page
             {
                 string role = dr["Role"].ToString();
 
-                // Store common user information
                 Session["UserID"] = dr["UserID"].ToString();
                 Session["Username"] = dr["Username"].ToString();
                 Session["FullName"] = dr["FullName"].ToString();
                 Session["Role"] = role;
 
-                // Store Bachat Gat ID
                 if (dr["BachatGatID"] != DBNull.Value)
                 {
-                    Session["BachatGatID"] =
-                        Convert.ToInt32(dr["BachatGatID"]);
+                    Session["BachatGatID"] = Convert.ToInt32(dr["BachatGatID"]);
                 }
                 else
                 {
                     Session["BachatGatID"] = null;
                 }
 
-                // Store Member ID for Member users
                 if (dr["MemberID"] != DBNull.Value)
                 {
-                    Session["MemberID"] =
-                        Convert.ToInt32(dr["MemberID"]);
+                    Session["MemberID"] = Convert.ToInt32(dr["MemberID"]);
                 }
                 else
                 {
                     Session["MemberID"] = null;
                 }
 
-                // President must have an assigned Bachat Gat
-                if (role == "President" &&
-                    Session["BachatGatID"] == null)
+                if (role.Equals("President", StringComparison.OrdinalIgnoreCase)
+                    && Session["BachatGatID"] == null)
                 {
                     Session.Clear();
-
-                    lblMessage.Text =
-                        "This President account is not assigned to a Bachat Gat.";
-                    lblMessage.ForeColor =
-                        System.Drawing.Color.Red;
-
+                    lblMessage.Text = "This President account is not assigned to a Bachat Gat.";
+                    lblMessage.ForeColor = System.Drawing.Color.Red;
+                    dr.Close();
                     return;
                 }
 
-                // Member must have an assigned Bachat Gat
-                // and Member record
-                if (role == "Member")
+                if (role.Equals("Member", StringComparison.OrdinalIgnoreCase))
                 {
                     if (Session["BachatGatID"] == null ||
                         Session["MemberID"] == null)
                     {
                         Session.Clear();
-
-                        lblMessage.Text =
-                            "This Member account is not properly assigned.";
-                        lblMessage.ForeColor =
-                            System.Drawing.Color.Red;
-
+                        lblMessage.Text = "This Member account is not properly assigned.";
+                        lblMessage.ForeColor = System.Drawing.Color.Red;
+                        dr.Close();
                         return;
                     }
                 }
 
-                Response.Redirect("Dashboard.aspx");
+                string returnUrl = Request.QueryString["returnUrl"];
+
+                dr.Close();
+
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    Response.Redirect(returnUrl);
+                }
+                else
+                {
+                    Response.Redirect("Dashboard.aspx");
+                }
             }
             else
             {
+                dr.Close();
                 lblMessage.Text = "Invalid username or password.";
                 lblMessage.ForeColor = System.Drawing.Color.Red;
             }
-
-            dr.Close();
         }
     }
 }

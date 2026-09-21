@@ -198,7 +198,7 @@ public partial class Products : System.Web.UI.Page
             else
             {
                 SqlCommand oldImageCmd = new SqlCommand(
-                    "SELECT Images FROM Products " +
+                    "SELECT ProductImage FROM Products " +
                     "WHERE ProductID=@ProductID", con);
 
                 oldImageCmd.Parameters.AddWithValue(
@@ -550,5 +550,29 @@ public partial class Products : System.Web.UI.Page
             "<div class='alert alert-" + type + "'>" +
             message +
             "</div>";
+    }
+    public string GetImageUrl(object value)
+    {
+        if (value == null || value == DBNull.Value)
+            return "";
+
+        string path = value.ToString().Trim();
+
+        if (path == "")
+            return "";
+
+        path = path.Replace("\\", "/");
+
+        if (path.StartsWith("ProductImages/", StringComparison.OrdinalIgnoreCase))
+        {
+            path = "Images/" + path.Substring("ProductImages/".Length);
+        }
+
+        if (!path.StartsWith("Images/", StringComparison.OrdinalIgnoreCase))
+        {
+            path = "Images/" + Path.GetFileName(path);
+        }
+
+        return ResolveUrl("~/" + path);
     }
 }

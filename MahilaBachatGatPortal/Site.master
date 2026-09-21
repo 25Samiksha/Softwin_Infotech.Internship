@@ -19,64 +19,76 @@
 <body>
 <form id="form1" runat="server">
 
-    <nav class="navbar navbar-default top-navbar">
-        <div class="container-fluid">
-
-            <div class="navbar-header">
-                <button type="button"
-                    class="navbar-toggle collapsed"
-                    data-toggle="collapse"
-                    data-target="#mainNavbar">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-
-                <a class="navbar-brand" href="Dashboard.aspx">
-                    <span class="glyphicon glyphicon-home"></span>
-                    Mahila Bachat Gat
-                </a>
-            </div>
-
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="Users.aspx" runat="server" id="lnkUser">
-                            <span class="glyphicon glyphicon-user"></span>
-                            <asp:Label ID="lblUser" runat="server" Text="User"></asp:Label>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="Logout.aspx">
-                            <span class="glyphicon glyphicon-log-out"></span>
-                            Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-    </nav>
-
+<nav class="navbar navbar-default top-navbar">
     <div class="container-fluid">
-        <div class="row">
 
-            <div class="col-sm-3 col-md-2 sidebar">
-                <ul class="nav nav-pills nav-stacked">
+        <div class="navbar-header">
+            <button type="button"
+                class="navbar-toggle collapsed"
+                data-toggle="collapse"
+                data-target="#mainNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
 
-                    <li class="sidebar-title">MAIN MENU</li>
+            <a class="navbar-brand" href="Dashboard.aspx">
+                <span class="glyphicon glyphicon-home"></span>
+                Mahila Bachat Gat
+            </a>
+        </div>
 
-                    <li>
-                        <a href="Dashboard.aspx">
-                            <span class="glyphicon glyphicon-dashboard"></span>
-                            Dashboard
-                        </a>
-                    </li>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="nav navbar-nav navbar-right">
 
-                    <li id="menuMemberAccountTitle" runat="server" class="sidebar-title">
+                <li>
+                    <a href="Users.aspx" runat="server" id="lnkUser">
+                        <span class="glyphicon glyphicon-user"></span>
+                        <asp:Label ID="lblUser" runat="server" Text="User"></asp:Label>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="Logout.aspx">
+                        <span class="glyphicon glyphicon-log-out"></span>
+                        Logout
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-sm-3 col-md-2 sidebar">
+
+            <ul class="nav nav-pills nav-stacked">
+
+                <li class="sidebar-title">MAIN MENU</li>
+
+                <li>
+                    <a href="Dashboard.aspx">
+                        <span class="glyphicon glyphicon-dashboard"></span>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li id="menuMemberAccountTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#memberAccountMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         MY ACCOUNT
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="memberAccountMenu" class="sidebar-submenu collapse">
 
                     <li id="menuMyProfile" runat="server">
                         <a href="MemberProfile.aspx">
@@ -85,9 +97,20 @@
                         </a>
                     </li>
 
-                    <li id="menuBachatGatTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuBachatGatTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#bachatGatMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         BACHAT GAT
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="bachatGatMenu" class="sidebar-submenu collapse">
 
                     <li id="menuBachatGat" runat="server">
                         <a href="BachatGat.aspx">
@@ -96,9 +119,20 @@
                         </a>
                     </li>
 
-                    <li id="menuMemberTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuMemberTitle"
+                    runat="server"
+                    class="sidebar-dropdown member-management-active"
+                    data-target="#memberMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         MEMBER MANAGEMENT
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="memberMenu" class="sidebar-submenu collapse">
 
                     <li id="menuMembers" runat="server">
                         <a href="Members.aspx">
@@ -107,9 +141,20 @@
                         </a>
                     </li>
 
-                    <li id="menuSavingsTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuSavingsTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#savingsMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         SAVINGS
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="savingsMenu" class="sidebar-submenu collapse">
 
                     <li id="menuSavings" runat="server">
                         <a href="Savings.aspx">
@@ -118,9 +163,20 @@
                         </a>
                     </li>
 
-                    <li id="menuMeetingsTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuMeetingsTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#meetingsMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         MEETINGS
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="meetingsMenu" class="sidebar-submenu collapse">
 
                     <li id="menuMeetings" runat="server">
                         <a href="Meetings.aspx">
@@ -136,9 +192,20 @@
                         </a>
                     </li>
 
-                    <li id="menuLoanTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuLoanTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#loanMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         LOAN MANAGEMENT
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="loanMenu" class="sidebar-submenu collapse">
 
                     <li id="menuLoans" runat="server">
                         <a href="Loans.aspx">
@@ -154,9 +221,20 @@
                         </a>
                     </li>
 
-                    <li id="menuFinanceTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuFinanceTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#financeMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         FINANCE
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="financeMenu" class="sidebar-submenu collapse">
 
                     <li id="menuIncome" runat="server">
                         <a href="Income.aspx">
@@ -172,9 +250,20 @@
                         </a>
                     </li>
 
-                    <li id="menuSchemeTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuSchemeTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#schemeMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         GOVERNMENT SCHEMES
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="schemeMenu" class="sidebar-submenu collapse">
 
                     <li id="menuSchemes" runat="server">
                         <a href="Schemes.aspx">
@@ -190,9 +279,20 @@
                         </a>
                     </li>
 
-                    <li id="menuProductsTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuProductsTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#productMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         PRODUCTS &amp; SALES
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="productMenu" class="sidebar-submenu collapse">
 
                     <li id="menuProducts" runat="server">
                         <a href="Products.aspx">
@@ -208,9 +308,20 @@
                         </a>
                     </li>
 
-                    <li id="menuReportsTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuReportsTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#reportsMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         REPORTS
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="reportsMenu" class="sidebar-submenu collapse">
 
                     <li id="menuReports" runat="server">
                         <a href="Reports.aspx">
@@ -219,9 +330,20 @@
                         </a>
                     </li>
 
-                    <li id="menuAdminTitle" runat="server" class="sidebar-title">
+                </ul>
+
+                <li id="menuAdminTitle"
+                    runat="server"
+                    class="sidebar-dropdown"
+                    data-target="#adminMenu">
+
+                    <div class="sidebar-title dropdown-title">
                         ADMIN
-                    </li>
+                    </div>
+
+                </li>
+
+                <ul id="adminMenu" class="sidebar-submenu collapse">
 
                     <li id="menuUsers" runat="server">
                         <a href="Users.aspx">
@@ -231,18 +353,56 @@
                     </li>
 
                 </ul>
-            </div>
 
-            <div class="col-sm-9 col-md-10 main-content">
-                <asp:ContentPlaceHolder ID="MainContent" runat="server">
-                </asp:ContentPlaceHolder>
-            </div>
+            </ul>
 
         </div>
-    </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <div class="col-sm-9 col-md-10 main-content">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server">
+            </asp:ContentPlaceHolder>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $(".sidebar-dropdown").each(function () {
+            var target = $(this).attr("data-target");
+
+            if (target && localStorage.getItem("sidebar_" + target) === "open") {
+                $(target).addClass("in").css("height", "auto");
+            }
+        });
+
+        $(".sidebar-dropdown").on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var target = $(this).attr("data-target");
+
+            if (!target) {
+                return;
+            }
+
+            var menu = $(target);
+
+            if (menu.hasClass("in")) {
+                menu.removeClass("in").css("height", "0");
+                localStorage.removeItem("sidebar_" + target);
+            } else {
+                menu.addClass("in").css("height", "auto");
+                localStorage.setItem("sidebar_" + target, "open");
+            }
+        });
+
+    });
+</script>
 
 </form>
 </body>

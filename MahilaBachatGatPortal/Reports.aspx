@@ -32,7 +32,7 @@
                     <asp:TextBox ID="txtFromDate"
                         runat="server"
                         CssClass="form-control"
-                        TextMode="SingleLine">
+                        TextMode="Date">
                     </asp:TextBox>
                 </div>
 
@@ -41,7 +41,7 @@
                     <asp:TextBox ID="txtToDate"
                         runat="server"
                         CssClass="form-control"
-                        TextMode="SingleLine">
+                        TextMode="Date">
                     </asp:TextBox>
                 </div>
 

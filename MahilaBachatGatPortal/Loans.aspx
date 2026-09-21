@@ -82,7 +82,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Application Date</label>
-<asp:TextBox ID="txtApplicationDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
+<asp:TextBox ID="txtApplicationDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
 </div>
 </div>
 

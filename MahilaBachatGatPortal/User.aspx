@@ -8,12 +8,31 @@
 <title>Login | Mahila Bachat Gat</title>
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
 <style>
-body { background-color: #f5f7fa; }
-.login-container { width: 400px; margin: 100px auto; }
-.login-panel { padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
-.login-title { text-align: center; margin-bottom: 25px; }
-.btn-login { width: 100%; }
-.message { display: block; margin-top: 15px; text-align: center; }
+body {
+    background-color: #f5f7fa;
+}
+.login-container {
+    width: 400px;
+    margin: 100px auto;
+}
+.login-panel {
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+.login-title {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.btn-login {
+    width: 100%;
+}
+.message {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+}
 </style>
 </head>
 <body>

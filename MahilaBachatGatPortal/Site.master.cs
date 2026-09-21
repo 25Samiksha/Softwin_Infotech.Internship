@@ -45,6 +45,9 @@ public partial class SiteMaster : System.Web.UI.MasterPage
 
     private void HideAllMenus()
     {
+        menuMemberAccountTitle.Visible = false;
+        menuMyProfile.Visible = false;
+
         menuBachatGatTitle.Visible = false;
         menuBachatGat.Visible = false;
 
@@ -80,9 +83,6 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuAdminTitle.Visible = false;
         menuUsers.Visible = false;
 
-        menuMemberAccountTitle.Visible = false;
-        menuMyProfile.Visible = false;
-
         lnkUser.HRef = "Dashboard.aspx";
     }
 
@@ -97,10 +97,6 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuSchemeTitle.Visible = true;
         menuSchemes.Visible = true;
         menuApplications.Visible = true;
-
-        menuProductsTitle.Visible = true;
-        menuProducts.Visible = true;
-        menuSales.Visible = true;
 
         menuReportsTitle.Visible = true;
         menuReports.Visible = true;
@@ -157,13 +153,9 @@ public partial class SiteMaster : System.Web.UI.MasterPage
         menuLoans.Visible = true;
         menuRepayment.Visible = true;
 
-        menuSchemeTitle.Visible = false;
-        menuSchemes.Visible = false;
+        menuSchemeTitle.Visible = true;
+        menuSchemes.Visible = true;
         menuApplications.Visible = true;
-
-        menuProductsTitle.Visible = false;
-        menuProducts.Visible = false;
-        menuSales.Visible = false;
 
         lnkUser.HRef = "Dashboard.aspx";
     }

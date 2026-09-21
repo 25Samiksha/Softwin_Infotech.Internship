@@ -30,7 +30,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Meeting Date <span class="required">*</span></label>
-<asp:TextBox ID="txtMeetingDate" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtMeetingDate" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 
@@ -64,7 +64,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Next Meeting Date</label>
-<asp:TextBox ID="txtNextMeetingDate" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtNextMeetingDate" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 </div>

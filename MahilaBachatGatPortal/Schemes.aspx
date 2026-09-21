@@ -23,11 +23,11 @@
 <div class="row">
 <div class="col-md-4">
 <label>Start Date</label>
-<asp:TextBox ID="txtStartDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
+<asp:TextBox ID="txtStartDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
 </div>
 <div class="col-md-4">
 <label>End Date</label>
-<asp:TextBox ID="txtEndDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
+<asp:TextBox ID="txtEndDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
 </div>
 <div class="col-md-4">
 <label>Status</label>

@@ -1,0 +1,74 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Public.Master.cs" Inherits="PublicMaster" %>
+
+<!DOCTYPE html>
+<html>
+<head id="Head1" runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Mahila Bachat Gat Portal</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link href="CSS/style.css" rel="stylesheet" />
+
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+
+<body>
+<form id="form1" runat="server">
+
+<nav class="navbar navbar-default top-navbar">
+    <div class="container-fluid">
+
+        <div class="navbar-header">
+            <a class="navbar-brand" href="PublicHome.aspx">
+                <span class="glyphicon glyphicon-home"></span>
+                Mahila Bachat Gat
+            </a>
+        </div>
+
+        <ul class="nav navbar-nav navbar-right">
+
+            <li>
+                <a href="PublicHome.aspx">
+                    <span class="glyphicon glyphicon-home"></span>
+                    Home
+                </a>
+            </li>
+
+     
+
+            <li>
+                <a href="PublicProducts.aspx">
+                    <span class="glyphicon glyphicon-shopping-cart"></span>
+                    Products
+                </a>
+            </li>
+
+            <li>
+                <a href="User.aspx">
+                    <span class="glyphicon glyphicon-log-in"></span>
+                    Login
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="main-content">
+        <asp:ContentPlaceHolder ID="MainContent" runat="server">
+        </asp:ContentPlaceHolder>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+</form>
+</body>
+</html>

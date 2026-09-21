@@ -57,7 +57,7 @@
 <div class="col-md-6">
 <div class="form-group">
 <label>Expense Date</label>
-<asp:TextBox ID="txtExpenseDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
+<asp:TextBox ID="txtExpenseDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
 </div>
 </div>
 </div>

@@ -59,7 +59,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Saving Month <span class="required">*</span></label>
-<asp:TextBox ID="txtSavingMonth" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtSavingMonth" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 </div>
@@ -85,7 +85,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Payment Date</label>
-<asp:TextBox ID="txtPaymentDate" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtPaymentDate" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 </div>

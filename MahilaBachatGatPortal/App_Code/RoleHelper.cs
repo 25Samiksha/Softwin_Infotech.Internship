@@ -3,18 +3,11 @@ using System.Web.UI;
 
 public static class RoleHelper
 {
-    // =========================
-    // LOGIN CHECK
-    // =========================
+   
     public static bool IsLoggedIn()
     {
         return System.Web.HttpContext.Current.Session["UserID"] != null;
     }
-
-
-    // =========================
-    // GET ROLE
-    // =========================
     public static string GetRole()
     {
         if (System.Web.HttpContext.Current.Session["Role"] == null)
@@ -24,11 +17,6 @@ public static class RoleHelper
 
         return System.Web.HttpContext.Current.Session["Role"].ToString();
     }
-
-
-    // =========================
-    // GET USER ID
-    // =========================
     public static int GetUserID()
     {
         if (System.Web.HttpContext.Current.Session["UserID"] == null)
@@ -40,10 +28,6 @@ public static class RoleHelper
             System.Web.HttpContext.Current.Session["UserID"]);
     }
 
-
-    // =========================
-    // GET BACHAT GAT ID
-    // =========================
     public static int GetBachatGatID()
     {
         if (System.Web.HttpContext.Current.Session["BachatGatID"] == null)
@@ -55,10 +39,6 @@ public static class RoleHelper
             System.Web.HttpContext.Current.Session["BachatGatID"]);
     }
 
-
-    // =========================
-    // GET MEMBER ID
-    // =========================
     public static int GetMemberID()
     {
         if (System.Web.HttpContext.Current.Session["MemberID"] == null)
@@ -69,11 +49,6 @@ public static class RoleHelper
         return Convert.ToInt32(
             System.Web.HttpContext.Current.Session["MemberID"]);
     }
-
-
-    // =========================
-    // ROLE CHECKS
-    // =========================
     public static bool IsAdmin()
     {
         return GetRole().Equals(
@@ -110,11 +85,6 @@ public static class RoleHelper
             "Member",
             StringComparison.OrdinalIgnoreCase);
     }
-
-
-    // =========================
-    // ADMIN
-    // =========================
     public static void RequireAdmin(Page page)
     {
         if (!IsLoggedIn())
@@ -129,11 +99,6 @@ public static class RoleHelper
         }
     }
 
-
-    // =========================
-    // MANAGEMENT
-    // ADMIN + PRESIDENT + SECRETARY
-    // =========================
     public static void RequireManagement(Page page)
     {
         if (!IsLoggedIn())
@@ -164,11 +129,6 @@ public static class RoleHelper
             page.Response.Redirect("User.aspx");
         }
     }
-
-
-    // =========================
-    // PRESIDENT + SECRETARY
-    // =========================
     public static void RequirePresidentSecretary(Page page)
     {
         if (!IsLoggedIn())
@@ -183,18 +143,12 @@ public static class RoleHelper
             return;
         }
 
-        // Must belong to a Bachat Gat
         if (GetBachatGatID() == 0)
         {
             page.Session.Clear();
             page.Response.Redirect("User.aspx");
         }
     }
-
-
-    // =========================
-    // PRESIDENT ONLY
-    // =========================
     public static void RequirePresident(Page page)
     {
         if (!IsLoggedIn())
@@ -216,10 +170,6 @@ public static class RoleHelper
         }
     }
 
-
-    // =========================
-    // MEMBER
-    // =========================
     public static void RequireMember(Page page)
     {
         if (!IsLoggedIn())
@@ -233,8 +183,6 @@ public static class RoleHelper
             page.Response.Redirect("Dashboard.aspx");
             return;
         }
-
-        // Member must have Bachat Gat + Member ID
         if (GetBachatGatID() == 0 ||
             GetMemberID() == 0)
         {
@@ -242,11 +190,6 @@ public static class RoleHelper
             page.Response.Redirect("User.aspx");
         }
     }
-
-
-    // =========================
-    // ANY LOGGED-IN USER
-    // =========================
     public static void RequireLogin(Page page)
     {
         if (!IsLoggedIn())
