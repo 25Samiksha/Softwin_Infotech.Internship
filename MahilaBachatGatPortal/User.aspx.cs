@@ -15,6 +15,11 @@ public partial class User : System.Web.UI.Page
                 {
                     Response.Redirect(returnUrl);
                 }
+                else if (Session["Role"] != null &&
+                         Session["Role"].ToString().Equals("Customer", StringComparison.OrdinalIgnoreCase))
+                {
+                    Response.Redirect("PublicProducts.aspx");
+                }
                 else
                 {
                     Response.Redirect("Dashboard.aspx");
@@ -119,6 +124,10 @@ public partial class User : System.Web.UI.Page
                 {
                     Response.Redirect(returnUrl);
                 }
+                else if (role.Equals("Customer", StringComparison.OrdinalIgnoreCase))
+                {
+                    Response.Redirect("PublicProducts.aspx");
+                }
                 else
                 {
                     Response.Redirect("Dashboard.aspx");
@@ -129,6 +138,113 @@ public partial class User : System.Web.UI.Page
                 dr.Close();
                 lblMessage.Text = "Invalid username or password.";
                 lblMessage.ForeColor = System.Drawing.Color.Red;
+            }
+        }
+    }
+
+    protected void btnCreateAccount_Click(object sender, EventArgs e)
+    {
+        string fullName = txtFullName.Text.Trim();
+        string mobile = txtMobile.Text.Trim();
+        string email = txtEmail.Text.Trim();
+        string username = txtNewUsername.Text.Trim();
+        string password = txtNewPassword.Text.Trim();
+        string confirmPassword = txtConfirmPassword.Text.Trim();
+
+        if (fullName == "" ||
+            mobile == "" ||
+            email == "" ||
+            username == "" ||
+            password == "" ||
+            confirmPassword == "")
+        {
+            lblSignupMessage.Text = "Please fill all fields.";
+            lblSignupMessage.ForeColor = System.Drawing.Color.Red;
+            return;
+        }
+
+        if (password != confirmPassword)
+        {
+            lblSignupMessage.Text = "Password and confirm password do not match.";
+            lblSignupMessage.ForeColor = System.Drawing.Color.Red;
+            return;
+        }
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string checkQuery = @"
+                SELECT COUNT(*)
+                FROM Users
+                WHERE Username = @Username";
+
+            SqlCommand checkCmd = new SqlCommand(checkQuery, con);
+            checkCmd.Parameters.AddWithValue("@Username", username);
+
+            con.Open();
+
+            int existingUser = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+            if (existingUser > 0)
+            {
+                lblSignupMessage.Text = "Username already exists.";
+                lblSignupMessage.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+
+            string insertQuery = @"
+                INSERT INTO Users
+                (
+                    Username,
+                    Password,
+                    FullName,
+                    Role,
+                    Mobile,
+                    Email,
+                    IsActive,
+                    CreatedDate,
+                    BachatGatID
+                )
+                VALUES
+                (
+                    @Username,
+                    @Password,
+                    @FullName,
+                    'Customer',
+                    @Mobile,
+                    @Email,
+                    1,
+                    GETDATE(),
+                    NULL
+                );
+
+                SELECT SCOPE_IDENTITY();";
+
+            SqlCommand insertCmd = new SqlCommand(insertQuery, con);
+
+            insertCmd.Parameters.AddWithValue("@Username", username);
+            insertCmd.Parameters.AddWithValue("@Password", password);
+            insertCmd.Parameters.AddWithValue("@FullName", fullName);
+            insertCmd.Parameters.AddWithValue("@Mobile", mobile);
+            insertCmd.Parameters.AddWithValue("@Email", email);
+
+            int userID = Convert.ToInt32(insertCmd.ExecuteScalar());
+
+            Session["UserID"] = userID;
+            Session["Username"] = username;
+            Session["FullName"] = fullName;
+            Session["Role"] = "Customer";
+            Session["BachatGatID"] = null;
+            Session["MemberID"] = null;
+
+            string returnUrl = Request.QueryString["returnUrl"];
+
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                Response.Redirect(returnUrl);
+            }
+            else
+            {
+                Response.Redirect("PublicProducts.aspx");
             }
         }
     }

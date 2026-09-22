@@ -90,10 +90,17 @@ public partial class ProductDetails : System.Web.UI.Page
 
     protected void btnBuyNow_Click(object sender, EventArgs e)
     {
+        string productID = Request.QueryString["ProductID"];
+
+        if (string.IsNullOrEmpty(productID))
+        {
+            lblMessage.Text = "Invalid product.";
+            return;
+        }
+
         if (Session["UserID"] == null)
         {
-            string returnUrl = "ProductDetails.aspx?ProductID=" +
-                               Request.QueryString["ProductID"];
+            string returnUrl = "Checkout.aspx?ProductID=" + productID;
 
             Response.Redirect("User.aspx?returnUrl=" +
                               Server.UrlEncode(returnUrl));
@@ -101,7 +108,13 @@ public partial class ProductDetails : System.Web.UI.Page
             return;
         }
 
-        Response.Redirect("Checkout.aspx?ProductID=" +
-                          Request.QueryString["ProductID"]);
+        if (Session["Role"] != null &&
+            Session["Role"].ToString().Equals("Customer", StringComparison.OrdinalIgnoreCase))
+        {
+            Response.Redirect("Checkout.aspx?ProductID=" + productID);
+            return;
+        }
+
+        Response.Redirect("Dashboard.aspx");
     }
 }
