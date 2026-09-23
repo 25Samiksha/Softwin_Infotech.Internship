@@ -1,119 +1,145 @@
-﻿<%@ Page Title="Sales Management" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeFile="Sales.aspx.cs" Inherits="Sales" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Sales.aspx.cs" Inherits="Sales" MasterPageFile="~/Site.Master" %>
 
-<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
-<div class="container-fluid">
-<h2 class="page-title">Sales Management</h2>
-<asp:Label ID="lblMessage" runat="server"></asp:Label>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+<style>
+.order-container{padding:25px}
+.order-title{color:#2f6f9f;margin-bottom:25px}
+.order-panel{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:20px}
+.order-table{width:100%;border-collapse:collapse}
+.order-table th{background:#2f6f9f;color:#fff;padding:12px;text-align:left}
+.order-table td{padding:10px;border-bottom:1px solid #e5e5e5;vertical-align:middle}
+.payment-proof{width:100px;height:100px;object-fit:cover;border:1px solid #ddd;border-radius:6px}
+.btn-verify{margin-right:5px}
+.status-pending{color:#d68910;font-weight:600}
+.status-paid{color:#198754;font-weight:600}
+.status-rejected{color:#dc3545;font-weight:600}
+.message{display:block;margin-bottom:15px}
+</style>
+</asp:Content>
 
-<div class="panel panel-primary">
-<div class="panel-heading">New Sale</div>
-<div class="panel-body">
-<div class="row">
-<div class="col-md-4">
-<label>Bachat Gat</label>
-<asp:DropDownList ID="ddlBachatGat" runat="server" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="ddlBachatGat_SelectedIndexChanged"></asp:DropDownList>
-</div>
-<div class="col-md-4">
-<label>Product</label>
-<asp:DropDownList ID="ddlProduct" runat="server" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="ddlProduct_SelectedIndexChanged"></asp:DropDownList>
-</div>
-<div class="col-md-4">
-<label>Sale Date</label>
-<asp:TextBox ID="txtSaleDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
-</div>
-</div>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+<div class="order-container">
+<h2 class="order-title">Order Management</h2>
 
-<br />
+<div class="order-panel">
+<asp:Label ID="lblMessage" runat="server" CssClass="message"></asp:Label>
 
-<div class="row">
-<div class="col-md-4">
-<label>Customer Name</label>
-<asp:TextBox ID="txtCustomerName" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-<div class="col-md-4">
-<label>Customer Mobile</label>
-<asp:TextBox ID="txtCustomerMobile" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-<div class="col-md-4">
-<label>Available Stock</label>
-<asp:TextBox ID="txtStock" runat="server" CssClass="form-control" ReadOnly="true"></asp:TextBox>
-</div>
-</div>
+<div class="table-responsive">
+<asp:GridView
+    ID="gvOrders"
+    runat="server"
+    AutoGenerateColumns="False"
+    CssClass="table table-bordered table-hover"
+    EmptyDataText="No orders found.">
 
-<br />
+    <Columns>
 
-<div class="row">
-<div class="col-md-4">
-<label>Quantity</label>
-<asp:TextBox ID="txtQuantity" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-<div class="col-md-4">
-<label>Unit Price</label>
-<asp:TextBox ID="txtUnitPrice" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-<div class="col-md-4">
-<label>Total Amount</label>
-<asp:TextBox ID="txtTotalAmount" runat="server" CssClass="form-control" ReadOnly="true"></asp:TextBox>
-</div>
-</div>
+        <asp:BoundField
+            DataField="OrderID"
+            HeaderText="Order ID" />
 
-<br />
+        <asp:BoundField
+            DataField="GatName"
+            HeaderText="Bachat Gat" />
 
-<div class="row">
-<div class="col-md-4">
-<label>Payment Mode</label>
-<asp:DropDownList ID="ddlPaymentMode" runat="server" CssClass="form-control">
-<asp:ListItem>Cash</asp:ListItem>
-<asp:ListItem>UPI</asp:ListItem>
-<asp:ListItem>Bank</asp:ListItem>
-<asp:ListItem>Cheque</asp:ListItem>
-</asp:DropDownList>
-</div>
-<div class="col-md-4">
-<label>Receipt Number</label>
-<asp:TextBox ID="txtReceiptNumber" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-<div class="col-md-4">
-<label>Sold By User ID</label>
-<asp:TextBox ID="txtSoldBy" runat="server" CssClass="form-control"></asp:TextBox>
-</div>
-</div>
+        <asp:BoundField
+            DataField="ProductName"
+            HeaderText="Product" />
 
-<br />
+        <asp:BoundField
+            DataField="OrderDate"
+            HeaderText="Order Date"
+            DataFormatString="{0:dd-MM-yyyy HH:mm}" />
 
-<label>Remarks</label>
-<asp:TextBox ID="txtRemarks" runat="server" CssClass="form-control" TextMode="MultiLine" Rows="3"></asp:TextBox>
+        <asp:BoundField
+            DataField="CustomerName"
+            HeaderText="Customer" />
 
-<br />
+        <asp:BoundField
+            DataField="Mobile"
+            HeaderText="Mobile" />
 
-<asp:Button ID="btnSave" runat="server" Text="Save Sale" CssClass="btn btn-success" OnClick="btnSave_Click" />
-<asp:Button ID="btnClear" runat="server" Text="Clear" CssClass="btn btn-default" OnClick="btnClear_Click" />
-</div>
-</div>
+        <asp:BoundField
+            DataField="Quantity"
+            HeaderText="Qty" />
 
-<div class="panel panel-default">
-<div class="panel-heading">Sales History</div>
-<div class="panel-body">
-<asp:TextBox ID="txtSearch" runat="server" CssClass="form-control" placeholder="Search customer or product"></asp:TextBox>
-<br />
-<asp:Button ID="btnSearch" runat="server" Text="Search" CssClass="btn btn-primary" OnClick="btnSearch_Click" />
-<asp:Button ID="btnShowAll" runat="server" Text="Show All" CssClass="btn btn-info" OnClick="btnShowAll_Click" />
-</div>
-</div>
+        <asp:BoundField
+            DataField="UnitPrice"
+            HeaderText="Unit Price"
+            DataFormatString="₹ {0:N2}" />
 
-<asp:GridView ID="gvSales" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-striped" DataKeyNames="SaleID">
-<Columns>
-<asp:BoundField DataField="SaleID" HeaderText="ID" />
-<asp:BoundField DataField="GatName" HeaderText="Bachat Gat" />
-<asp:BoundField DataField="ProductName" HeaderText="Product" />
-<asp:BoundField DataField="SaleDate" HeaderText="Date" DataFormatString="{0:dd-MM-yyyy}" />
-<asp:BoundField DataField="CustomerName" HeaderText="Customer" />
-<asp:BoundField DataField="Quantity" HeaderText="Quantity" />
-<asp:BoundField DataField="UnitPrice" HeaderText="Unit Price" DataFormatString="{0:N2}" />
-<asp:BoundField DataField="TotalAmount" HeaderText="Total" DataFormatString="{0:N2}" />
-<asp:BoundField DataField="PaymentMode" HeaderText="Payment" />
-<asp:BoundField DataField="ReceiptNumber" HeaderText="Receipt" />
-</Columns>
+        <asp:BoundField
+            DataField="TotalAmount"
+            HeaderText="Total"
+            DataFormatString="₹ {0:N2}" />
+
+        <asp:BoundField
+            DataField="PaymentMode"
+            HeaderText="Payment Mode" />
+
+        <asp:TemplateField HeaderText="Payment Status">
+            <ItemTemplate>
+                <asp:Label
+                    ID="lblPaymentStatus"
+                    runat="server"
+                    Text='<%# Eval("PaymentStatus") %>'
+                    CssClass='<%# GetPaymentStatusClass(Eval("PaymentStatus")) %>'>
+                </asp:Label>
+            </ItemTemplate>
+        </asp:TemplateField>
+
+        <asp:TemplateField HeaderText="UTR Number">
+            <ItemTemplate>
+                <asp:Label
+                    ID="lblUTR"
+                    runat="server"
+                    Text='<%# Eval("UTRNumber") %>'>
+                </asp:Label>
+            </ItemTemplate>
+        </asp:TemplateField>
+
+        <asp:TemplateField HeaderText="Payment Screenshot">
+            <ItemTemplate>
+                <asp:Image
+                    ID="imgPaymentScreenshot"
+                    runat="server"
+                    CssClass="payment-proof"
+                    ImageUrl='<%# GetPaymentScreenshotUrl(Eval("PaymentScreenshot")) %>'
+                    Visible='<%# HasPaymentScreenshot(Eval("PaymentScreenshot")) %>' />
+            </ItemTemplate>
+        </asp:TemplateField>
+
+        <asp:BoundField
+            DataField="OrderStatus"
+            HeaderText="Order Status" />
+
+        <asp:TemplateField HeaderText="Action">
+            <ItemTemplate>
+
+                <asp:Button
+                    ID="btnVerify"
+                    runat="server"
+                    Text="Verify Payment"
+                    CssClass="btn btn-success btn-sm btn-verify"
+                    CommandName="VerifyPayment"
+                    CommandArgument='<%# Eval("OrderID") %>'
+                    OnCommand="OrderCommand" />
+
+                <asp:Button
+                    ID="btnReject"
+                    runat="server"
+                    Text="Reject Payment"
+                    CssClass="btn btn-danger btn-sm"
+                    CommandName="RejectPayment"
+                    CommandArgument='<%# Eval("OrderID") %>'
+                    OnCommand="OrderCommand" />
+
+            </ItemTemplate>
+        </asp:TemplateField>
+
+    </Columns>
 </asp:GridView>
+</div>
+</div>
 </div>
 </asp:Content>

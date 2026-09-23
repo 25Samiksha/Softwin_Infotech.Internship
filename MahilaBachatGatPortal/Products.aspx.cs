@@ -7,8 +7,11 @@ public partial class Products : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
+            fuProductImage.Attributes["accept"] = "image/*";
             LoadBachatGats();
             LoadProducts();
         }
@@ -18,12 +21,16 @@ public partial class Products : System.Web.UI.Page
     {
         using (SqlConnection con = DBHelper.GetConnection())
         {
-            SqlDataAdapter da = new SqlDataAdapter(
-                "SELECT BachatGatID, GatName FROM BachatGat " +
-                "WHERE Status='Active' ORDER BY GatName", con);
+            string query = @"SELECT BachatGatID,GatName
+                             FROM BachatGat
+                             WHERE BachatGatID=@BachatGatID
+                             AND Status='Active'
+                             ORDER BY GatName";
+
+            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            da.SelectCommand.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
 
             DataTable dt = new DataTable();
-
             da.Fill(dt);
 
             ddlBachatGat.DataSource = dt;
@@ -31,195 +38,132 @@ public partial class Products : System.Web.UI.Page
             ddlBachatGat.DataValueField = "BachatGatID";
             ddlBachatGat.DataBind();
 
-            ddlBachatGat.Items.Insert(0,
-                new System.Web.UI.WebControls.ListItem(
-                    "-- Select Bachat Gat --", ""));
-        }
-    }
-
-    private void LoadProducts()
-    {
-        using (SqlConnection con = DBHelper.GetConnection())
-        {
-            string query = @"
-                SELECT P.ProductID,
-                       BG.GatName,
-                       P.ProductName,
-                       P.Category,
-                       P.Unit,
-                       P.Quantity,
-                       P.CostPrice,
-                       P.SellingPrice,
-                       P.Status,
-                       P.ProductImage
-                FROM Products P
-                INNER JOIN BachatGat BG
-                    ON P.BachatGatID=BG.BachatGatID
-                ORDER BY P.ProductID DESC";
-
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
-
-            DataTable dt = new DataTable();
-
-            da.Fill(dt);
-
-            gvProducts.DataSource = dt;
-            gvProducts.DataBind();
+            if (dt.Rows.Count == 1)
+            {
+                ddlBachatGat.SelectedValue = dt.Rows[0]["BachatGatID"].ToString();
+            }
         }
     }
 
     protected void btnSave_Click(object sender, EventArgs e)
     {
+        int bachatGatID = RoleHelper.GetBachatGatID();
+        int productID = 0;
         decimal quantity;
         decimal costPrice;
         decimal sellingPrice;
 
-        if (ddlBachatGat.SelectedValue == "")
+        int.TryParse(hfProductID.Value, out productID);
+
+        if (bachatGatID == 0)
         {
-            ShowMessage("Please select Bachat Gat.", "danger");
+            ShowMessage("Bachat Gat is not assigned.", "danger");
             return;
         }
 
-        if (txtProductName.Text.Trim() == "")
+        if (string.IsNullOrWhiteSpace(txtProductName.Text))
         {
-            ShowMessage("Please enter product name.", "danger");
+            ShowMessage("Enter product name.", "danger");
             return;
         }
 
-        if (!decimal.TryParse(txtQuantity.Text, out quantity))
+        if (string.IsNullOrWhiteSpace(txtCategory.Text))
+        {
+            ShowMessage("Enter category.", "danger");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(txtUnit.Text))
+        {
+            ShowMessage("Enter unit.", "danger");
+            return;
+        }
+
+        if (!decimal.TryParse(txtQuantity.Text, out quantity) || quantity < 0)
         {
             ShowMessage("Enter valid quantity.", "danger");
             return;
         }
 
-        if (!decimal.TryParse(txtCostPrice.Text, out costPrice))
+        if (!decimal.TryParse(txtCostPrice.Text, out costPrice) || costPrice < 0)
         {
             ShowMessage("Enter valid cost price.", "danger");
             return;
         }
 
-        if (!decimal.TryParse(txtSellingPrice.Text, out sellingPrice))
+        if (!decimal.TryParse(txtSellingPrice.Text, out sellingPrice) || sellingPrice < 0)
         {
             ShowMessage("Enter valid selling price.", "danger");
             return;
         }
 
-        string status = ddlStatus.SelectedValue;
-
-        if (quantity <= 0 && status == "Available")
+        try
         {
-            status = "Out of Stock";
-        }
-
-        string imagePath = "";
-        string oldImagePath = "";
-
-        if (fuProductImage.HasFile)
-        {
-            string extension =
-                Path.GetExtension(fuProductImage.FileName).ToLower();
-
-            if (extension != ".jpg" &&
-                extension != ".jpeg" &&
-                extension != ".png")
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                ShowMessage(
-                    "Only JPG, JPEG and PNG images are allowed.",
-                    "danger");
+                con.Open();
 
-                return;
-            }
+                string imagePath = "";
 
-            if (fuProductImage.PostedFile.ContentLength > 5 * 1024 * 1024)
-            {
-                ShowMessage(
-                    "Image size must be less than 5 MB.",
-                    "danger");
-
-                return;
-            }
-
-            string folderPath =
-                Server.MapPath("~/Images/");
-
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-
-            string fileName =
-                Guid.NewGuid().ToString() + extension;
-
-            string filePath =
-                Path.Combine(folderPath, fileName);
-
-            fuProductImage.SaveAs(filePath);
-
-            imagePath = "Images/" + fileName;
-        }
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        {
-            con.Open();
-
-            string query;
-
-            if (hfProductID.Value == "")
-            {
-                query = @"
-                    INSERT INTO Products
-                    (
-                        BachatGatID,
-                        ProductName,
-                        Category,
-                        Description,
-                        Unit,
-                        Quantity,
-                        CostPrice,
-                        SellingPrice,
-                        ProductImage,
-                        Status
-                    )
-                    VALUES
-                    (
-                        @BachatGatID,
-                        @ProductName,
-                        @Category,
-                        @Description,
-                        @Unit,
-                        @Quantity,
-                        @CostPrice,
-                        @SellingPrice,
-                        @ProductImage,
-                        @Status
-                    )";
-            }
-            else
-            {
-                SqlCommand oldImageCmd = new SqlCommand(
-                    "SELECT ProductImage FROM Products " +
-                    "WHERE ProductID=@ProductID", con);
-
-                oldImageCmd.Parameters.AddWithValue(
-                    "@ProductID",
-                    Convert.ToInt32(hfProductID.Value));
-
-                object oldImage =
-                    oldImageCmd.ExecuteScalar();
-
-                if (oldImage != null &&
-                    oldImage != DBNull.Value)
+                if (productID > 0)
                 {
-                    oldImagePath = oldImage.ToString();
+                    SqlCommand oldImageCmd = new SqlCommand(
+                        @"SELECT ProductImage
+                          FROM Products
+                          WHERE ProductID=@ProductID
+                          AND BachatGatID=@BachatGatID", con);
+
+                    oldImageCmd.Parameters.AddWithValue("@ProductID", productID);
+                    oldImageCmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+
+                    object oldImage = oldImageCmd.ExecuteScalar();
+
+                    if (oldImage == null)
+                    {
+                        ShowMessage("Product not found.", "danger");
+                        return;
+                    }
+
+                    if (oldImage != DBNull.Value)
+                    {
+                        imagePath = oldImage.ToString();
+                    }
                 }
 
-                if (imagePath != "")
+                if (fuProductImage.HasFile)
                 {
-                    query = @"
-                        UPDATE Products SET
-                            BachatGatID=@BachatGatID,
-                            ProductName=@ProductName,
+                    string extension = Path.GetExtension(fuProductImage.FileName).ToLower();
+
+                    if (extension != ".jpg" &&
+                        extension != ".jpeg" &&
+                        extension != ".png" &&
+                        extension != ".gif" &&
+                        extension != ".webp")
+                    {
+                        ShowMessage("Only JPG, JPEG, PNG, GIF and WEBP images are allowed.", "danger");
+                        return;
+                    }
+
+                    string folderPath = Server.MapPath("~/Images/");
+
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+
+                    string fileName = Guid.NewGuid().ToString() + extension;
+                    string filePath = Path.Combine(folderPath, fileName);
+
+                    fuProductImage.SaveAs(filePath);
+
+                    imagePath = "Images/" + fileName;
+                }
+
+                if (productID > 0)
+                {
+                    string query = @"
+                        UPDATE Products
+                        SET ProductName=@ProductName,
                             Category=@Category,
                             Description=@Description,
                             Unit=@Unit,
@@ -228,108 +172,133 @@ public partial class Products : System.Web.UI.Page
                             SellingPrice=@SellingPrice,
                             ProductImage=@ProductImage,
                             Status=@Status
-                        WHERE ProductID=@ProductID";
+                        WHERE ProductID=@ProductID
+                        AND BachatGatID=@BachatGatID";
+
+                    SqlCommand cmd = new SqlCommand(query, con);
+
+                    cmd.Parameters.AddWithValue("@ProductName", txtProductName.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Category", txtCategory.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Description", txtDescription.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Unit", txtUnit.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Quantity", quantity);
+                    cmd.Parameters.AddWithValue("@CostPrice", costPrice);
+                    cmd.Parameters.AddWithValue("@SellingPrice", sellingPrice);
+                    cmd.Parameters.AddWithValue("@ProductImage", imagePath);
+                    cmd.Parameters.AddWithValue("@Status", ddlStatus.SelectedValue);
+                    cmd.Parameters.AddWithValue("@ProductID", productID);
+                    cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+
+                    cmd.ExecuteNonQuery();
+
+                    ShowMessage("Product updated successfully.", "success");
                 }
                 else
                 {
-                    query = @"
-                        UPDATE Products SET
-                            BachatGatID=@BachatGatID,
-                            ProductName=@ProductName,
-                            Category=@Category,
-                            Description=@Description,
-                            Unit=@Unit,
-                            Quantity=@Quantity,
-                            CostPrice=@CostPrice,
-                            SellingPrice=@SellingPrice,
-                            Status=@Status
-                        WHERE ProductID=@ProductID";
+                    string query = @"
+                        INSERT INTO Products
+                        (
+                            BachatGatID,
+                            ProductName,
+                            Category,
+                            Description,
+                            Unit,
+                            Quantity,
+                            CostPrice,
+                            SellingPrice,
+                            ProductImage,
+                            Status,
+                            CreatedDate
+                        )
+                        VALUES
+                        (
+                            @BachatGatID,
+                            @ProductName,
+                            @Category,
+                            @Description,
+                            @Unit,
+                            @Quantity,
+                            @CostPrice,
+                            @SellingPrice,
+                            @ProductImage,
+                            @Status,
+                            GETDATE()
+                        )";
+
+                    SqlCommand cmd = new SqlCommand(query, con);
+
+                    cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+                    cmd.Parameters.AddWithValue("@ProductName", txtProductName.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Category", txtCategory.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Description", txtDescription.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Unit", txtUnit.Text.Trim());
+                    cmd.Parameters.AddWithValue("@Quantity", quantity);
+                    cmd.Parameters.AddWithValue("@CostPrice", costPrice);
+                    cmd.Parameters.AddWithValue("@SellingPrice", sellingPrice);
+                    cmd.Parameters.AddWithValue("@ProductImage", imagePath);
+                    cmd.Parameters.AddWithValue("@Status", ddlStatus.SelectedValue);
+
+                    cmd.ExecuteNonQuery();
+
+                    ShowMessage("Product added successfully.", "success");
                 }
             }
 
-            SqlCommand cmd = new SqlCommand(query, con);
-
-            cmd.Parameters.AddWithValue(
-                "@BachatGatID",
-                Convert.ToInt32(ddlBachatGat.SelectedValue));
-
-            cmd.Parameters.AddWithValue(
-                "@ProductName",
-                txtProductName.Text.Trim());
-
-            cmd.Parameters.AddWithValue(
-                "@Category",
-                txtCategory.Text.Trim());
-
-            cmd.Parameters.AddWithValue(
-                "@Description",
-                txtDescription.Text.Trim());
-
-            cmd.Parameters.AddWithValue(
-                "@Unit",
-                txtUnit.Text.Trim());
-
-            cmd.Parameters.AddWithValue(
-                "@Quantity",
-                quantity);
-
-            cmd.Parameters.AddWithValue(
-                "@CostPrice",
-                costPrice);
-
-            cmd.Parameters.AddWithValue(
-                "@SellingPrice",
-                sellingPrice);
-
-            if (hfProductID.Value == "" || imagePath != "")
-            {
-                cmd.Parameters.AddWithValue(
-                    "@ProductImage",
-                    imagePath);
-            }
-
-            cmd.Parameters.AddWithValue(
-                "@Status",
-                status);
-
-            if (hfProductID.Value != "")
-            {
-                cmd.Parameters.AddWithValue(
-                    "@ProductID",
-                    Convert.ToInt32(hfProductID.Value));
-            }
-
-            cmd.ExecuteNonQuery();
+            ClearForm();
+            LoadBachatGats();
+            LoadProducts();
         }
-
-        if (oldImagePath != "" && imagePath != "")
+        catch (Exception ex)
         {
-            string oldPhysicalPath =
-                Server.MapPath("~/" + oldImagePath);
-
-            if (File.Exists(oldPhysicalPath))
-            {
-                File.Delete(oldPhysicalPath);
-            }
+            ShowMessage(ex.Message, "danger");
         }
-
-        ShowMessage(
-            "Product saved successfully.",
-            "success");
-
-        ClearForm();
-        LoadProducts();
     }
 
-    protected void gvProducts_RowCommand(
-        object sender,
-        System.Web.UI.WebControls.GridViewCommandEventArgs e)
+    private void LoadProducts()
     {
-        int index = Convert.ToInt32(e.CommandArgument);
+        int bachatGatID = RoleHelper.GetBachatGatID();
 
-        int productID =
-            Convert.ToInt32(
-                gvProducts.DataKeys[index].Value);
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT
+                    P.ProductID,
+                    BG.GatName,
+                    P.ProductName,
+                    P.ProductImage,
+                    P.Category,
+                    P.Unit,
+                    P.Quantity,
+                    P.CostPrice,
+                    P.SellingPrice,
+                    P.Status
+                FROM Products P
+                INNER JOIN BachatGat BG
+                    ON P.BachatGatID=BG.BachatGatID
+                WHERE P.BachatGatID=@BachatGatID
+                ORDER BY P.ProductID DESC";
+
+            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            da.SelectCommand.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            gvProducts.DataSource = dt;
+            gvProducts.DataBind();
+        }
+    }
+
+    protected void gvProducts_RowCommand(object sender, System.Web.UI.WebControls.GridViewCommandEventArgs e)
+    {
+        int rowIndex = Convert.ToInt32(e.CommandArgument);
+
+        if (rowIndex < 0 || rowIndex >= gvProducts.Rows.Count)
+        {
+            return;
+        }
+
+        int productID = Convert.ToInt32(gvProducts.DataKeys[rowIndex].Value);
 
         if (e.CommandName == "EditProduct")
         {
@@ -345,130 +314,86 @@ public partial class Products : System.Web.UI.Page
     {
         using (SqlConnection con = DBHelper.GetConnection())
         {
+            string query = @"
+                SELECT
+                    ProductID,
+                    BachatGatID,
+                    ProductName,
+                    Category,
+                    Description,
+                    Unit,
+                    Quantity,
+                    CostPrice,
+                    SellingPrice,
+                    ProductImage,
+                    Status
+                FROM Products
+                WHERE ProductID=@ProductID
+                AND BachatGatID=@BachatGatID";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue("@ProductID", productID);
+            cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+
             con.Open();
 
-            SqlCommand cmd = new SqlCommand(
-                "SELECT * FROM Products " +
-                "WHERE ProductID=@ProductID", con);
-
-            cmd.Parameters.AddWithValue(
-                "@ProductID",
-                productID);
-
-            SqlDataReader dr = cmd.ExecuteReader();
-
-            if (dr.Read())
+            using (SqlDataReader dr = cmd.ExecuteReader())
             {
-                hfProductID.Value =
-                    dr["ProductID"].ToString();
-
-                ddlBachatGat.SelectedValue =
-                    dr["BachatGatID"].ToString();
-
-                txtProductName.Text =
-                    dr["ProductName"].ToString();
-
-                txtCategory.Text =
-                    dr["Category"].ToString();
-
-                txtDescription.Text =
-                    dr["Description"].ToString();
-
-                txtUnit.Text =
-                    dr["Unit"].ToString();
-
-                txtQuantity.Text =
-                    dr["Quantity"].ToString();
-
-                txtCostPrice.Text =
-                    dr["CostPrice"].ToString();
-
-                txtSellingPrice.Text =
-                    dr["SellingPrice"].ToString();
-
-                ddlStatus.SelectedValue =
-                    dr["Status"].ToString();
-
-                btnSave.Text = "Update Product";
+                if (dr.Read())
+                {
+                    hfProductID.Value = dr["ProductID"].ToString();
+                    ddlBachatGat.SelectedValue = dr["BachatGatID"].ToString();
+                    txtProductName.Text = dr["ProductName"].ToString();
+                    txtCategory.Text = dr["Category"].ToString();
+                    txtDescription.Text = dr["Description"].ToString();
+                    txtUnit.Text = dr["Unit"].ToString();
+                    txtQuantity.Text = dr["Quantity"].ToString();
+                    txtCostPrice.Text = dr["CostPrice"].ToString();
+                    txtSellingPrice.Text = dr["SellingPrice"].ToString();
+                    ddlStatus.SelectedValue = dr["Status"].ToString();
+                    btnSave.Text = "Update Product";
+                }
             }
-
-            dr.Close();
         }
     }
 
     private void DeleteProduct(int productID)
     {
-        string imagePath = "";
-
-        using (SqlConnection con = DBHelper.GetConnection())
+        try
         {
-            con.Open();
-
-            SqlCommand checkCmd = new SqlCommand(
-                "SELECT COUNT(*) FROM Sales " +
-                "WHERE ProductID=@ProductID", con);
-
-            checkCmd.Parameters.AddWithValue(
-                "@ProductID",
-                productID);
-
-            int count =
-                Convert.ToInt32(
-                    checkCmd.ExecuteScalar());
-
-            if (count > 0)
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                ShowMessage(
-                    "Product cannot be deleted because sales exist.",
-                    "danger");
+                string query = @"
+                    DELETE FROM Products
+                    WHERE ProductID=@ProductID
+                    AND BachatGatID=@BachatGatID";
 
-                return;
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue("@ProductID", productID);
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
+
+                con.Open();
+
+                int result = cmd.ExecuteNonQuery();
+
+                if (result > 0)
+                {
+                    ShowMessage("Product deleted successfully.", "success");
+                }
+                else
+                {
+                    ShowMessage("Product not found.", "danger");
+                }
             }
 
-            SqlCommand imageCmd = new SqlCommand(
-                "SELECT ProductImage FROM Products " +
-                "WHERE ProductID=@ProductID", con);
-
-            imageCmd.Parameters.AddWithValue(
-                "@ProductID",
-                productID);
-
-            object image =
-                imageCmd.ExecuteScalar();
-
-            if (image != null &&
-                image != DBNull.Value)
-            {
-                imagePath = image.ToString();
-            }
-
-            SqlCommand cmd = new SqlCommand(
-                "DELETE FROM Products " +
-                "WHERE ProductID=@ProductID", con);
-
-            cmd.Parameters.AddWithValue(
-                "@ProductID",
-                productID);
-
-            cmd.ExecuteNonQuery();
+            LoadProducts();
         }
-
-        if (imagePath != "")
+        catch (Exception ex)
         {
-            string physicalPath =
-                Server.MapPath("~/" + imagePath);
-
-            if (File.Exists(physicalPath))
-            {
-                File.Delete(physicalPath);
-            }
+            ShowMessage(ex.Message, "danger");
         }
-
-        LoadProducts();
-
-        ShowMessage(
-            "Product deleted successfully.",
-            "success");
     }
 
     protected void btnSearch_Click(object sender, EventArgs e)
@@ -476,25 +401,33 @@ public partial class Products : System.Web.UI.Page
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
-                SELECT P.ProductID,
-                       BG.GatName,
-                       P.ProductName,
-                       P.Category,
-                       P.Unit,
-                       P.Quantity,
-                       P.CostPrice,
-                       P.SellingPrice,
-                       P.Status,
-                       P.ProductImage
+                SELECT
+                    P.ProductID,
+                    BG.GatName,
+                    P.ProductName,
+                    P.ProductImage,
+                    P.Category,
+                    P.Unit,
+                    P.Quantity,
+                    P.CostPrice,
+                    P.SellingPrice,
+                    P.Status
                 FROM Products P
                 INNER JOIN BachatGat BG
                     ON P.BachatGatID=BG.BachatGatID
-                WHERE P.ProductName LIKE @Search
-                   OR P.Category LIKE @Search
+                WHERE P.BachatGatID=@BachatGatID
+                AND
+                (
+                    P.ProductName LIKE @Search
+                    OR P.Category LIKE @Search
+                )
                 ORDER BY P.ProductID DESC";
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+            SqlDataAdapter da = new SqlDataAdapter(query, con);
+
+            da.SelectCommand.Parameters.AddWithValue(
+                "@BachatGatID",
+                RoleHelper.GetBachatGatID());
 
             da.SelectCommand.Parameters.AddWithValue(
                 "@Search",
@@ -511,6 +444,7 @@ public partial class Products : System.Web.UI.Page
 
     protected void btnShowAll_Click(object sender, EventArgs e)
     {
+        txtSearch.Text = "";
         LoadProducts();
     }
 
@@ -522,26 +456,52 @@ public partial class Products : System.Web.UI.Page
     private void ClearForm()
     {
         hfProductID.Value = "";
-
-        if (ddlBachatGat.Items.Count > 0)
-            ddlBachatGat.SelectedIndex = 0;
-
         txtProductName.Text = "";
         txtCategory.Text = "";
-        txtDescription.Text = "";
         txtUnit.Text = "";
         txtQuantity.Text = "";
         txtCostPrice.Text = "";
         txtSellingPrice.Text = "";
+        txtDescription.Text = "";
+        lblImageMessage.Text = "";
 
-        ddlStatus.SelectedIndex = 0;
+        if (ddlStatus.Items.FindByValue("Available") != null)
+        {
+            ddlStatus.SelectedValue = "Available";
+        }
 
-        fuProductImage.Attributes.Clear();
-
-        if (lblImageMessage != null)
-            lblImageMessage.Text = "";
+        if (ddlBachatGat.Items.FindByValue(
+            RoleHelper.GetBachatGatID().ToString()) != null)
+        {
+            ddlBachatGat.SelectedValue =
+                RoleHelper.GetBachatGatID().ToString();
+        }
 
         btnSave.Text = "Save Product";
+    }
+
+    public string GetImageUrl(object value)
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return ResolveUrl("~/Images/no-image.png");
+        }
+
+        string path = value.ToString().Trim();
+
+        if (path == "")
+        {
+            return ResolveUrl("~/Images/no-image.png");
+        }
+
+        path = path.Replace("\\", "/");
+
+        if (!path.StartsWith("Images/", StringComparison.OrdinalIgnoreCase))
+        {
+            path = "Images/" + Path.GetFileName(path);
+        }
+
+        return ResolveUrl("~/" + path);
     }
 
     private void ShowMessage(string message, string type)
@@ -550,29 +510,5 @@ public partial class Products : System.Web.UI.Page
             "<div class='alert alert-" + type + "'>" +
             message +
             "</div>";
-    }
-    public string GetImageUrl(object value)
-    {
-        if (value == null || value == DBNull.Value)
-            return "";
-
-        string path = value.ToString().Trim();
-
-        if (path == "")
-            return "";
-
-        path = path.Replace("\\", "/");
-
-        if (path.StartsWith("ProductImages/", StringComparison.OrdinalIgnoreCase))
-        {
-            path = "Images/" + path.Substring("ProductImages/".Length);
-        }
-
-        if (!path.StartsWith("Images/", StringComparison.OrdinalIgnoreCase))
-        {
-            path = "Images/" + Path.GetFileName(path);
-        }
-
-        return ResolveUrl("~/" + path);
     }
 }

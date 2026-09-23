@@ -8,6 +8,9 @@ public partial class Loans : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtApplicationDate.Attributes["type"] = "date";
+        txtDistributionDate.Attributes["type"] = "date";
+
         RoleHelper.RequireLogin(this);
 
         pnlLoanDistribution.Visible = IsManagementUser();

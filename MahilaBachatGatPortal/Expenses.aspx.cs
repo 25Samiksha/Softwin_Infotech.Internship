@@ -6,7 +6,10 @@ public partial class Expenses : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtExpenseDate.Attributes["type"] = "date";
+
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             LoadBachatGats();
@@ -18,11 +21,6 @@ public partial class Expenses : System.Web.UI.Page
             LoadSummary();
         }
     }
-
-
-    // =====================================================
-    // LOAD BACHAT GATS
-    // =====================================================
 
     private void LoadBachatGats()
     {
@@ -42,13 +40,8 @@ public partial class Expenses : System.Web.UI.Page
             da.Fill(dt);
 
             ddlBachatGat.DataSource = dt;
-
-            ddlBachatGat.DataTextField =
-                "GatName";
-
-            ddlBachatGat.DataValueField =
-                "BachatGatID";
-
+            ddlBachatGat.DataTextField = "GatName";
+            ddlBachatGat.DataValueField = "BachatGatID";
             ddlBachatGat.DataBind();
 
             ddlBachatGat.Items.Insert(
@@ -59,11 +52,6 @@ public partial class Expenses : System.Web.UI.Page
             );
         }
     }
-
-
-    // =====================================================
-    // LOAD EXPENSES
-    // =====================================================
 
     private void LoadExpenses()
     {
@@ -98,14 +86,7 @@ public partial class Expenses : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // SAVE EXPENSE
-    // =====================================================
-
-    protected void btnSave_Click(
-        object sender,
-        EventArgs e)
+    protected void btnSave_Click(object sender, EventArgs e)
     {
         decimal amount;
 
@@ -151,7 +132,6 @@ public partial class Expenses : System.Web.UI.Page
             return;
         }
 
-
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
@@ -165,7 +145,6 @@ public partial class Expenses : System.Web.UI.Page
                     PaidTo,
                     PaymentMode,
                     ReceiptNumber
-                   
                 )
                 VALUES
                 (
@@ -177,7 +156,6 @@ public partial class Expenses : System.Web.UI.Page
                     @PaidTo,
                     @PaymentMode,
                     @ReceiptNumber
-                    
                 )";
 
             SqlCommand cmd =
@@ -215,12 +193,10 @@ public partial class Expenses : System.Web.UI.Page
                 "@ReceiptNumber",
                 txtReceiptNumber.Text.Trim());
 
-            
             con.Open();
 
             cmd.ExecuteNonQuery();
         }
-
 
         ShowMessage(
             "Expense entry saved successfully.",
@@ -231,11 +207,6 @@ public partial class Expenses : System.Web.UI.Page
         LoadExpenses();
         LoadSummary();
     }
-
-
-    // =====================================================
-    // DELETE
-    // =====================================================
 
     protected void gvExpenses_RowCommand(
         object sender,
@@ -249,7 +220,6 @@ public partial class Expenses : System.Web.UI.Page
             DeleteExpense(expenseID);
         }
     }
-
 
     private void DeleteExpense(int expenseID)
     {
@@ -278,11 +248,6 @@ public partial class Expenses : System.Web.UI.Page
         LoadExpenses();
         LoadSummary();
     }
-
-
-    // =====================================================
-    // SEARCH
-    // =====================================================
 
     protected void btnSearch_Click(
         object sender,
@@ -330,11 +295,6 @@ public partial class Expenses : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // SHOW ALL
-    // =====================================================
-
     protected void btnShowAll_Click(
         object sender,
         EventArgs e)
@@ -343,11 +303,6 @@ public partial class Expenses : System.Web.UI.Page
 
         LoadExpenses();
     }
-
-
-    // =====================================================
-    // SUMMARY
-    // =====================================================
 
     private void LoadSummary()
     {
@@ -395,11 +350,6 @@ public partial class Expenses : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // CLEAR FORM
-    // =====================================================
-
     protected void btnClear_Click(
         object sender,
         EventArgs e)
@@ -407,37 +357,27 @@ public partial class Expenses : System.Web.UI.Page
         ClearForm();
     }
 
-
     private void ClearForm()
     {
         hfExpenseID.Value = "";
 
         ddlBachatGat.SelectedIndex = 0;
-
         ddlExpenseType.SelectedIndex = 0;
 
         txtExpenseDate.Text =
             DateTime.Now.ToString("yyyy-MM-dd");
 
         txtAmount.Text = "";
-
         txtDescription.Text = "";
-
         txtPaidTo.Text = "";
 
         ddlPaymentMode.SelectedIndex = 0;
 
         txtReceiptNumber.Text = "";
-
         txtRemarks.Text = "";
 
         btnSave.Text = "Save Expense";
     }
-
-
-    // =====================================================
-    // MESSAGE
-    // =====================================================
 
     private void ShowMessage(
         string message,

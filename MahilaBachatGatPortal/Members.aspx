@@ -52,7 +52,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Date of Birth</label>
-<asp:TextBox ID="txtDateOfBirth" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtDateOfBirth" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 
@@ -102,7 +102,7 @@
 <div class="col-md-4">
 <div class="form-group">
 <label>Join Date <span class="required">*</span></label>
-<asp:TextBox ID="txtJoinDate" runat="server" TextMode="Date" CssClass="form-control"></asp:TextBox>
+<asp:TextBox ID="txtJoinDate" runat="server" TextMode="SingleLine" CssClass="form-control"></asp:TextBox>
 </div>
 </div>
 
@@ -170,16 +170,14 @@
 <div class="col-md-3">
 <div class="form-group">
 <label>Filter by Bachat Gat</label>
-<asp:DropDownList ID="ddlFilterBachatGat" runat="server" CssClass="form-control">
-</asp:DropDownList>
+<asp:DropDownList ID="ddlFilterBachatGat" runat="server" CssClass="form-control"></asp:DropDownList>
 </div>
 </div>
 
 <div class="col-md-3">
 <div class="form-group">
 <label>Filter by Village</label>
-<asp:DropDownList ID="ddlFilterVillage" runat="server" CssClass="form-control">
-</asp:DropDownList>
+<asp:DropDownList ID="ddlFilterVillage" runat="server" CssClass="form-control"></asp:DropDownList>
 </div>
 </div>
 

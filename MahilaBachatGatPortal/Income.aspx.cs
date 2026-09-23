@@ -6,22 +6,21 @@ public partial class Income : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtIncomeDate.Attributes["type"] = "date";
+
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             LoadBachatGats();
 
-            txtIncomeDate.Text = DateTime.Now.ToString("yyyy-MM-dd");
+            txtIncomeDate.Text =
+                DateTime.Now.ToString("yyyy-MM-dd");
 
             LoadIncome();
             LoadSummary();
         }
     }
-
-
-    // =====================================================
-    // LOAD BACHAT GATS
-    // =====================================================
 
     private void LoadBachatGats()
     {
@@ -33,7 +32,8 @@ public partial class Income : System.Web.UI.Page
                 WHERE Status = 'Active'
                 ORDER BY GatName";
 
-            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            SqlDataAdapter da =
+                new SqlDataAdapter(query, con);
 
             DataTable dt = new DataTable();
 
@@ -48,15 +48,9 @@ public partial class Income : System.Web.UI.Page
                 0,
                 new System.Web.UI.WebControls.ListItem(
                     "-- Select Bachat Gat --",
-                    "")
-            );
+                    ""));
         }
     }
-
-
-    // =====================================================
-    // LOAD INCOME
-    // =====================================================
 
     private void LoadIncome()
     {
@@ -89,33 +83,38 @@ public partial class Income : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // SAVE INCOME
-    // =====================================================
-
     protected void btnSave_Click(object sender, EventArgs e)
     {
         decimal amount;
 
         if (ddlBachatGat.SelectedValue == "")
         {
-            ShowMessage("Please select Bachat Gat.", "alert-danger");
+            ShowMessage(
+                "Please select Bachat Gat.",
+                "alert-danger");
+
             return;
         }
 
         if (ddlIncomeType.SelectedValue == "")
         {
-            ShowMessage("Please select income type.", "alert-danger");
+            ShowMessage(
+                "Please select income type.",
+                "alert-danger");
+
             return;
         }
+
         DateTime incomeDate;
 
         if (!DateTime.TryParse(
             txtIncomeDate.Text,
             out incomeDate))
         {
-            ShowMessage("Please enter valid income date.", "alert-danger");
+            ShowMessage(
+                "Please enter valid income date.",
+                "alert-danger");
+
             return;
         }
 
@@ -123,12 +122,15 @@ public partial class Income : System.Web.UI.Page
             txtAmount.Text,
             out amount) || amount <= 0)
         {
-            ShowMessage("Please enter valid amount.", "alert-danger");
+            ShowMessage(
+                "Please enter valid amount.",
+                "alert-danger");
+
             return;
         }
 
-
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 INSERT INTO Income
@@ -141,7 +143,6 @@ public partial class Income : System.Web.UI.Page
                     ReceivedFrom,
                     PaymentMode,
                     ReceiptNumber
-                    
                 )
                 VALUES
                 (
@@ -153,7 +154,6 @@ public partial class Income : System.Web.UI.Page
                     @ReceivedFrom,
                     @PaymentMode,
                     @ReceiptNumber
-                    
                 )";
 
             SqlCommand cmd =
@@ -191,13 +191,10 @@ public partial class Income : System.Web.UI.Page
                 "@ReceiptNumber",
                 txtReceiptNumber.Text.Trim());
 
-           
-
             con.Open();
 
             cmd.ExecuteNonQuery();
         }
-
 
         ShowMessage(
             "Income entry saved successfully.",
@@ -209,11 +206,6 @@ public partial class Income : System.Web.UI.Page
         LoadSummary();
     }
 
-
-    // =====================================================
-    // DELETE
-    // =====================================================
-
     protected void gvIncome_RowCommand(
         object sender,
         System.Web.UI.WebControls.GridViewCommandEventArgs e)
@@ -221,16 +213,17 @@ public partial class Income : System.Web.UI.Page
         if (e.CommandName == "DeleteIncome")
         {
             int incomeID =
-                Convert.ToInt32(e.CommandArgument);
+                Convert.ToInt32(
+                    e.CommandArgument);
 
             DeleteIncome(incomeID);
         }
     }
 
-
     private void DeleteIncome(int incomeID)
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 DELETE FROM Income
@@ -256,11 +249,6 @@ public partial class Income : System.Web.UI.Page
         LoadSummary();
     }
 
-
-    // =====================================================
-    // SEARCH
-    // =====================================================
-
     protected void btnSearch_Click(
         object sender,
         EventArgs e)
@@ -268,7 +256,8 @@ public partial class Income : System.Web.UI.Page
         string search =
             txtSearch.Text.Trim();
 
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -307,11 +296,6 @@ public partial class Income : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // SHOW ALL
-    // =====================================================
-
     protected void btnShowAll_Click(
         object sender,
         EventArgs e)
@@ -321,14 +305,10 @@ public partial class Income : System.Web.UI.Page
         LoadIncome();
     }
 
-
-    // =====================================================
-    // SUMMARY
-    // =====================================================
-
     private void LoadSummary()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -372,18 +352,12 @@ public partial class Income : System.Web.UI.Page
         }
     }
 
-
-    // =====================================================
-    // CLEAR FORM
-    // =====================================================
-
     protected void btnClear_Click(
         object sender,
         EventArgs e)
     {
         ClearForm();
     }
-
 
     private void ClearForm()
     {
@@ -410,11 +384,6 @@ public partial class Income : System.Web.UI.Page
 
         btnSave.Text = "Save Income";
     }
-
-
-    // =====================================================
-    // MESSAGE
-    // =====================================================
 
     private void ShowMessage(
         string message,

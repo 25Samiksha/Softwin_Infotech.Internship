@@ -1,12 +1,10 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="OrderPlaced.aspx.cs" Inherits="OrderPlaced" MasterPageFile="~/Public.Master" %>
-
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 <style>
 .order-success-container {
     max-width: 850px;
     margin: 40px auto;
 }
-
 .order-success-panel {
     background: #fff;
     padding: 40px;
@@ -14,24 +12,20 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.12);
     text-align: center;
 }
-
 .success-icon {
     font-size: 60px;
     color: #5cb85c;
     margin-bottom: 15px;
 }
-
 .success-title {
     color: #5cb85c;
     font-weight: 600;
     margin-bottom: 10px;
 }
-
 .order-number {
     font-size: 18px;
     margin-bottom: 30px;
 }
-
 .details-box {
     text-align: left;
     background: #f8fafc;
@@ -40,28 +34,36 @@
     padding: 25px;
     margin-bottom: 25px;
 }
-
 .section-title {
     color: #2f6f9f;
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 20px;
 }
-
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.order-table th {
+    background: #fff;
+    padding: 12px;
+    border-bottom: 1px solid #e5e9ef;
+}
+.order-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e9ef;
+}
 .detail-row {
     margin-bottom: 12px;
 }
-
 .total-amount {
     font-size: 22px;
     font-weight: 700;
     color: #2f6f9f;
 }
-
 .btn-home {
     margin: 5px;
 }
-
 .btn-products {
     margin: 5px;
 }
@@ -69,9 +71,7 @@
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
-
 <div class="order-success-container">
-
 <div class="order-success-panel">
 
 <div class="success-icon">
@@ -91,15 +91,22 @@ Order ID:
 
 <h4 class="section-title">Order Details</h4>
 
-<div class="detail-row">
-<strong>Product:</strong>
-<asp:Label ID="lblProductName" runat="server"></asp:Label>
-</div>
+<asp:GridView
+    ID="gvOrderItems"
+    runat="server"
+    AutoGenerateColumns="False"
+    CssClass="order-table"
+    GridLines="None">
+    <Columns>
+        <asp:BoundField DataField="ProductName" HeaderText="Product" />
+        <asp:BoundField DataField="GatName" HeaderText="Bachat Gat" />
+        <asp:BoundField DataField="Quantity" HeaderText="Quantity" />
+        <asp:BoundField DataField="UnitPrice" HeaderText="Price" DataFormatString="₹ {0:N2}" />
+        <asp:BoundField DataField="TotalAmount" HeaderText="Total" DataFormatString="₹ {0:N2}" />
+    </Columns>
+</asp:GridView>
 
-<div class="detail-row">
-<strong>Quantity:</strong>
-<asp:Label ID="lblQuantity" runat="server"></asp:Label>
-</div>
+<br />
 
 <div class="detail-row">
 <strong>Payment Method:</strong>
@@ -180,7 +187,5 @@ Home
 </a>
 
 </div>
-
 </div>
-
 </asp:Content>

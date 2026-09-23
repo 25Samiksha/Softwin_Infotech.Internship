@@ -7,6 +7,9 @@ public partial class Members : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtDateOfBirth.Attributes["type"] = "date";
+        txtJoinDate.Attributes["type"] = "date";
+
         RoleHelper.RequireManagement(this);
 
         if (!IsPostBack)
@@ -47,10 +50,7 @@ public partial class Members : System.Web.UI.Page
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             con.Open();
@@ -74,10 +74,7 @@ public partial class Members : System.Web.UI.Page
     private void LoadFilterBachatGats()
     {
         ddlFilterBachatGat.Items.Clear();
-
-        ddlFilterBachatGat.Items.Add(
-            new ListItem("All Bachat Gats", "")
-        );
+        ddlFilterBachatGat.Items.Add(new ListItem("All Bachat Gats", ""));
 
         using (SqlConnection con = DBHelper.GetConnection())
         {
@@ -103,10 +100,7 @@ public partial class Members : System.Web.UI.Page
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             con.Open();
@@ -130,10 +124,7 @@ public partial class Members : System.Web.UI.Page
     private void LoadFilterVillages()
     {
         ddlFilterVillage.Items.Clear();
-
-        ddlFilterVillage.Items.Add(
-            new ListItem("All Villages", "")
-        );
+        ddlFilterVillage.Items.Add(new ListItem("All Villages", ""));
 
         using (SqlConnection con = DBHelper.GetConnection())
         {
@@ -154,10 +145,7 @@ public partial class Members : System.Web.UI.Page
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             con.Open();
@@ -206,10 +194,7 @@ public partial class Members : System.Web.UI.Page
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -245,16 +230,12 @@ public partial class Members : System.Web.UI.Page
             return;
         }
 
-        int selectedGatID =
-            Convert.ToInt32(ddlBachatGat.SelectedValue);
+        int selectedGatID = Convert.ToInt32(ddlBachatGat.SelectedValue);
 
         if (!RoleHelper.IsAdmin() &&
             selectedGatID != RoleHelper.GetBachatGatID())
         {
-            ShowMessage(
-                "You can manage members only from your assigned Bachat Gat.",
-                true
-            );
+            ShowMessage("You can manage members only from your assigned Bachat Gat.", true);
             return;
         }
 
@@ -380,8 +361,7 @@ public partial class Members : System.Web.UI.Page
                         GETDATE()
                     )";
 
-                SqlCommand cmd =
-                    new SqlCommand(insertQuery, con);
+                SqlCommand cmd = new SqlCommand(insertQuery, con);
 
                 cmd.Parameters.AddWithValue("@BachatGatID", selectedGatID);
                 cmd.Parameters.AddWithValue("@MemberName", memberName);
@@ -433,8 +413,7 @@ public partial class Members : System.Web.UI.Page
         if (!RoleHelper.IsAdmin() &&
             ddlBachatGat.Items.Count > 0)
         {
-            ddlBachatGat.SelectedValue =
-                RoleHelper.GetBachatGatID().ToString();
+            ddlBachatGat.SelectedValue = RoleHelper.GetBachatGatID().ToString();
         }
     }
 
@@ -490,40 +469,25 @@ public partial class Members : System.Web.UI.Page
 
             if (search != "")
             {
-                cmd.Parameters.AddWithValue(
-                    "@Search",
-                    "%" + search + "%"
-                );
+                cmd.Parameters.AddWithValue("@Search", "%" + search + "%");
             }
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@UserBachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@UserBachatGatID", RoleHelper.GetBachatGatID());
             }
             else if (filterBachatGat != "")
             {
-                cmd.Parameters.AddWithValue(
-                    "@FilterBachatGatID",
-                    Convert.ToInt32(filterBachatGat)
-                );
+                cmd.Parameters.AddWithValue("@FilterBachatGatID", Convert.ToInt32(filterBachatGat));
             }
 
             if (filterVillage != "")
             {
-                cmd.Parameters.AddWithValue(
-                    "@Village",
-                    filterVillage
-                );
+                cmd.Parameters.AddWithValue("@Village", filterVillage);
             }
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(cmd);
-
-            DataTable dt =
-                new DataTable();
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
 
             da.Fill(dt);
 
@@ -549,12 +513,9 @@ public partial class Members : System.Web.UI.Page
         LoadMembers();
     }
 
-    protected void gvMembers_RowCommand(
-        object sender,
-        GridViewCommandEventArgs e)
+    protected void gvMembers_RowCommand(object sender, GridViewCommandEventArgs e)
     {
-        int memberID =
-            Convert.ToInt32(e.CommandArgument);
+        int memberID = Convert.ToInt32(e.CommandArgument);
 
         if (e.CommandName == "EditMember")
         {
@@ -594,88 +555,53 @@ public partial class Members : System.Web.UI.Page
                 query += " AND BachatGatID = @BachatGatID";
             }
 
-            SqlCommand cmd =
-                new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, con);
 
-            cmd.Parameters.AddWithValue(
-                "@MemberID",
-                memberID
-            );
+            cmd.Parameters.AddWithValue("@MemberID", memberID);
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             con.Open();
 
-            SqlDataReader dr =
-                cmd.ExecuteReader();
+            SqlDataReader dr = cmd.ExecuteReader();
 
             if (dr.Read())
             {
-                hfMemberID.Value =
-                    dr["MemberID"].ToString();
-
-                ddlBachatGat.SelectedValue =
-                    dr["BachatGatID"].ToString();
-
-                txtMemberName.Text =
-                    dr["MemberName"].ToString();
-
-                txtFatherOrHusbandName.Text =
-                    dr["FatherOrHusbandName"].ToString();
+                hfMemberID.Value = dr["MemberID"].ToString();
+                ddlBachatGat.SelectedValue = dr["BachatGatID"].ToString();
+                txtMemberName.Text = dr["MemberName"].ToString();
+                txtFatherOrHusbandName.Text = dr["FatherOrHusbandName"].ToString();
 
                 if (dr["DateOfBirth"] != DBNull.Value)
                 {
-                    txtDateOfBirth.Text =
-                        Convert.ToDateTime(
-                            dr["DateOfBirth"]
-                        ).ToString("yyyy-MM-dd");
+                    txtDateOfBirth.Text = Convert.ToDateTime(dr["DateOfBirth"]).ToString("yyyy-MM-dd");
                 }
                 else
                 {
                     txtDateOfBirth.Text = "";
                 }
 
-                txtMobile.Text =
-                    dr["Mobile"].ToString();
-
-                txtEmail.Text =
-                    dr["Email"].ToString();
-
-                txtAddress.Text =
-                    dr["Address"].ToString();
-
-                txtVillage.Text =
-                    dr["Village"].ToString();
-
-                txtTaluka.Text =
-                    dr["Taluka"].ToString();
-
-                txtDistrict.Text =
-                    dr["District"].ToString();
+                txtMobile.Text = dr["Mobile"].ToString();
+                txtEmail.Text = dr["Email"].ToString();
+                txtAddress.Text = dr["Address"].ToString();
+                txtVillage.Text = dr["Village"].ToString();
+                txtTaluka.Text = dr["Taluka"].ToString();
+                txtDistrict.Text = dr["District"].ToString();
 
                 if (dr["JoinDate"] != DBNull.Value)
                 {
-                    txtJoinDate.Text =
-                        Convert.ToDateTime(
-                            dr["JoinDate"]
-                        ).ToString("yyyy-MM-dd");
+                    txtJoinDate.Text = Convert.ToDateTime(dr["JoinDate"]).ToString("yyyy-MM-dd");
                 }
                 else
                 {
                     txtJoinDate.Text = "";
                 }
 
-                txtOccupation.Text =
-                    dr["Occupation"].ToString();
-
-                ddlStatus.SelectedValue =
-                    dr["Status"].ToString();
+                txtOccupation.Text = dr["Occupation"].ToString();
+                ddlStatus.SelectedValue = dr["Status"].ToString();
             }
 
             dr.Close();
@@ -696,40 +622,26 @@ public partial class Members : System.Web.UI.Page
                 query += " AND BachatGatID = @BachatGatID";
             }
 
-            SqlCommand cmd =
-                new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, con);
 
-            cmd.Parameters.AddWithValue(
-                "@MemberID",
-                memberID
-            );
+            cmd.Parameters.AddWithValue("@MemberID", memberID);
 
             if (!RoleHelper.IsAdmin())
             {
-                cmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    RoleHelper.GetBachatGatID()
-                );
+                cmd.Parameters.AddWithValue("@BachatGatID", RoleHelper.GetBachatGatID());
             }
 
             con.Open();
 
-            int rows =
-                cmd.ExecuteNonQuery();
+            int rows = cmd.ExecuteNonQuery();
 
             if (rows > 0)
             {
-                ShowMessage(
-                    "Member deactivated successfully.",
-                    false
-                );
+                ShowMessage("Member deactivated successfully.", false);
             }
             else
             {
-                ShowMessage(
-                    "Member was not found or access was denied.",
-                    true
-                );
+                ShowMessage("Member was not found or access was denied.", true);
             }
         }
 
@@ -758,9 +670,7 @@ public partial class Members : System.Web.UI.Page
         return DBNull.Value;
     }
 
-    private void ShowMessage(
-        string message,
-        bool isError)
+    private void ShowMessage(string message, bool isError)
     {
         lblMessage.Text = message;
 

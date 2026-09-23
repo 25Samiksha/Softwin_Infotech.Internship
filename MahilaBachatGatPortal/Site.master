@@ -12,6 +12,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <link href="CSS/style.css" rel="stylesheet" />
 
+    <style>
+        .logo-brand{
+            display:flex;
+            align-items:center;
+            height:60px;
+            padding-top:8px;
+            padding-bottom:8px;
+        }
+
+        .site-logo{
+            width:42px;
+            height:42px;
+            object-fit:contain;
+            margin-right:10px;
+        }
+    </style>
+
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
 </head>
@@ -32,9 +49,9 @@
                 <span class="icon-bar"></span>
             </button>
 
-            <a class="navbar-brand" href="Dashboard.aspx">
-                <span class="glyphicon glyphicon-home"></span>
-                Mahila Bachat Gat
+            <a class="navbar-brand logo-brand" href="Dashboard.aspx">
+                <img src="images/Logo.png" class="site-logo" />
+                <span>Mahila Bachat Gat</span>
             </a>
         </div>
 
@@ -373,14 +390,17 @@
     $(document).ready(function () {
 
         $(".sidebar-dropdown").each(function () {
+
             var target = $(this).attr("data-target");
 
             if (target && localStorage.getItem("sidebar_" + target) === "open") {
                 $(target).addClass("in").css("height", "auto");
             }
+
         });
 
         $(".sidebar-dropdown").on("click", function (e) {
+
             e.preventDefault();
             e.stopPropagation();
 
@@ -399,6 +419,7 @@
                 menu.addClass("in").css("height", "auto");
                 localStorage.setItem("sidebar_" + target, "open");
             }
+
         });
 
     });

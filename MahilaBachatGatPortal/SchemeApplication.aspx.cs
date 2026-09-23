@@ -6,6 +6,9 @@ public partial class SchemeApplication : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtApplicationDate.Attributes["type"] = "date";
+        txtApprovedDate.Attributes["type"] = "date";
+
         if (!IsPostBack)
         {
             LoadSchemes();
@@ -210,25 +213,32 @@ public partial class SchemeApplication : System.Web.UI.Page
 
             SqlCommand cmd = new SqlCommand(query, con);
 
-            cmd.Parameters.AddWithValue("@SchemeID",
+            cmd.Parameters.AddWithValue(
+                "@SchemeID",
                 Convert.ToInt32(ddlScheme.SelectedValue));
 
-            cmd.Parameters.AddWithValue("@MemberID",
+            cmd.Parameters.AddWithValue(
+                "@MemberID",
                 Convert.ToInt32(ddlMember.SelectedValue));
 
-            cmd.Parameters.AddWithValue("@ApplicationDate",
+            cmd.Parameters.AddWithValue(
+                "@ApplicationDate",
                 applicationDate);
 
-            cmd.Parameters.AddWithValue("@ApplicationNumber",
+            cmd.Parameters.AddWithValue(
+                "@ApplicationNumber",
                 txtApplicationNumber.Text.Trim());
 
-            cmd.Parameters.AddWithValue("@Documents",
+            cmd.Parameters.AddWithValue(
+                "@Documents",
                 txtDocuments.Text.Trim());
 
-            cmd.Parameters.AddWithValue("@Remarks",
+            cmd.Parameters.AddWithValue(
+                "@Remarks",
                 txtRemarks.Text.Trim());
 
-            cmd.Parameters.AddWithValue("@Status",
+            cmd.Parameters.AddWithValue(
+                "@Status",
                 ddlStatus.SelectedValue);
 
             DateTime approvedDate;
@@ -237,20 +247,24 @@ public partial class SchemeApplication : System.Web.UI.Page
                 txtApprovedDate.Text, out approvedDate))
             {
                 cmd.Parameters.AddWithValue(
-                    "@ApprovedDate", approvedDate);
+                    "@ApprovedDate",
+                    approvedDate);
             }
             else
             {
                 cmd.Parameters.AddWithValue(
-                    "@ApprovedDate", DBNull.Value);
+                    "@ApprovedDate",
+                    DBNull.Value);
             }
 
-            cmd.Parameters.AddWithValue("@RejectionReason",
+            cmd.Parameters.AddWithValue(
+                "@RejectionReason",
                 txtRejectionReason.Text.Trim());
 
             if (hfApplicationID.Value != "")
             {
-                cmd.Parameters.AddWithValue("@ApplicationID",
+                cmd.Parameters.AddWithValue(
+                    "@ApplicationID",
                     Convert.ToInt32(hfApplicationID.Value));
             }
 
@@ -303,7 +317,8 @@ public partial class SchemeApplication : System.Web.UI.Page
                 new SqlCommand(query, con);
 
             cmd.Parameters.AddWithValue(
-                "@ApplicationID", applicationID);
+                "@ApplicationID",
+                applicationID);
 
             SqlDataReader dr = cmd.ExecuteReader();
 
@@ -333,7 +348,8 @@ public partial class SchemeApplication : System.Web.UI.Page
                         "WHERE ApplicationID=@ID", con2);
 
                     cmd2.Parameters.AddWithValue(
-                        "@ID", applicationID);
+                        "@ID",
+                        applicationID);
 
                     SqlDataReader dr2 =
                         cmd2.ExecuteReader();
@@ -367,11 +383,16 @@ public partial class SchemeApplication : System.Web.UI.Page
                                     dr2["ApprovedDate"])
                                 .ToString("yyyy-MM-dd");
                         }
+                        else
+                        {
+                            txtApprovedDate.Text = "";
+                        }
 
                         txtRejectionReason.Text =
                             dr2["RejectionReason"].ToString();
 
-                        btnSave.Text = "Update Application";
+                        btnSave.Text =
+                            "Update Application";
                     }
 
                     dr2.Close();
@@ -392,10 +413,12 @@ public partial class SchemeApplication : System.Web.UI.Page
 
             SqlCommand cmd = new SqlCommand(
                 "DELETE FROM SchemeApplications " +
-                "WHERE ApplicationID=@ApplicationID", con);
+                "WHERE ApplicationID=@ApplicationID",
+                con);
 
             cmd.Parameters.AddWithValue(
-                "@ApplicationID", applicationID);
+                "@ApplicationID",
+                applicationID);
 
             cmd.ExecuteNonQuery();
         }
@@ -407,7 +430,9 @@ public partial class SchemeApplication : System.Web.UI.Page
             "success");
     }
 
-    protected void btnSearch_Click(object sender, EventArgs e)
+    protected void btnSearch_Click(
+        object sender,
+        EventArgs e)
     {
         using (SqlConnection con = DBHelper.GetConnection())
         {
@@ -448,12 +473,16 @@ public partial class SchemeApplication : System.Web.UI.Page
         }
     }
 
-    protected void btnShowAll_Click(object sender, EventArgs e)
+    protected void btnShowAll_Click(
+        object sender,
+        EventArgs e)
     {
         LoadApplications();
     }
 
-    protected void btnClear_Click(object sender, EventArgs e)
+    protected void btnClear_Click(
+        object sender,
+        EventArgs e)
     {
         ClearForm();
     }
@@ -480,7 +509,9 @@ public partial class SchemeApplication : System.Web.UI.Page
         btnSave.Text = "Save Application";
     }
 
-    private void ShowMessage(string message, string type)
+    private void ShowMessage(
+        string message,
+        string type)
     {
         lblMessage.Text =
             "<div class='alert alert-" + type + "'>" +

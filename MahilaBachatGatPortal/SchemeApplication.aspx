@@ -29,7 +29,7 @@
 <div class="row">
 <div class="col-md-4">
 <label>Application Date</label>
-<asp:TextBox ID="txtApplicationDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+<asp:TextBox ID="txtApplicationDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
 </div>
 <div class="col-md-4">
 <label>Application Number</label>
@@ -65,7 +65,7 @@
 <div class="row">
 <div class="col-md-6">
 <label>Approved Date</label>
-<asp:TextBox ID="txtApprovedDate" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+<asp:TextBox ID="txtApprovedDate" runat="server" CssClass="form-control" TextMode="SingleLine"></asp:TextBox>
 </div>
 <div class="col-md-6">
 <label>Rejection Reason</label>

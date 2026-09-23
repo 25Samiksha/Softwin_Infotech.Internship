@@ -1,74 +1,270 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Public.Master.cs" Inherits="PublicMaster" %>
-
 <!DOCTYPE html>
 <html>
 <head id="Head1" runat="server">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Mahila Bachat Gat Portal</title>
-
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-    <link href="CSS/style.css" rel="stylesheet" />
-
-    <asp:ContentPlaceHolder ID="head" runat="server">
-    </asp:ContentPlaceHolder>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mahila Bachat Gat Portal</title>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+<link href="CSS/style.css" rel="stylesheet" />
+<style>
+body{
+    background:#f7f3ed;
+}
+.top-navbar{
+    background:rgba(0,0,0,.75);
+    border:0;
+    border-bottom:1px solid rgba(255,255,255,.15);
+    border-radius:0;
+    margin-bottom:0;
+    min-height:68px;
+    box-shadow:0 3px 18px rgba(0,0,0,.25);
+}
+.logo-brand{
+    display:flex;
+    align-items:center;
+    height:68px;
+    padding:8px 15px;
+    color:#ffffff !important;
+    font-size:19px;
+    font-weight:700;
+}
+.logo-brand:hover{
+    background:transparent !important;
+    color:#ffffff !important;
+}
+.site-logo{
+    width:42px;
+    height:42px;
+    object-fit:contain;
+    margin-right:10px;
+}
+.top-navbar .navbar-nav{
+    margin-top:9px;
+}
+.top-navbar .navbar-nav>li>a{
+    color:#ffffff !important;
+    font-size:14px;
+    font-weight:600;
+    padding:16px 15px;
+    transition:all .2s ease;
+}
+.top-navbar .navbar-nav>li>a:hover,
+.top-navbar .navbar-nav>li>a:focus{
+    color:#ffffff !important;
+    background:rgba(255,255,255,.12);
+}
+.top-navbar .navbar-nav>li>a .glyphicon{
+    margin-right:5px;
+    color:#ffffff;
+}
+.cart-link{
+    color:#ffffff !important;
+}
+.cart-link:hover{
+    color:#ffffff !important;
+    background:rgba(255,255,255,.12) !important;
+}
+.main-content{
+    min-height:400px;
+}
+.public-footer{
+    background:#302d29;
+    color:#ffffff;
+    margin-top:60px;
+    padding:50px 0 20px;
+    border-top:3px solid #b47759;
+}
+.footer-container{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 25px;
+}
+.footer-column{
+    min-height:150px;
+    margin-bottom:25px;
+}
+.footer-column h3{
+    font-size:24px;
+    font-weight:700;
+    margin-top:0;
+    margin-bottom:15px;
+    color:#ffffff;
+}
+.footer-column h4{
+    font-size:16px;
+    font-weight:700;
+    margin-top:0;
+    margin-bottom:18px;
+    color:#ead7c8;
+}
+.footer-column p{
+    color:#c9c3bc;
+    line-height:1.7;
+    font-size:14px;
+    max-width:330px;
+    margin-bottom:0;
+}
+.footer-column a{
+    display:block;
+    color:#c9c3bc;
+    text-decoration:none;
+    font-size:14px;
+    margin-bottom:11px;
+    transition:all .2s ease;
+}
+.footer-column a:hover{
+    color:#e0a383;
+    text-decoration:none;
+    padding-left:3px;
+}
+.footer-support{
+    display:inline-block;
+    margin-top:15px;
+    padding:9px 13px;
+    border-radius:20px;
+    background:#403b36;
+    color:#ded2c7;
+    font-size:13px;
+    border:1px solid #504a44;
+}
+.footer-divider{
+    height:1px;
+    background:rgba(255,255,255,.14);
+    margin:20px 0;
+}
+.footer-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#aaa49e;
+    font-size:13px;
+}
+@media(max-width:767px){
+    .top-navbar{
+        min-height:60px;
+    }
+    .logo-brand{
+        height:60px;
+        font-size:17px;
+    }
+    .site-logo{
+        width:40px;
+        height:40px;
+    }
+    .top-navbar .navbar-nav{
+        margin-top:0;
+    }
+    .top-navbar .navbar-nav>li>a{
+        padding:13px 20px;
+        border-top:1px solid rgba(255,255,255,.12);
+    }
+    .public-footer{
+        padding:40px 0 20px;
+    }
+    .footer-column{
+        min-height:auto;
+        margin-bottom:30px;
+    }
+    .footer-bottom{
+        display:block;
+        text-align:center;
+        line-height:1.8;
+    }
+}
+</style>
+<asp:ContentPlaceHolder ID="head" runat="server">
+</asp:ContentPlaceHolder>
 </head>
-
 <body>
 <form id="form1" runat="server">
-
 <nav class="navbar navbar-default top-navbar">
-    <div class="container-fluid">
-
-        <div class="navbar-header">
-            <a class="navbar-brand" href="PublicHome.aspx">
-                <span class="glyphicon glyphicon-home"></span>
-                Mahila Bachat Gat
-            </a>
-        </div>
-
-        <ul class="nav navbar-nav navbar-right">
-
-            <li>
-                <a href="PublicHome.aspx">
-                    <span class="glyphicon glyphicon-home"></span>
-                    Home
-                </a>
-            </li>
-
-     
-
-            <li>
-                <a href="PublicProducts.aspx">
-                    <span class="glyphicon glyphicon-shopping-cart"></span>
-                    Products
-                </a>
-            </li>
-
-            <li>
-                <a href="User.aspx">
-                    <span class="glyphicon glyphicon-log-in"></span>
-                    Login
-                </a>
-            </li>
-
-        </ul>
-
-    </div>
-</nav>
-
 <div class="container-fluid">
-    <div class="main-content">
-        <asp:ContentPlaceHolder ID="MainContent" runat="server">
-        </asp:ContentPlaceHolder>
-    </div>
+<div class="navbar-header">
+<a class="navbar-brand logo-brand" href="PublicHome.aspx">
+<img src="images/Logo.png" class="site-logo" />
+<span>Mahila Bachat Gat</span>
+</a>
 </div>
-
+<ul class="nav navbar-nav navbar-right">
+<li>
+<a href="PublicHome.aspx">
+<span class="glyphicon glyphicon-home"></span>
+Home
+</a>
+</li>
+<li>
+<a href="PublicProducts.aspx">
+<span class="glyphicon glyphicon-shopping-cart"></span>
+Products
+</a>
+</li>
+<li>
+<a href="MyOrders.aspx">
+<span class="glyphicon glyphicon-list-alt"></span>
+My Orders
+</a>
+</li>
+<li>
+<a href="Cart.aspx" class="cart-link">
+<span class="glyphicon glyphicon-shopping-cart"></span>
+Cart
+</a>
+</li>
+<li>
+<a href="User.aspx?mode=login">
+<span class="glyphicon glyphicon-log-in"></span>
+Login
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<div class="container-fluid">
+<div class="main-content">
+<asp:ContentPlaceHolder ID="MainContent" runat="server">
+</asp:ContentPlaceHolder>
+</div>
+</div>
+<footer class="public-footer">
+<div class="footer-container">
+<div class="row">
+<div class="col-md-4 footer-column">
+<h3>Mahila Bachat Gat</h3>
+<p>Supporting women-led businesses and promoting authentic products made by local women entrepreneurs.</p>
+</div>
+<div class="col-md-2 footer-column">
+<h4>Shop</h4>
+<a href="PublicHome.aspx">Home</a>
+<a href="PublicProducts.aspx">Products</a>
+<a href="PublicProducts.aspx">Categories</a>
+</div>
+<div class="col-md-3 footer-column">
+<h4>Customer</h4>
+<a href="User.aspx?mode=login">Login</a>
+<a href="User.aspx?mode=signup">Create Account</a>
+<a href="MyOrders.aspx">My Orders</a>
+<a href="PublicProducts.aspx">Shop Products</a>
+</div>
+<div class="col-md-3 footer-column">
+<h4>About</h4>
+<p>Products made with skill, care and dedication by Mahila Bachat Gats.</p>
+<div class="footer-support">
+<span class="glyphicon glyphicon-heart"></span>
+Supporting Women Entrepreneurs
+</div>
+</div>
+</div>
+<div class="footer-divider"></div>
+<div class="footer-bottom">
+<span>© 2026 Mahila Bachat Gat Portal</span>
+<span>Made with <span class="glyphicon glyphicon-heart"></span> to support women-led businesses</span>
+</div>
+</div>
+</footer>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
 </form>
 </body>
 </html>

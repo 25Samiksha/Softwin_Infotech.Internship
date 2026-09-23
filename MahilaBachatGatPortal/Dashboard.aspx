@@ -2,22 +2,31 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 <style>
-.dashboard-title { margin-top: 0; margin-bottom: 5px; font-weight: bold; color: #333; }
-.dashboard-subtitle { color: #777; margin-bottom: 25px; }
-.dashboard-card { background: #ffffff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); min-height: 130px; }
-.dashboard-card .icon { font-size: 35px; margin-bottom: 10px; }
-.dashboard-card h3 { margin: 5px 0; font-size: 28px; font-weight: bold; }
-.dashboard-card p { margin: 0; color: #777; }
-.card-blue .icon { color: #337ab7; }
-.card-green .icon { color: #5cb85c; }
-.card-orange .icon { color: #f0ad4e; }
-.card-red .icon { color: #d9534f; }
-.card-purple .icon { color: #8e44ad; }
-.card-teal .icon { color: #16a085; }
-.dashboard-section { background: #ffffff; border-radius: 10px; padding: 20px; margin-top: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-.dashboard-section h4 { margin-top: 0; font-weight: bold; border-bottom: 1px solid #eeeeee; padding-bottom: 12px; }
-.quick-link { display: block; padding: 15px; margin-bottom: 10px; border: 1px solid #eeeeee; border-radius: 7px; color: #444444; text-decoration: none; }
-.quick-link:hover { background: #f7f9fb; text-decoration: none; }
+.dashboard-title{margin-top:0;margin-bottom:5px;font-weight:bold;color:#333}
+.dashboard-subtitle{color:#777;margin-bottom:25px}
+.dashboard-card{background:#fff;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08);min-height:130px}
+.dashboard-card .icon{font-size:35px;margin-bottom:10px}
+.dashboard-card h3{margin:5px 0;font-size:28px;font-weight:bold}
+.dashboard-card p{margin:0;color:#777}
+.card-blue .icon{color:#337ab7}
+.card-green .icon{color:#5cb85c}
+.card-orange .icon{color:#f0ad4e}
+.card-red .icon{color:#d9534f}
+.card-purple .icon{color:#8e44ad}
+.card-teal .icon{color:#16a085}
+.dashboard-section{background:#fff;border-radius:10px;padding:20px;margin-top:10px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.08)}
+.dashboard-section h4{margin-top:0;font-weight:bold;border-bottom:1px solid #eee;padding-bottom:12px}
+.quick-link{display:block;padding:15px;margin-bottom:10px;border:1px solid #eee;border-radius:7px;color:#444;text-decoration:none}
+.quick-link:hover{background:#f7f9fb;text-decoration:none}
+.order-table{width:100%;border-collapse:collapse}
+.order-table th{background:#172b4d;color:#fff;padding:12px;text-align:left}
+.order-table td{padding:12px;border-bottom:1px solid #eee}
+.order-table tr:hover{background:#f7f9fb}
+.verify-button{background:#5cb85c;color:#fff;border:none;padding:7px 14px;border-radius:4px}
+.verify-button:hover{background:#449d44;color:#fff}
+.order-status{font-weight:bold}
+.pending-status{color:#f0ad4e}
+.verified-status{color:#5cb85c}
 </style>
 </asp:Content>
 
@@ -99,4 +108,43 @@
 </div>
 </div>
 </div>
+
+<asp:Panel ID="pnlPendingOrders" runat="server" Visible="false">
+<div class="dashboard-section">
+<h4>Pending Customer Orders</h4>
+
+<asp:GridView ID="gvPendingOrders" runat="server"
+    AutoGenerateColumns="False"
+    CssClass="order-table"
+    GridLines="None"
+    OnRowCommand="gvPendingOrders_RowCommand"
+    EmptyDataText="No pending orders found.">
+
+<Columns>
+<asp:BoundField DataField="OrderID" HeaderText="Order ID" />
+<asp:BoundField DataField="CustomerName" HeaderText="Customer" />
+<asp:BoundField DataField="ProductName" HeaderText="Product" />
+<asp:BoundField DataField="Quantity" HeaderText="Quantity" />
+<asp:BoundField DataField="TotalAmount" HeaderText="Amount" DataFormatString="₹ {0:N2}" />
+<asp:BoundField DataField="PaymentMode" HeaderText="Payment" />
+<asp:BoundField DataField="PaymentStatus" HeaderText="Payment Status" />
+
+<asp:TemplateField HeaderText="Action">
+<ItemTemplate>
+<asp:Button ID="btnVerify" runat="server"
+    Text="Verify Order"
+    CommandName="VerifyOrder"
+    CommandArgument='<%# Eval("OrderID") %>'
+    CssClass="verify-button"
+    OnClientClick="return confirm('Are you sure you want to verify this order?');" />
+</ItemTemplate>
+</asp:TemplateField>
+
+</Columns>
+</asp:GridView>
+
+<asp:Label ID="lblOrderMessage" runat="server"></asp:Label>
+</div>
+</asp:Panel>
+
 </asp:Content>

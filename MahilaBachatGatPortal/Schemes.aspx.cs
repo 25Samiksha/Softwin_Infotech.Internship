@@ -6,6 +6,9 @@ public partial class Schemes : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        txtStartDate.Attributes["type"] = "date";
+        txtEndDate.Attributes["type"] = "date";
+
         if (!IsPostBack)
         {
             LoadSchemes();
@@ -104,8 +107,10 @@ public partial class Schemes : System.Web.UI.Page
 
             if (hfSchemeID.Value != "")
             {
-                cmd.Parameters.AddWithValue("@SchemeID",
-                    Convert.ToInt32(hfSchemeID.Value));
+                cmd.Parameters.AddWithValue(
+                    "@SchemeID",
+                    Convert.ToInt32(hfSchemeID.Value)
+                );
             }
 
             cmd.ExecuteNonQuery();
@@ -117,13 +122,15 @@ public partial class Schemes : System.Web.UI.Page
         LoadSchemes();
     }
 
-    protected void gvSchemes_RowCommand(object sender,
+    protected void gvSchemes_RowCommand(
+        object sender,
         System.Web.UI.WebControls.GridViewCommandEventArgs e)
     {
         int index = Convert.ToInt32(e.CommandArgument);
 
         int schemeID = Convert.ToInt32(
-            gvSchemes.DataKeys[index].Value);
+            gvSchemes.DataKeys[index].Value
+        );
 
         if (e.CommandName == "EditScheme")
         {
@@ -159,6 +166,7 @@ public partial class Schemes : System.Web.UI.Page
                 txtDescription.Text = dr["Description"].ToString();
                 txtEligibility.Text = dr["Eligibility"].ToString();
                 txtBenefits.Text = dr["Benefits"].ToString();
+
                 txtRequiredDocuments.Text =
                     dr["RequiredDocuments"].ToString();
 
@@ -198,15 +206,20 @@ public partial class Schemes : System.Web.UI.Page
             SqlCommand checkCmd =
                 new SqlCommand(checkQuery, con);
 
-            checkCmd.Parameters.AddWithValue("@SchemeID", schemeID);
+            checkCmd.Parameters.AddWithValue(
+                "@SchemeID",
+                schemeID
+            );
 
-            int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+            int count =
+                Convert.ToInt32(checkCmd.ExecuteScalar());
 
             if (count > 0)
             {
                 ShowMessage(
                     "This scheme cannot be deleted because applications exist.",
-                    "danger");
+                    "danger"
+                );
 
                 return;
             }
@@ -214,16 +227,23 @@ public partial class Schemes : System.Web.UI.Page
             string query =
                 "DELETE FROM GovernmentSchemes WHERE SchemeID=@SchemeID";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd =
+                new SqlCommand(query, con);
 
-            cmd.Parameters.AddWithValue("@SchemeID", schemeID);
+            cmd.Parameters.AddWithValue(
+                "@SchemeID",
+                schemeID
+            );
 
             cmd.ExecuteNonQuery();
         }
 
         LoadSchemes();
 
-        ShowMessage("Scheme deleted successfully.", "success");
+        ShowMessage(
+            "Scheme deleted successfully.",
+            "success"
+        );
     }
 
     protected void btnSearch_Click(object sender, EventArgs e)
@@ -241,9 +261,12 @@ public partial class Schemes : System.Web.UI.Page
                 new SqlDataAdapter(query, con);
 
             da.SelectCommand.Parameters.AddWithValue(
-                "@Search", "%" + txtSearch.Text.Trim() + "%");
+                "@Search",
+                "%" + txtSearch.Text.Trim() + "%"
+            );
 
-            DataTable dt = new DataTable();
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
 

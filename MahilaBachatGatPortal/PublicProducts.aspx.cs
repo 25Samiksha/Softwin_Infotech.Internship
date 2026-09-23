@@ -9,7 +9,72 @@ public partial class PublicProducts : System.Web.UI.Page
     {
         if (!IsPostBack)
         {
+            LoadCategories();
+            LoadBachatGats();
             LoadProducts();
+        }
+    }
+
+    private void LoadCategories()
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT DISTINCT Category
+                FROM Products
+                WHERE Status = 'Available'
+                AND Quantity > 0
+                AND Category IS NOT NULL
+                AND LTRIM(RTRIM(Category)) <> ''
+                ORDER BY Category";
+
+            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            ddlCategory.Items.Clear();
+            ddlCategory.Items.Add(new System.Web.UI.WebControls.ListItem("All Categories", ""));
+
+            foreach (DataRow row in dt.Rows)
+            {
+                ddlCategory.Items.Add(
+                    new System.Web.UI.WebControls.ListItem(
+                        row["Category"].ToString(),
+                        row["Category"].ToString()
+                    )
+                );
+            }
+        }
+    }
+
+    private void LoadBachatGats()
+    {
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT BachatGatID, GatName
+                FROM BachatGat
+                WHERE Status = 'Active'
+                ORDER BY GatName";
+
+            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            ddlBachatGat.Items.Clear();
+            ddlBachatGat.Items.Add(
+                new System.Web.UI.WebControls.ListItem("All Bachat Gats", "")
+            );
+
+            foreach (DataRow row in dt.Rows)
+            {
+                ddlBachatGat.Items.Add(
+                    new System.Web.UI.WebControls.ListItem(
+                        row["GatName"].ToString(),
+                        row["BachatGatID"].ToString()
+                    )
+                );
+            }
         }
     }
 
@@ -19,21 +84,73 @@ public partial class PublicProducts : System.Web.UI.Page
         {
             string query = @"
                 SELECT
-                    ProductID,
-                    BachatGatID,
-                    ProductName,
-                    Category,
-                    Description,
-                    Unit,
-                    Quantity,
-                    SellingPrice,
-                    ProductImage
-                FROM Products
-                WHERE Status = 'Available'
-                AND Quantity > 0
-                ORDER BY ProductName";
+                    P.ProductID,
+                    P.BachatGatID,
+                    P.ProductName,
+                    P.Category,
+                    P.Description,
+                    P.Unit,
+                    P.Quantity,
+                    P.SellingPrice,
+                    P.ProductImage,
+                    B.GatName
+                FROM Products P
+                INNER JOIN BachatGat B
+                    ON P.BachatGatID = B.BachatGatID
+                WHERE P.Status = 'Available'
+                AND P.Quantity > 0";
 
-            SqlDataAdapter da = new SqlDataAdapter(query, con);
+            if (!string.IsNullOrWhiteSpace(txtSearch.Text))
+            {
+                query += @"
+                    AND
+                    (
+                        P.ProductName LIKE @Search
+                        OR P.Description LIKE @Search
+                    )";
+            }
+
+            if (!string.IsNullOrWhiteSpace(ddlCategory.SelectedValue))
+            {
+                query += @"
+                    AND P.Category = @Category";
+            }
+
+            if (!string.IsNullOrWhiteSpace(ddlBachatGat.SelectedValue))
+            {
+                query += @"
+                    AND P.BachatGatID = @BachatGatID";
+            }
+
+            query += " ORDER BY P.ProductName";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            if (!string.IsNullOrWhiteSpace(txtSearch.Text))
+            {
+                cmd.Parameters.AddWithValue(
+                    "@Search",
+                    "%" + txtSearch.Text.Trim() + "%"
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(ddlCategory.SelectedValue))
+            {
+                cmd.Parameters.AddWithValue(
+                    "@Category",
+                    ddlCategory.SelectedValue
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(ddlBachatGat.SelectedValue))
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    Convert.ToInt32(ddlBachatGat.SelectedValue)
+                );
+            }
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
             DataTable dt = new DataTable();
             da.Fill(dt);
 
@@ -42,13 +159,27 @@ public partial class PublicProducts : System.Web.UI.Page
 
             if (dt.Rows.Count == 0)
             {
-                lblMessage.Text = "No products are currently available.";
+                lblMessage.Text = "No products found.";
             }
             else
             {
                 lblMessage.Text = "";
             }
         }
+    }
+
+    protected void btnSearch_Click(object sender, EventArgs e)
+    {
+        LoadProducts();
+    }
+
+    protected void btnClear_Click(object sender, EventArgs e)
+    {
+        txtSearch.Text = "";
+        ddlCategory.SelectedIndex = 0;
+        ddlBachatGat.SelectedIndex = 0;
+
+        LoadProducts();
     }
 
     public string GetImageUrl(object value)

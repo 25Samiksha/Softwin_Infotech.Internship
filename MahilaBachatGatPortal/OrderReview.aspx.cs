@@ -7,7 +7,7 @@ public partial class OrderReview : System.Web.UI.Page
     {
         if (Session["UserID"] == null)
         {
-            Response.Redirect("User.aspx");
+            Response.Redirect("User.aspx?returnUrl=" + Server.UrlEncode(Request.RawUrl));
             return;
         }
 
@@ -27,82 +27,198 @@ public partial class OrderReview : System.Web.UI.Page
 
     private void LoadOrderDetails()
     {
-        int productID;
-
-        if (!int.TryParse(Request.QueryString["ProductID"], out productID))
-        {
-            lblMessage.Text = "Invalid product.";
-            btnContinuePayment.Enabled = false;
-            return;
-        }
+        int userID = Convert.ToInt32(Session["UserID"]);
 
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
-                    ProductName,
-                    SellingPrice
-                FROM Products
-                WHERE ProductID = @ProductID
-                AND Status = 'Available'
-                AND Quantity > 0";
+                    C.CartID,
+                    P.ProductName,
+                    B.GatName,
+                    C.Quantity,
+                    P.SellingPrice,
+                    C.Quantity * P.SellingPrice AS ItemTotal,
+                    P.Quantity AS AvailableQuantity
+                FROM Cart C
+                INNER JOIN Products P
+                    ON C.ProductID = P.ProductID
+                INNER JOIN BachatGat B
+                    ON P.BachatGatID = B.BachatGatID
+                WHERE C.UserID = @UserID
+                AND P.Status = 'Available'
+                AND P.Quantity > 0
+                AND P.Quantity >= C.Quantity
+                ORDER BY C.CartID DESC";
 
             SqlCommand cmd = new SqlCommand(query, con);
-            cmd.Parameters.AddWithValue("@ProductID", productID);
+            cmd.Parameters.AddWithValue("@UserID", userID);
 
             con.Open();
 
-            SqlDataReader dr = cmd.ExecuteReader();
-
-            if (dr.Read())
+            using (SqlDataReader dr = cmd.ExecuteReader())
             {
-                decimal price = Convert.ToDecimal(dr["SellingPrice"]);
-
-                lblProductName.Text = dr["ProductName"].ToString();
-                lblPrice.Text = price.ToString("N2");
-                lblQuantity.Text = "1";
-                lblTotalAmount.Text = price.ToString("N2");
+                gvOrderItems.DataSource = dr;
+                gvOrderItems.DataBind();
             }
-            else
+        }
+
+        LoadTotalAmount();
+        ValidateCart();
+    }
+
+    private void LoadTotalAmount()
+    {
+        int userID = Convert.ToInt32(Session["UserID"]);
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT ISNULL(SUM(C.Quantity * P.SellingPrice), 0)
+                FROM Cart C
+                INNER JOIN Products P
+                    ON C.ProductID = P.ProductID
+                WHERE C.UserID = @UserID
+                AND P.Status = 'Available'
+                AND P.Quantity > 0
+                AND P.Quantity >= C.Quantity";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+            cmd.Parameters.AddWithValue("@UserID", userID);
+
+            con.Open();
+
+            decimal totalAmount = Convert.ToDecimal(cmd.ExecuteScalar());
+
+            lblTotalAmount.Text = totalAmount.ToString("N2");
+        }
+    }
+
+    private void ValidateCart()
+    {
+        int userID = Convert.ToInt32(Session["UserID"]);
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT COUNT(*)
+                FROM Cart
+                WHERE UserID = @UserID";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+            cmd.Parameters.AddWithValue("@UserID", userID);
+
+            con.Open();
+
+            int cartCount = Convert.ToInt32(cmd.ExecuteScalar());
+
+            if (cartCount == 0)
             {
-                lblMessage.Text = "Product is no longer available.";
+                lblMessage.Text = "Your cart is empty.";
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                btnContinuePayment.Enabled = false;
+                return;
+            }
+        }
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT COUNT(*)
+                FROM Cart C
+                INNER JOIN Products P
+                    ON C.ProductID = P.ProductID
+                WHERE C.UserID = @UserID
+                AND (
+                    P.Status <> 'Available'
+                    OR P.Quantity <= 0
+                    OR P.Quantity < C.Quantity
+                )";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+            cmd.Parameters.AddWithValue("@UserID", userID);
+
+            con.Open();
+
+            int invalidCount = Convert.ToInt32(cmd.ExecuteScalar());
+
+            if (invalidCount > 0)
+            {
+                lblMessage.Text = "Some products in your cart are unavailable or have insufficient stock.";
+                lblMessage.ForeColor = System.Drawing.Color.Red;
                 btnContinuePayment.Enabled = false;
             }
-
-            dr.Close();
         }
     }
 
     private void LoadDeliveryAddress()
     {
-        if (Session["DeliveryFullName"] != null)
-            lblFullName.Text = Session["DeliveryFullName"].ToString();
+        lblFullName.Text = Session["DeliveryFullName"] != null
+            ? Session["DeliveryFullName"].ToString()
+            : "";
 
-        if (Session["DeliveryMobile"] != null)
-            lblMobile.Text = Session["DeliveryMobile"].ToString();
+        lblMobile.Text = Session["DeliveryMobile"] != null
+            ? Session["DeliveryMobile"].ToString()
+            : "";
 
-        if (Session["DeliveryAddress"] != null)
-            lblAddress.Text = Session["DeliveryAddress"].ToString();
+        lblAddress.Text = Session["DeliveryAddress"] != null
+            ? Session["DeliveryAddress"].ToString()
+            : "";
 
-        if (Session["DeliveryCity"] != null)
-            lblCity.Text = Session["DeliveryCity"].ToString();
+        lblCity.Text = Session["DeliveryCity"] != null
+            ? Session["DeliveryCity"].ToString()
+            : "";
 
-        if (Session["DeliveryTaluka"] != null)
-            lblTaluka.Text = Session["DeliveryTaluka"].ToString();
+        lblTaluka.Text = Session["DeliveryTaluka"] != null
+            ? Session["DeliveryTaluka"].ToString()
+            : "";
 
-        if (Session["DeliveryDistrict"] != null)
-            lblDistrict.Text = Session["DeliveryDistrict"].ToString();
+        lblDistrict.Text = Session["DeliveryDistrict"] != null
+            ? Session["DeliveryDistrict"].ToString()
+            : "";
 
-        if (Session["DeliveryState"] != null)
-            lblState.Text = Session["DeliveryState"].ToString();
+        lblState.Text = Session["DeliveryState"] != null
+            ? Session["DeliveryState"].ToString()
+            : "";
 
-        if (Session["DeliveryPincode"] != null)
-            lblPincode.Text = Session["DeliveryPincode"].ToString();
+        lblPincode.Text = Session["DeliveryPincode"] != null
+            ? Session["DeliveryPincode"].ToString()
+            : "";
     }
 
     protected void btnContinuePayment_Click(object sender, EventArgs e)
     {
-        Response.Redirect("Payment.aspx?ProductID=" +
-                          Request.QueryString["ProductID"]);
+        int userID = Convert.ToInt32(Session["UserID"]);
+
+        using (SqlConnection con = DBHelper.GetConnection())
+        {
+            string query = @"
+                SELECT COUNT(*)
+                FROM Cart C
+                INNER JOIN Products P
+                    ON C.ProductID = P.ProductID
+                WHERE C.UserID = @UserID
+                AND (
+                    P.Status <> 'Available'
+                    OR P.Quantity <= 0
+                    OR P.Quantity < C.Quantity
+                )";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+            cmd.Parameters.AddWithValue("@UserID", userID);
+
+            con.Open();
+
+            int invalidCount = Convert.ToInt32(cmd.ExecuteScalar());
+
+            if (invalidCount > 0)
+            {
+                lblMessage.Text = "Some products in your cart are unavailable or have insufficient stock.";
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+        }
+
+        Response.Redirect("Payment.aspx");
     }
 }

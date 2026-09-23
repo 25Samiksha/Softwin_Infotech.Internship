@@ -1,447 +1,250 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Web.UI.WebControls;
 
 public partial class Sales : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
-            txtSaleDate.Text =
-                DateTime.Today.ToString("yyyy-MM-dd");
-
-            LoadBachatGats();
-            LoadSales();
+            LoadOrders();
         }
     }
 
-    private void LoadBachatGats()
+    private void LoadOrders()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        try
         {
-            SqlDataAdapter da = new SqlDataAdapter(
-                "SELECT BachatGatID, GatName FROM BachatGat " +
-                "WHERE Status='Active' ORDER BY GatName", con);
+            int bachatGatID = RoleHelper.GetBachatGatID();
 
-            DataTable dt = new DataTable();
-
-            da.Fill(dt);
-
-            ddlBachatGat.DataSource = dt;
-            ddlBachatGat.DataTextField = "GatName";
-            ddlBachatGat.DataValueField = "BachatGatID";
-            ddlBachatGat.DataBind();
-
-            ddlBachatGat.Items.Insert(0,
-                new System.Web.UI.WebControls.ListItem(
-                    "-- Select Bachat Gat --", ""));
-        }
-    }
-
-    protected void ddlBachatGat_SelectedIndexChanged(
-        object sender, EventArgs e)
-    {
-        LoadProducts();
-    }
-
-    private void LoadProducts()
-    {
-        ddlProduct.Items.Clear();
-
-        if (ddlBachatGat.SelectedValue == "")
-            return;
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        {
-            SqlDataAdapter da = new SqlDataAdapter(
-                @"SELECT ProductID, ProductName
-                  FROM Products
-                  WHERE BachatGatID=@BachatGatID
-                  AND Status='Available'
-                  AND Quantity > 0
-                  ORDER BY ProductName", con);
-
-            da.SelectCommand.Parameters.AddWithValue(
-                "@BachatGatID",
-                Convert.ToInt32(ddlBachatGat.SelectedValue));
-
-            DataTable dt = new DataTable();
-
-            da.Fill(dt);
-
-            ddlProduct.DataSource = dt;
-            ddlProduct.DataTextField = "ProductName";
-            ddlProduct.DataValueField = "ProductID";
-            ddlProduct.DataBind();
-
-            ddlProduct.Items.Insert(0,
-                new System.Web.UI.WebControls.ListItem(
-                    "-- Select Product --", ""));
-        }
-    }
-
-    protected void ddlProduct_SelectedIndexChanged(
-        object sender, EventArgs e)
-    {
-        if (ddlProduct.SelectedValue == "")
-            return;
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        {
-            con.Open();
-
-            SqlCommand cmd = new SqlCommand(
-                @"SELECT Quantity, SellingPrice
-                  FROM Products
-                  WHERE ProductID=@ProductID", con);
-
-            cmd.Parameters.AddWithValue(
-                "@ProductID",
-                Convert.ToInt32(ddlProduct.SelectedValue));
-
-            SqlDataReader dr = cmd.ExecuteReader();
-
-            if (dr.Read())
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                txtStock.Text =
-                    dr["Quantity"].ToString();
+                string query = @"
+                    SELECT
+                        O.OrderID,
+                        BG.GatName,
+                        P.ProductName,
+                        O.OrderDate,
+                        O.CustomerName,
+                        O.Mobile,
+                        O.Quantity,
+                        O.UnitPrice,
+                        O.TotalAmount,
+                        O.PaymentMode,
+                        O.PaymentStatus,
+                        O.UTRNumber,
+                        O.PaymentScreenshot,
+                        O.OrderStatus
+                    FROM Orders O
+                    INNER JOIN BachatGat BG
+                        ON O.BachatGatID = BG.BachatGatID
+                    INNER JOIN Products P
+                        ON O.ProductID = P.ProductID
+                    WHERE O.BachatGatID = @BachatGatID
+                    ORDER BY O.OrderID DESC";
 
-                txtUnitPrice.Text =
-                    dr["SellingPrice"].ToString();
-
-                CalculateTotal();
-            }
-
-            dr.Close();
-        }
-    }
-
-    protected void btnSave_Click(object sender, EventArgs e)
-    {
-        DateTime saleDate;
-        decimal quantity;
-        decimal unitPrice;
-
-        if (ddlBachatGat.SelectedValue == "")
-        {
-            ShowMessage("Please select Bachat Gat.", "danger");
-            return;
-        }
-
-        if (ddlProduct.SelectedValue == "")
-        {
-            ShowMessage("Please select product.", "danger");
-            return;
-        }
-
-        if (!DateTime.TryParse(
-            txtSaleDate.Text, out saleDate))
-        {
-            ShowMessage("Enter valid sale date.", "danger");
-            return;
-        }
-
-        if (!decimal.TryParse(
-            txtQuantity.Text, out quantity) ||
-            quantity <= 0)
-        {
-            ShowMessage("Enter valid quantity.", "danger");
-            return;
-        }
-
-        if (!decimal.TryParse(
-            txtUnitPrice.Text, out unitPrice) ||
-            unitPrice <= 0)
-        {
-            ShowMessage("Enter valid unit price.", "danger");
-            return;
-        }
-
-        using (SqlConnection con = DBHelper.GetConnection())
-        {
-            con.Open();
-
-            SqlTransaction transaction =
-                con.BeginTransaction();
-
-            try
-            {
-                SqlCommand stockCmd = new SqlCommand(
-                    @"SELECT Quantity
-                      FROM Products WITH (UPDLOCK)
-                      WHERE ProductID=@ProductID
-                      AND BachatGatID=@BachatGatID",
-                    con, transaction);
-
-                stockCmd.Parameters.AddWithValue(
-                    "@ProductID",
-                    Convert.ToInt32(ddlProduct.SelectedValue));
-
-                stockCmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    Convert.ToInt32(ddlBachatGat.SelectedValue));
-
-                object stockResult =
-                    stockCmd.ExecuteScalar();
-
-                if (stockResult == null)
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    throw new Exception(
-                        "Product not found.");
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        bachatGatID
+                    );
+
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        da.Fill(dt);
+
+                        gvOrders.DataSource = dt;
+                        gvOrders.DataBind();
+                    }
                 }
-
-                decimal stock =
-                    Convert.ToDecimal(stockResult);
-
-                if (quantity > stock)
-                {
-                    throw new Exception(
-                        "Insufficient stock.");
-                }
-
-                string saleQuery = @"
-                    INSERT INTO Sales
-                    (
-                        BachatGatID,
-                        ProductID,
-                        SaleDate,
-                        CustomerName,
-                        CustomerMobile,
-                        Quantity,
-                        UnitPrice,
-                        PaymentMode,
-                        ReceiptNumber,
-                        Remarks
-                    )
-                    VALUES
-                    (
-                        @BachatGatID,
-                        @ProductID,
-                        @SaleDate,
-                        @CustomerName,
-                        @CustomerMobile,
-                        @Quantity,
-                        @UnitPrice,
-                        @PaymentMode,
-                        @ReceiptNumber,
-                        @Remarks
-                    )";
-
-                SqlCommand saleCmd =
-                    new SqlCommand(
-                        saleQuery,
-                        con,
-                        transaction);
-
-                saleCmd.Parameters.AddWithValue(
-                    "@BachatGatID",
-                    Convert.ToInt32(
-                        ddlBachatGat.SelectedValue));
-
-                saleCmd.Parameters.AddWithValue(
-                    "@ProductID",
-                    Convert.ToInt32(
-                        ddlProduct.SelectedValue));
-
-                saleCmd.Parameters.AddWithValue(
-                    "@SaleDate",
-                    saleDate);
-
-                saleCmd.Parameters.AddWithValue(
-                    "@CustomerName",
-                    txtCustomerName.Text.Trim());
-
-                saleCmd.Parameters.AddWithValue(
-                    "@CustomerMobile",
-                    txtCustomerMobile.Text.Trim());
-
-                saleCmd.Parameters.AddWithValue(
-                    "@Quantity",
-                    quantity);
-
-                saleCmd.Parameters.AddWithValue(
-                    "@UnitPrice",
-                    unitPrice);
-
-                saleCmd.Parameters.AddWithValue(
-                    "@PaymentMode",
-                    ddlPaymentMode.SelectedValue);
-
-                saleCmd.Parameters.AddWithValue(
-                    "@ReceiptNumber",
-                    txtReceiptNumber.Text.Trim());
-
-                saleCmd.Parameters.AddWithValue(
-                    "@Remarks",
-                    txtRemarks.Text.Trim());
-
-                saleCmd.ExecuteNonQuery();
-
-                SqlCommand updateStock =
-                    new SqlCommand(
-                    @"UPDATE Products
-                      SET Quantity = Quantity - @Quantity,
-                          Status =
-                            CASE
-                              WHEN Quantity - @Quantity <= 0
-                              THEN 'Out of Stock'
-                              ELSE Status
-                            END
-                      WHERE ProductID=@ProductID",
-                    con,
-                    transaction);
-
-                updateStock.Parameters.AddWithValue(
-                    "@Quantity", quantity);
-
-                updateStock.Parameters.AddWithValue(
-                    "@ProductID",
-                    Convert.ToInt32(
-                        ddlProduct.SelectedValue));
-
-                updateStock.ExecuteNonQuery();
-
-                transaction.Commit();
-
-                ShowMessage(
-                    "Sale saved and stock updated successfully.",
-                    "success");
-
-                ClearForm();
-                LoadProducts();
-                LoadSales();
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            lblMessage.Text = "Error loading orders: " + ex.Message;
+            lblMessage.ForeColor = System.Drawing.Color.Red;
+        }
+    }
+
+    protected void OrderCommand(object sender, CommandEventArgs e)
+    {
+        int orderID;
+
+        if (!int.TryParse(e.CommandArgument.ToString(), out orderID))
+        {
+            lblMessage.Text = "Invalid Order ID.";
+            lblMessage.ForeColor = System.Drawing.Color.Red;
+            return;
+        }
+
+        if (e.CommandName == "VerifyPayment")
+        {
+            VerifyPayment(orderID);
+        }
+        else if (e.CommandName == "RejectPayment")
+        {
+            RejectPayment(orderID);
+        }
+    }
+
+    private void VerifyPayment(int orderID)
+    {
+        try
+        {
+            int bachatGatID = RoleHelper.GetBachatGatID();
+
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                transaction.Rollback();
+                string query = @"
+                    UPDATE Orders
+                    SET PaymentStatus = 'Paid'
+                    WHERE OrderID = @OrderID
+                    AND BachatGatID = @BachatGatID
+                    AND PaymentMode = 'Online Payment'
+                    AND PaymentStatus = 'Pending Verification'
+                    AND UTRNumber IS NOT NULL
+                    AND PaymentScreenshot IS NOT NULL";
 
-                ShowMessage(
-                    ex.Message,
-                    "danger");
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@OrderID", orderID);
+                    cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
+
+                    con.Open();
+
+                    int rows = cmd.ExecuteNonQuery();
+
+                    if (rows > 0)
+                    {
+                        lblMessage.Text = "Payment verified successfully.";
+                        lblMessage.ForeColor = System.Drawing.Color.Green;
+                    }
+                    else
+                    {
+                        lblMessage.Text = "Payment could not be verified.";
+                        lblMessage.ForeColor = System.Drawing.Color.Red;
+                    }
+                }
             }
+
+            LoadOrders();
         }
-    }
-
-    private void CalculateTotal()
-    {
-        decimal quantity;
-        decimal price;
-
-        if (decimal.TryParse(
-            txtQuantity.Text, out quantity) &&
-            decimal.TryParse(
-            txtUnitPrice.Text, out price))
+        catch (Exception ex)
         {
-            txtTotalAmount.Text =
-                (quantity * price).ToString("0.00");
+            lblMessage.Text = "Error verifying payment: " + ex.Message;
+            lblMessage.ForeColor = System.Drawing.Color.Red;
         }
     }
 
-    private void LoadSales()
+    private void RejectPayment(int orderID)
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                SELECT S.SaleID,
-                       BG.GatName,
-                       P.ProductName,
-                       S.SaleDate,
-                       S.CustomerName,
-                       S.Quantity,
-                       S.UnitPrice,
-                       S.TotalAmount,
-                       S.PaymentMode,
-                       S.ReceiptNumber
-                FROM Sales S
-                INNER JOIN BachatGat BG
-                    ON S.BachatGatID=BG.BachatGatID
-                INNER JOIN Products P
-                    ON S.ProductID=P.ProductID
-                ORDER BY S.SaleID DESC";
+            int bachatGatID = RoleHelper.GetBachatGatID();
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+            using (SqlConnection con = DBHelper.GetConnection())
+            {
+                string query = @"
+                    UPDATE Orders
+                    SET
+                        PaymentStatus = 'Rejected',
+                        OrderStatus = 'Cancelled'
+                    WHERE OrderID = @OrderID
+                    AND BachatGatID = @BachatGatID
+                    AND PaymentMode = 'Online Payment'
+                    AND PaymentStatus = 'Pending Verification'";
 
-            DataTable dt = new DataTable();
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.Parameters.AddWithValue("@OrderID", orderID);
+                    cmd.Parameters.AddWithValue("@BachatGatID", bachatGatID);
 
-            da.Fill(dt);
+                    con.Open();
 
-            gvSales.DataSource = dt;
-            gvSales.DataBind();
+                    int rows = cmd.ExecuteNonQuery();
+
+                    if (rows > 0)
+                    {
+                        lblMessage.Text = "Payment rejected.";
+                        lblMessage.ForeColor = System.Drawing.Color.Red;
+                    }
+                    else
+                    {
+                        lblMessage.Text = "Payment could not be rejected.";
+                        lblMessage.ForeColor = System.Drawing.Color.Red;
+                    }
+                }
+            }
+
+            LoadOrders();
         }
-    }
-
-    protected void btnSearch_Click(object sender, EventArgs e)
-    {
-        using (SqlConnection con = DBHelper.GetConnection())
+        catch (Exception ex)
         {
-            string query = @"
-                SELECT S.SaleID,
-                       BG.GatName,
-                       P.ProductName,
-                       S.SaleDate,
-                       S.CustomerName,
-                       S.Quantity,
-                       S.UnitPrice,
-                       S.TotalAmount,
-                       S.PaymentMode,
-                       S.ReceiptNumber
-                FROM Sales S
-                INNER JOIN BachatGat BG
-                    ON S.BachatGatID=BG.BachatGatID
-                INNER JOIN Products P
-                    ON S.ProductID=P.ProductID
-                WHERE S.CustomerName LIKE @Search
-                   OR P.ProductName LIKE @Search
-                ORDER BY S.SaleID DESC";
-
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
-
-            da.SelectCommand.Parameters.AddWithValue(
-                "@Search",
-                "%" + txtSearch.Text.Trim() + "%");
-
-            DataTable dt = new DataTable();
-
-            da.Fill(dt);
-
-            gvSales.DataSource = dt;
-            gvSales.DataBind();
+            lblMessage.Text = "Error rejecting payment: " + ex.Message;
+            lblMessage.ForeColor = System.Drawing.Color.Red;
         }
     }
 
-    protected void btnShowAll_Click(object sender, EventArgs e)
+    public string GetPaymentScreenshotUrl(object value)
     {
-        LoadSales();
+        if (value == null || value == DBNull.Value)
+        {
+            return "";
+        }
+
+        string path = value.ToString().Trim();
+
+        if (path == "")
+        {
+            return "";
+        }
+
+        path = path.Replace("\\", "/");
+
+        if (path.StartsWith("~/"))
+        {
+            return ResolveUrl(path);
+        }
+
+        return ResolveUrl("~/" + path);
     }
 
-    protected void btnClear_Click(object sender, EventArgs e)
+    public bool HasPaymentScreenshot(object value)
     {
-        ClearForm();
+        if (value == null || value == DBNull.Value)
+        {
+            return false;
+        }
+
+        return !string.IsNullOrWhiteSpace(value.ToString());
     }
 
-    private void ClearForm()
+    public string GetPaymentStatusClass(object value)
     {
-        txtSaleDate.Text =
-            DateTime.Today.ToString("yyyy-MM-dd");
+        if (value == null || value == DBNull.Value)
+        {
+            return "";
+        }
 
-        txtCustomerName.Text = "";
-        txtCustomerMobile.Text = "";
-        txtQuantity.Text = "";
-        txtTotalAmount.Text = "";
-        txtStock.Text = "";
-        txtUnitPrice.Text = "";
-        txtReceiptNumber.Text = "";
-        txtRemarks.Text = "";
-    }
+        string status = value.ToString();
 
-    private void ShowMessage(string message, string type)
-    {
-        lblMessage.Text =
-            "<div class='alert alert-" + type + "'>" +
-            message +
-            "</div>";
+        if (status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+        {
+            return "status-paid";
+        }
+
+        if (status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+        {
+            return "status-rejected";
+        }
+
+        return "status-pending";
     }
 }

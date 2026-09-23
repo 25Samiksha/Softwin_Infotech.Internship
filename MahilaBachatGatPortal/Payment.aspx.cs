@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.IO;
 
 public partial class Payment : System.Web.UI.Page
 {
@@ -7,7 +8,7 @@ public partial class Payment : System.Web.UI.Page
     {
         if (Session["UserID"] == null)
         {
-            Response.Redirect("User.aspx");
+            Response.Redirect("User.aspx?returnUrl=" + Server.UrlEncode(Request.RawUrl));
             return;
         }
 
@@ -20,52 +21,74 @@ public partial class Payment : System.Web.UI.Page
 
         if (!IsPostBack)
         {
+            pnlOnlinePayment.Visible = false;
             LoadAmount();
         }
     }
 
     private void LoadAmount()
     {
-        int productID;
-
-        if (!int.TryParse(Request.QueryString["ProductID"], out productID))
-        {
-            lblMessage.Text = "Invalid product.";
-            btnPlaceOrder.Enabled = false;
-            return;
-        }
+        int userID = Convert.ToInt32(Session["UserID"]);
 
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
-                SELECT SellingPrice
-                FROM Products
-                WHERE ProductID = @ProductID
-                AND Status = 'Available'
-                AND Quantity > 0";
+                SELECT ISNULL(SUM(C.Quantity * P.SellingPrice), 0)
+                FROM Cart C
+                INNER JOIN Products P ON C.ProductID = P.ProductID
+                WHERE C.UserID = @UserID
+                AND P.Status = 'Available'
+                AND P.Quantity > 0
+                AND P.Quantity >= C.Quantity";
 
             SqlCommand cmd = new SqlCommand(query, con);
-            cmd.Parameters.AddWithValue("@ProductID", productID);
+            cmd.Parameters.AddWithValue("@UserID", userID);
 
             con.Open();
 
             object result = cmd.ExecuteScalar();
+            decimal amount = result == null || result == DBNull.Value
+                ? 0
+                : Convert.ToDecimal(result);
 
-            if (result == null)
-            {
-                lblMessage.Text = "Product is no longer available.";
-                btnPlaceOrder.Enabled = false;
-                return;
-            }
-
-            decimal amount = Convert.ToDecimal(result);
             lblTotalAmount.Text = amount.ToString("N2");
+            lblQRAmount.Text = amount.ToString("N2");
+
+            if (amount <= 0)
+            {
+                lblMessage.Text = "Your cart is empty or products are no longer available.";
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                btnPlaceOrder.Enabled = false;
+            }
+            else
+            {
+                btnPlaceOrder.Enabled = true;
+            }
         }
+    }
+
+    protected void rbCOD_CheckedChanged(object sender, EventArgs e)
+    {
+        pnlOnlinePayment.Visible = false;
+        chkPaymentCompleted.Checked = false;
+        txtUTRNumber.Text = "";
+        lblMessage.Text = "";
+    }
+
+    protected void rbOnline_CheckedChanged(object sender, EventArgs e)
+    {
+        pnlOnlinePayment.Visible = true;
+        chkPaymentCompleted.Checked = false;
+        txtUTRNumber.Text = "";
+        lblMessage.Text = "";
+        LoadAmount();
     }
 
     protected void btnPlaceOrder_Click(object sender, EventArgs e)
     {
         string paymentMode;
+        string utrNumber = "";
+        string screenshotPath = "";
 
         if (rbCOD.Checked)
         {
@@ -73,18 +96,66 @@ public partial class Payment : System.Web.UI.Page
         }
         else if (rbOnline.Checked)
         {
+            if (!chkPaymentCompleted.Checked)
+            {
+                ShowMessage("Please complete the payment using the QR code.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtUTRNumber.Text))
+            {
+                ShowMessage("Please enter the UTR number.");
+                return;
+            }
+
+            if (!fuPaymentScreenshot.HasFile)
+            {
+                ShowMessage("Please upload the payment screenshot.");
+                return;
+            }
+
+            string extension = Path.GetExtension(fuPaymentScreenshot.FileName).ToLower();
+
+            if (extension != ".jpg" &&
+                extension != ".jpeg" &&
+                extension != ".png")
+            {
+                ShowMessage("Only JPG, JPEG and PNG screenshots are allowed.");
+                return;
+            }
+
+            string folderPath = Server.MapPath("~/PaymentScreenshots/");
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = Guid.NewGuid().ToString() + extension;
+
+            fuPaymentScreenshot.SaveAs(
+                Path.Combine(folderPath, fileName));
+
+            screenshotPath = "PaymentScreenshots/" + fileName;
+            utrNumber = txtUTRNumber.Text.Trim();
             paymentMode = "Online Payment";
         }
         else
         {
-            lblMessage.Text = "Please select a payment method.";
-            lblMessage.ForeColor = System.Drawing.Color.Red;
+            ShowMessage("Please select a payment method.");
             return;
         }
 
         Session["PaymentMode"] = paymentMode;
+        Session["UTRNumber"] = utrNumber;
+        Session["PaymentScreenshot"] = screenshotPath;
 
-        Response.Redirect("OrderPlaced.aspx?ProductID=" +
-                          Request.QueryString["ProductID"]);
+        Response.Redirect("OrderPlaced.aspx");
+    }
+
+    private void ShowMessage(string message)
+    {
+        lblMessage.Text = message;
+        lblMessage.ForeColor = System.Drawing.Color.Red;
     }
 }

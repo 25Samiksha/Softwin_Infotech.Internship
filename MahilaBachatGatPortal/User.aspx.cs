@@ -7,23 +7,27 @@ public partial class User : System.Web.UI.Page
     {
         if (!IsPostBack)
         {
-            if (Session["UserID"] != null)
+            string mode = Request.QueryString["mode"];
+
+            if (Session["UserID"] != null && string.IsNullOrEmpty(mode))
             {
                 string returnUrl = Request.QueryString["returnUrl"];
 
                 if (!string.IsNullOrEmpty(returnUrl))
                 {
                     Response.Redirect(returnUrl);
+                    return;
                 }
-                else if (Session["Role"] != null &&
-                         Session["Role"].ToString().Equals("Customer", StringComparison.OrdinalIgnoreCase))
+
+                if (Session["Role"] != null &&
+                    Session["Role"].ToString().Equals("Customer", StringComparison.OrdinalIgnoreCase))
                 {
                     Response.Redirect("PublicProducts.aspx");
+                    return;
                 }
-                else
-                {
-                    Response.Redirect("Dashboard.aspx");
-                }
+
+                Response.Redirect("Dashboard.aspx");
+                return;
             }
         }
     }
@@ -46,7 +50,6 @@ public partial class User : System.Web.UI.Page
                 SELECT
                     U.UserID,
                     U.Username,
-                    U.Password,
                     U.FullName,
                     U.Role,
                     U.BachatGatID,
@@ -64,20 +67,41 @@ public partial class User : System.Web.UI.Page
 
             con.Open();
 
-            SqlDataReader dr = cmd.ExecuteReader();
-
-            if (dr.Read())
+            using (SqlDataReader dr = cmd.ExecuteReader())
             {
+                if (!dr.Read())
+                {
+                    lblMessage.Text = "Invalid username or password.";
+                    lblMessage.ForeColor = System.Drawing.Color.Red;
+                    return;
+                }
+
+                int userID = Convert.ToInt32(dr["UserID"]);
+                string loggedUsername = dr["Username"].ToString();
+                string fullName = dr["FullName"].ToString();
                 string role = dr["Role"].ToString();
 
-                Session["UserID"] = dr["UserID"].ToString();
-                Session["Username"] = dr["Username"].ToString();
-                Session["FullName"] = dr["FullName"].ToString();
+                int bachatGatID = 0;
+                int memberID = 0;
+
+                if (dr["BachatGatID"] != DBNull.Value)
+                {
+                    bachatGatID = Convert.ToInt32(dr["BachatGatID"]);
+                }
+
+                if (dr["MemberID"] != DBNull.Value)
+                {
+                    memberID = Convert.ToInt32(dr["MemberID"]);
+                }
+
+                Session["UserID"] = userID;
+                Session["Username"] = loggedUsername;
+                Session["FullName"] = fullName;
                 Session["Role"] = role;
 
                 if (dr["BachatGatID"] != DBNull.Value)
                 {
-                    Session["BachatGatID"] = Convert.ToInt32(dr["BachatGatID"]);
+                    Session["BachatGatID"] = bachatGatID;
                 }
                 else
                 {
@@ -86,20 +110,28 @@ public partial class User : System.Web.UI.Page
 
                 if (dr["MemberID"] != DBNull.Value)
                 {
-                    Session["MemberID"] = Convert.ToInt32(dr["MemberID"]);
+                    Session["MemberID"] = memberID;
                 }
                 else
                 {
                     Session["MemberID"] = null;
                 }
 
-                if (role.Equals("President", StringComparison.OrdinalIgnoreCase)
-                    && Session["BachatGatID"] == null)
+                if (role.Equals("President", StringComparison.OrdinalIgnoreCase) &&
+                    Session["BachatGatID"] == null)
                 {
                     Session.Clear();
                     lblMessage.Text = "This President account is not assigned to a Bachat Gat.";
                     lblMessage.ForeColor = System.Drawing.Color.Red;
-                    dr.Close();
+                    return;
+                }
+
+                if (role.Equals("Secretary", StringComparison.OrdinalIgnoreCase) &&
+                    Session["BachatGatID"] == null)
+                {
+                    Session.Clear();
+                    lblMessage.Text = "This Secretary account is not assigned to a Bachat Gat.";
+                    lblMessage.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
 
@@ -111,33 +143,25 @@ public partial class User : System.Web.UI.Page
                         Session.Clear();
                         lblMessage.Text = "This Member account is not properly assigned.";
                         lblMessage.ForeColor = System.Drawing.Color.Red;
-                        dr.Close();
                         return;
                     }
                 }
 
                 string returnUrl = Request.QueryString["returnUrl"];
 
-                dr.Close();
-
                 if (!string.IsNullOrEmpty(returnUrl))
                 {
                     Response.Redirect(returnUrl);
+                    return;
                 }
-                else if (role.Equals("Customer", StringComparison.OrdinalIgnoreCase))
+
+                if (role.Equals("Customer", StringComparison.OrdinalIgnoreCase))
                 {
                     Response.Redirect("PublicProducts.aspx");
+                    return;
                 }
-                else
-                {
-                    Response.Redirect("Dashboard.aspx");
-                }
-            }
-            else
-            {
-                dr.Close();
-                lblMessage.Text = "Invalid username or password.";
-                lblMessage.ForeColor = System.Drawing.Color.Red;
+
+                Response.Redirect("Dashboard.aspx");
             }
         }
     }
@@ -241,11 +265,10 @@ public partial class User : System.Web.UI.Page
             if (!string.IsNullOrEmpty(returnUrl))
             {
                 Response.Redirect(returnUrl);
+                return;
             }
-            else
-            {
-                Response.Redirect("PublicProducts.aspx");
-            }
+
+            Response.Redirect("PublicProducts.aspx");
         }
     }
 }
