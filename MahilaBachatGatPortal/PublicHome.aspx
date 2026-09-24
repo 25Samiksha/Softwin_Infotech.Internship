@@ -1,241 +1,231 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="PublicHome.aspx.cs" Inherits="PublicHome" MasterPageFile="~/Public.Master" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
 :root{
-    --ink:#1c2530;
-    --ink-soft:#5b6672;
-    --ink-faint:#93a0ad;
-    --paper:#fbfaf8;
-    --panel:#ffffff;
-    --line:#e8e4dd;
-    --accent:#c1652f;
-    --accent-dark:#a2521f;
-    --accent-tint:#fbeee5;
+    --green:#4f8f68;
+    --green-dark:#3f7756;
+    --green-light:#eef7f0;
+    --orange:#c96d35;
+    --orange-dark:#ad5726;
+    --dark:#26352d;
+    --text:#52605a;
+    --muted:#89938d;
+    --light:#f8faf7;
+    --white:#fff;
+    --line:#e6ebe6;
 }
+
 body{
-    background:var(--paper);
-    color:var(--ink);
+    background:#fff;
+    color:var(--dark);
     font-family:"Inter",Arial,sans-serif;
-    font-size:15px;
 }
+
 h1,h2,h3,h4{
     font-family:"Outfit","Inter",Arial,sans-serif;
 }
+
 .home-wrapper{
+    width:100%;
+    max-width:100%;
+    margin:0;
     overflow:hidden;
 }
+
 .hero-section{
     position:relative;
-    min-height:640px;
+    width:100%;
+    min-height:590px;
     display:flex;
     align-items:center;
-    background-image:linear-gradient(100deg,rgba(15,25,37,.88) 0%,rgba(15,25,37,.72) 45%,rgba(15,25,37,.35) 100%),url("https://images.unsplash.com/photo-1748944076823-9991da0a0634?w=1800&h=1100&fit=crop&auto=format&q=80");
+    background:
+        linear-gradient(
+            100deg,
+            rgba(24,45,34,.88) 0%,
+            rgba(24,45,34,.70) 48%,
+            rgba(24,45,34,.25) 100%
+        ),
+        url("https://images.unsplash.com/photo-1748944076823-9991da0a0634?w=1800&h=1100&fit=crop&auto=format&q=80");
     background-size:cover;
     background-position:center;
-    padding:60px 0;
-    overflow:hidden;
+    padding:70px 0;
+    box-sizing:border-box;
 }
-.hero-section:before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,.15);
-    z-index:1;
-}
+
 .hero-content{
+    max-width:650px;
     position:relative;
-    z-index:5;
-    max-width:600px;
+    z-index:2;
 }
+
 .hero-badge{
-    position:relative;
-    z-index:5;
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    background:rgba(0,0,0,.35);
-    color:#ffffff;
-    padding:7px 16px 7px 6px;
+    gap:9px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    padding:7px 17px 7px 7px;
+    border:1px solid rgba(255,255,255,.25);
     border-radius:30px;
     font-size:12px;
     font-weight:600;
-    letter-spacing:.4px;
-    margin-bottom:24px;
-    border:1px solid rgba(255,255,255,.3);
+    margin-bottom:22px;
 }
+
 .hero-badge i{
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:var(--accent);
-    color:#fff;
+    width:23px;
+    height:23px;
     display:flex;
     align-items:center;
     justify-content:center;
+    border-radius:50%;
+    background:var(--orange);
+    color:#fff;
     font-size:11px;
 }
+
 .hero-title{
-    position:relative;
-    z-index:5;
     font-size:54px;
-    line-height:1.1;
+    line-height:1.08;
     font-weight:700;
-    color:#ffffff !important;
+    color:#fff!important;
     margin:0 0 20px;
     letter-spacing:-1px;
-    text-shadow:0 3px 12px rgba(0,0,0,.45);
+    text-shadow:0 3px 12px rgba(0,0,0,.35);
 }
+
 .hero-title span{
-    color:#f0a477 !important;
+    color:#f2a476!important;
 }
+
 .hero-subtitle{
-    position:relative;
-    z-index:5;
+    max-width:550px;
+    color:#fff!important;
     font-size:19px;
-    color:#ffffff !important;
     line-height:1.6;
-    max-width:480px;
-    margin-bottom:12px;
+    margin:0 0 10px;
     font-weight:500;
-    text-shadow:0 2px 8px rgba(0,0,0,.45);
 }
+
 .hero-description{
-    position:relative;
-    z-index:5;
-    font-size:15px;
-    color:#f0f0f0 !important;
-    max-width:460px;
-    line-height:1.75;
-    margin-bottom:34px;
-    text-shadow:0 2px 8px rgba(0,0,0,.45);
+    max-width:510px;
+    color:#e8eeea!important;
+    font-size:14px;
+    line-height:1.8;
+    margin:0 0 30px;
 }
+
 .hero-buttons{
-    position:relative;
-    z-index:5;
     display:flex;
-    gap:16px;
-    flex-wrap:wrap;
     align-items:center;
-    margin-bottom:44px;
+    gap:13px;
+    flex-wrap:wrap;
+    margin-bottom:38px;
 }
+
 .btn-shop{
     display:inline-flex;
     align-items:center;
-    padding:15px 30px;
-    background:var(--accent);
-    color:#fff !important;
-    border-radius:6px;
+    justify-content:center;
+    min-height:46px;
+    padding:0 25px;
+    background:var(--orange);
+    color:#fff!important;
+    border-radius:5px;
     font-size:14px;
     font-weight:600;
-    letter-spacing:.2px;
-    text-decoration:none !important;
-    box-shadow:0 12px 28px rgba(193,101,47,.35);
+    text-decoration:none!important;
     transition:all .2s ease;
 }
+
 .btn-shop:hover{
-    background:var(--accent-dark);
+    background:var(--orange-dark);
+    color:#fff!important;
+    text-decoration:none!important;
     transform:translateY(-2px);
-    box-shadow:0 16px 32px rgba(193,101,47,.4);
 }
+
 .btn-explore{
     display:inline-flex;
     align-items:center;
-    padding:15px 26px;
+    justify-content:center;
+    min-height:46px;
+    padding:0 23px;
     background:rgba(255,255,255,.08);
-    color:#fff !important;
+    color:#fff!important;
     border:1px solid rgba(255,255,255,.35);
-    border-radius:6px;
+    border-radius:5px;
     font-size:14px;
     font-weight:600;
-    text-decoration:none !important;
+    text-decoration:none!important;
     transition:all .2s ease;
-    backdrop-filter:blur(4px);
 }
+
 .btn-explore:hover{
     background:rgba(255,255,255,.16);
-    border-color:rgba(255,255,255,.6);
+    color:#fff!important;
+    text-decoration:none!important;
 }
+
 .hero-stats{
-    position:relative;
-    z-index:5;
     display:flex;
-    gap:36px;
+    gap:35px;
     flex-wrap:wrap;
 }
+
 .hero-stat{
-    padding-left:16px;
-    border-left:2px solid var(--accent);
+    padding-left:14px;
+    border-left:2px solid var(--orange);
 }
+
 .hero-stat strong{
     display:block;
-    color:#ffffff !important;
-    font-size:15px;
+    color:#fff!important;
+    font-size:14px;
     font-weight:700;
 }
+
 .hero-stat span{
     display:block;
-    color:#e0e0e0 !important;
-    font-size:12px;
-    margin-top:2px;
+    color:#d9e2dc!important;
+    font-size:11px;
+    margin-top:3px;
 }
-.section{
-    padding:90px 0;
-}
-.section-header{
-    text-align:center;
-    margin-bottom:50px;
-    max-width:600px;
-    margin-left:auto;
-    margin-right:auto;
-}
-.section-label{
-    color:var(--accent-dark);
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:1.8px;
-    font-weight:700;
-    margin-bottom:10px;
-}
-.section-title{
-    font-size:32px;
-    font-weight:700;
-    color:var(--ink);
-    margin:0 0 12px;
-    letter-spacing:-.5px;
-}
-.section-description{
-    color:var(--ink-soft);
-    font-size:15px;
-    line-height:1.7;
-    margin:0;
-}
+
 .product-slider-section{
-    padding:55px 0;
-    background:var(--paper);
+    padding:42px 0;
+    background:#fff;
     overflow:hidden;
+    border-bottom:1px solid var(--line);
 }
+
 .product-slider{
     width:100%;
     overflow:hidden;
     position:relative;
 }
+
 .product-slider-track{
     display:flex;
     width:max-content;
-    animation:productRunning 20s linear infinite;
+    animation:productRunning 30s linear infinite;
 }
+
 .slider-product{
-    width:260px;
-    height:210px;
-    margin-right:22px;
-    border-radius:14px;
+    width:245px;
+    height:190px;
+    margin-right:18px;
+    border-radius:7px;
     overflow:hidden;
-    background:#ffffff;
-    box-shadow:0 8px 25px rgba(24,40,58,.12);
+    background:#f7f9f6;
+    border:1px solid var(--line);
     flex-shrink:0;
 }
+
 .slider-product img{
     width:100%;
     height:100%;
@@ -243,12 +233,15 @@ h1,h2,h3,h4{
     display:block;
     transition:transform .4s ease;
 }
+
 .slider-product:hover img{
-    transform:scale(1.08);
+    transform:scale(1.06);
 }
+
 .product-slider:hover .product-slider-track{
     animation-play-state:paused;
 }
+
 @keyframes productRunning{
     from{
         transform:translateX(0);
@@ -257,20 +250,57 @@ h1,h2,h3,h4{
         transform:translateX(-50%);
     }
 }
+
+.section{
+    padding:75px 0;
+}
+
+.section-header{
+    max-width:650px;
+    margin:0 auto 42px;
+    text-align:center;
+}
+
+.section-label{
+    color:var(--green);
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1.7px;
+    margin-bottom:9px;
+}
+
+.section-title{
+    color:var(--dark);
+    font-size:34px;
+    font-weight:700;
+    margin:0 0 12px;
+    letter-spacing:-.5px;
+}
+
+.section-description{
+    color:var(--text);
+    font-size:14px;
+    line-height:1.8;
+    margin:0;
+}
+
 .category-card{
     display:block;
-    text-decoration:none !important;
     position:relative;
-    border-radius:12px;
-    overflow:hidden;
     height:220px;
-    box-shadow:0 10px 26px rgba(24,40,58,.10);
-    transition:transform .25s ease,box-shadow .25s ease;
+    border-radius:7px;
+    overflow:hidden;
+    text-decoration:none!important;
+    box-shadow:0 8px 22px rgba(38,53,45,.10);
+    transition:all .25s ease;
 }
+
 .category-card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 20px 40px rgba(24,40,58,.18);
+    transform:translateY(-5px);
+    box-shadow:0 16px 30px rgba(38,53,45,.15);
 }
+
 .category-card .cat-bg{
     position:absolute;
     inset:0;
@@ -278,14 +308,23 @@ h1,h2,h3,h4{
     background-position:center;
     transition:transform .4s ease;
 }
+
 .category-card:hover .cat-bg{
-    transform:scale(1.08);
+    transform:scale(1.06);
 }
+
 .category-card .cat-overlay{
     position:absolute;
     inset:0;
-    background:linear-gradient(0deg,rgba(15,25,37,.82) 0%,rgba(15,25,37,.15) 60%,rgba(15,25,37,.05) 100%);
+    background:
+        linear-gradient(
+            0deg,
+            rgba(24,45,34,.85) 0%,
+            rgba(24,45,34,.20) 65%,
+            rgba(24,45,34,.05) 100%
+        );
 }
+
 .category-card .cat-body{
     position:relative;
     z-index:2;
@@ -295,179 +334,233 @@ h1,h2,h3,h4{
     justify-content:flex-end;
     padding:20px;
 }
+
 .category-icon{
     width:38px;
     height:38px;
-    border-radius:8px;
-    background:var(--accent);
-    color:#fff;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:16px;
-    margin-bottom:12px;
+    background:var(--orange);
+    color:#fff;
+    border-radius:5px;
+    font-size:15px;
+    margin-bottom:11px;
 }
+
 .category-card h4{
     color:#fff;
     font-size:17px;
-    font-weight:650;
+    font-weight:600;
     margin:0;
 }
+
 .category-card p{
-    color:#dfe4e8;
+    color:#e3ebe5;
     font-size:12px;
     margin:4px 0 0;
 }
+
 .products-section{
-    background:var(--panel);
+    background:#f8faf7;
     border-top:1px solid var(--line);
     border-bottom:1px solid var(--line);
 }
+
 .product-card{
-    background:var(--panel);
+    background:#fff;
     border:1px solid var(--line);
-    border-radius:12px;
+    border-radius:7px;
     overflow:hidden;
     height:100%;
-    box-shadow:0 2px 10px rgba(24,40,58,.04);
+    box-shadow:0 2px 10px rgba(38,53,45,.04);
     transition:all .25s ease;
 }
+
 .product-card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 18px 34px rgba(24,40,58,.14);
-    border-color:transparent;
+    transform:translateY(-5px);
+    box-shadow:0 14px 28px rgba(38,53,45,.11);
+    border-color:#d7e2da;
 }
+
 .product-image-box{
-    height:230px;
-    background:var(--accent-tint);
+    height:225px;
+    background:#f3f7f3;
     overflow:hidden;
-    position:relative;
 }
+
 .product-image{
     width:100%;
     height:100%;
     object-fit:cover;
     transition:transform .4s ease;
 }
+
 .product-card:hover .product-image{
-    transform:scale(1.06);
+    transform:scale(1.05);
 }
+
 .product-info{
-    padding:20px 22px 22px;
+    padding:18px 20px 20px;
 }
+
 .product-category{
-    color:var(--accent-dark);
-    font-size:11px;
+    color:var(--green);
+    font-size:10px;
     font-weight:700;
     text-transform:uppercase;
     letter-spacing:1px;
 }
+
 .product-name{
-    color:var(--ink);
+    color:var(--dark);
     font-size:17px;
-    font-weight:650;
-    margin:8px 0 4px;
-}
-.product-gat{
-    color:var(--ink-faint);
-    font-size:12px;
-    margin-bottom:14px;
-}
-.product-price{
-    color:var(--ink);
-    font-size:20px;
-    font-weight:750;
-    margin-bottom:16px;
-}
-.product-button{
-    display:block;
-    text-align:center;
-    padding:11px;
-    border-radius:6px;
-    background:var(--ink);
-    color:#fff !important;
-    text-decoration:none !important;
-    font-size:13px;
     font-weight:600;
+    line-height:1.35;
+    margin:7px 0 4px;
+}
+
+.product-gat{
+    color:var(--muted);
+    font-size:11px;
+    margin-bottom:13px;
+}
+
+.product-price{
+    color:var(--orange);
+    font-size:19px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.product-button{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    background:var(--green);
+    color:#fff!important;
+    border-radius:4px;
+    font-size:12px;
+    font-weight:600;
+    text-decoration:none!important;
     transition:all .2s ease;
 }
+
 .product-button:hover{
-    background:var(--accent-dark);
+    background:var(--green-dark);
+    color:#fff!important;
+    text-decoration:none!important;
 }
+
 .cta-banner{
-    background:linear-gradient(120deg,#1c2530 0%,#2b3a4d 100%);
-    border-radius:16px;
-    padding:56px 50px;
+    background:#26352d;
+    border-radius:8px;
+    padding:48px 45px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     flex-wrap:wrap;
-    gap:24px;
+    gap:25px;
 }
+
 .cta-banner h3{
     color:#fff;
     font-size:26px;
     font-weight:700;
     margin:0 0 8px;
 }
+
 .cta-banner p{
-    color:#c3cad1;
-    font-size:14px;
+    color:#bdc9c1;
+    font-size:13px;
+    line-height:1.7;
     margin:0;
-    max-width:440px;
+    max-width:500px;
 }
+
 @media(max-width:991px){
     .hero-title{
-        font-size:40px;
+        font-size:43px;
     }
+
     .hero-section{
-        min-height:auto;
-        padding:70px 0 90px;
+        min-height:540px;
     }
+
     .slider-product{
-        width:230px;
-        height:190px;
+        width:220px;
+        height:175px;
     }
 }
+
 @media(max-width:767px){
-    .hero-title{
-        font-size:33px;
+    .hero-section{
+        min-height:520px;
+        padding:60px 0;
     }
+
+    .hero-title{
+        font-size:35px;
+    }
+
     .hero-subtitle{
         font-size:17px;
     }
+
+    .hero-description{
+        font-size:13px;
+    }
+
+    .hero-stats{
+        gap:20px;
+    }
+
     .section{
-        padding:60px 0;
+        padding:55px 0;
     }
+
     .section-title{
-        font-size:26px;
+        font-size:28px;
     }
+
     .product-slider-section{
-        padding:40px 0;
+        padding:35px 0;
     }
+
     .slider-product{
-        width:210px;
-        height:170px;
-        margin-right:15px;
+        width:205px;
+        height:165px;
+        margin-right:13px;
     }
+
     .product-slider-track{
-        animation-duration:16s;
+        animation-duration:24s;
     }
-    .product-image-box{
-        height:200px;
-    }
+
     .category-card{
-        height:170px;
-        margin-bottom:16px;
+        height:190px;
+        margin-bottom:18px;
     }
+
+    .product-image-box{
+        height:210px;
+    }
+
     .cta-banner{
-        padding:40px 26px;
+        padding:38px 25px;
+    }
+
+    .cta-banner h3{
+        font-size:23px;
     }
 }
 </style>
+
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+
 <div class="home-wrapper">
 
 <section class="hero-section">
@@ -495,14 +588,17 @@ Shop handmade and locally produced goods while supporting women-led businesses a
 </p>
 
 <div class="hero-buttons">
+
 <a href="PublicProducts.aspx" class="btn-shop">
 Shop Products
-&nbsp; <i class="glyphicon glyphicon-arrow-right"></i>
+&nbsp;
+<i class="glyphicon glyphicon-arrow-right"></i>
 </a>
 
 <a href="#categories" class="btn-explore">
 Explore Categories
 </a>
+
 </div>
 
 <div class="hero-stats">
@@ -523,6 +619,7 @@ Explore Categories
 </div>
 
 </div>
+
 </div>
 </div>
 </div>
@@ -534,29 +631,21 @@ Explore Categories
 <div class="product-slider">
 <div class="product-slider-track">
 
+<asp:Repeater ID="rptSliderProducts" runat="server">
+<ItemTemplate>
 <div class="slider-product">
-<img src="Images/homemade bowl.jpg" alt="Homemade Bowl" />
+<img src='<%# GetImageUrl(Eval("ImagePath")) %>' alt='<%# Eval("ImageName") %>' />
 </div>
+</ItemTemplate>
+</asp:Repeater>
 
+<asp:Repeater ID="rptSliderProductsDuplicate" runat="server">
+<ItemTemplate>
 <div class="slider-product">
-<img src="Images/Homemade Mango Pickle.jpg" alt="Homemade Mango Pickle" />
+<img src='<%# GetImageUrl(Eval("ImagePath")) %>' alt='<%# Eval("ImageName") %>' />
 </div>
-
-<div class="slider-product">
-<img src="Images/Homemade Papad.jpg" alt="Homemade Papad" />
-</div>
-
-<div class="slider-product">
-<img src="Images/homemade bowl.jpg" alt="Homemade Bowl" />
-</div>
-
-<div class="slider-product">
-<img src="Images/Homemade Mango Pickle.jpg" alt="Homemade Mango Pickle" />
-</div>
-
-<div class="slider-product">
-<img src="Images/Homemade Papad.jpg" alt="Homemade Papad" />
-</div>
+</ItemTemplate>
+</asp:Repeater>
 
 </div>
 </div>
@@ -587,19 +676,11 @@ Explore products created by talented women from Mahila Bachat Gats.
 <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1634588478809-22e8edbfc85a?w=500&h=400&fit=crop&auto=format&q=80');"></div>
 <div class="cat-overlay"></div>
 <div class="cat-body">
-
 <div class="category-icon">
 <i class="glyphicon glyphicon-cutlery"></i>
 </div>
-
-<h4>
-Food Products
-</h4>
-
-<p>
-Homemade &amp; traditional foods
-</p>
-
+<h4>Food Products</h4>
+<p>Homemade &amp; traditional foods</p>
 </div>
 </a>
 </div>
@@ -609,19 +690,11 @@ Homemade &amp; traditional foods
 <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1748944076900-65700f687edf?w=500&h=400&fit=crop&auto=format&q=80');"></div>
 <div class="cat-overlay"></div>
 <div class="cat-body">
-
 <div class="category-icon">
 <i class="glyphicon glyphicon-heart"></i>
 </div>
-
-<h4>
-Handmade Products
-</h4>
-
-<p>
-Unique handmade creations
-</p>
-
+<h4>Handmade Products</h4>
+<p>Unique handmade creations</p>
 </div>
 </a>
 </div>
@@ -631,19 +704,11 @@ Unique handmade creations
 <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1748944078380-3d12ffee7378?w=500&h=400&fit=crop&auto=format&q=80');"></div>
 <div class="cat-overlay"></div>
 <div class="cat-body">
-
 <div class="category-icon">
 <i class="glyphicon glyphicon-home"></i>
 </div>
-
-<h4>
-Home Products
-</h4>
-
-<p>
-Useful products for your home
-</p>
-
+<h4>Home Products</h4>
+<p>Useful products for your home</p>
 </div>
 </a>
 </div>
@@ -653,19 +718,11 @@ Useful products for your home
 <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1748944080331-30fe7088ff11?w=500&h=400&fit=crop&auto=format&q=80');"></div>
 <div class="cat-overlay"></div>
 <div class="cat-body">
-
 <div class="category-icon">
 <i class="glyphicon glyphicon-th"></i>
 </div>
-
-<h4>
-View All
-</h4>
-
-<p>
-Explore all available products
-</p>
-
+<h4>View All</h4>
+<p>Explore all available products</p>
 </div>
 </a>
 </div>
@@ -696,7 +753,6 @@ Discover some of the latest products available from our Mahila Bachat Gats.
 <div class="row">
 
 <asp:Repeater ID="rptProducts" runat="server">
-
 <ItemTemplate>
 
 <div class="col-md-3 col-sm-6" style="margin-bottom:30px;">
@@ -734,24 +790,26 @@ CssClass="product-image" />
 
 <a href='<%# "ProductDetails.aspx?ProductID=" + Eval("ProductID") %>' class="product-button">
 View Product
-&nbsp; <i class="glyphicon glyphicon-arrow-right"></i>
+&nbsp;
+<i class="glyphicon glyphicon-arrow-right"></i>
 </a>
 
 </div>
 </div>
+
 </div>
 
 </ItemTemplate>
-
 </asp:Repeater>
 
 </div>
 
-<div class="text-center" style="margin-top:10px;">
+<div class="text-center" style="margin-top:5px;">
 
 <a href="PublicProducts.aspx" class="btn-shop">
 View All Products
-&nbsp; <i class="glyphicon glyphicon-arrow-right"></i>
+&nbsp;
+<i class="glyphicon glyphicon-arrow-right"></i>
 </a>
 
 </div>
@@ -765,7 +823,6 @@ View All Products
 <div class="cta-banner">
 
 <div>
-
 <h3>
 Ready to shop with purpose?
 </h3>
@@ -773,12 +830,12 @@ Ready to shop with purpose?
 <p>
 Every order supports a woman-led self-help group and helps strengthen local communities.
 </p>
-
 </div>
 
 <a href="PublicProducts.aspx" class="btn-shop">
 Browse All Products
-&nbsp; <i class="glyphicon glyphicon-arrow-right"></i>
+&nbsp;
+<i class="glyphicon glyphicon-arrow-right"></i>
 </a>
 
 </div>
@@ -787,4 +844,5 @@ Browse All Products
 </section>
 
 </div>
+
 </asp:Content>

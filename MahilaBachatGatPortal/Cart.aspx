@@ -1,41 +1,39 @@
 ﻿<%@ Page Title="Cart" Language="C#" MasterPageFile="~/Public.Master" AutoEventWireup="true" CodeFile="Cart.aspx.cs" Inherits="Cart" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root{
+    --ink:#1c2530;
+    --ink-soft:#5b6672;
+    --ink-faint:#93a0ad;
+    --paper:#fbfaf8;
+    --panel:#ffffff;
+    --line:#e8e4dd;
+    --accent:#c1652f;
+    --accent-dark:#a2521f;
+    --accent-tint:#fbeee5;
+}
 .cart-page{
-    background:#f4f8fc;
+    background:var(--paper);
     min-height:100vh;
     padding-bottom:80px;
+    font-family:"Inter",Arial,sans-serif;
+    color:var(--ink);
+}
+.cart-page h1,
+.cart-page h2,
+.cart-page h3,
+.cart-page h4{
+    font-family:"Outfit","Inter",Arial,sans-serif;
 }
 .cart-hero{
     position:relative;
-    background-image:linear-gradient(rgba(24,59,91,.78),rgba(24,59,91,.78)),url("images/cart-bg.jpg");
+    background-image:linear-gradient(100deg,rgba(15,25,37,.88) 0%,rgba(15,25,37,.72) 55%,rgba(15,25,37,.4) 100%),url("https://images.unsplash.com/photo-1748944084924-bef8de7650f5?w=1800&h=650&fit=crop&auto=format&q=80");
     background-size:cover;
     background-position:center;
-    background-repeat:no-repeat;
     margin-bottom:40px;
     padding:65px 15px;
-    overflow:hidden;
-}
-.cart-hero:before{
-    content:"";
-    position:absolute;
-    width:320px;
-    height:320px;
-    border-radius:50%;
-    background:rgba(255,255,255,.06);
-    top:-150px;
-    right:-70px;
-}
-.cart-hero:after{
-    content:"";
-    position:absolute;
-    width:220px;
-    height:220px;
-    border-radius:50%;
-    background:rgba(120,185,225,.08);
-    bottom:-120px;
-    left:-60px;
 }
 .cart-heading{
     position:relative;
@@ -43,26 +41,29 @@
     text-align:center;
 }
 .cart-label{
-    display:inline-block;
-    background:rgba(255,255,255,.13);
-    border:1px solid rgba(255,255,255,.22);
-    color:#ffffff;
-    padding:8px 17px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.2);
+    color:#f3ded2;
+    padding:7px 17px;
     border-radius:30px;
     font-size:12px;
-    font-weight:700;
+    font-weight:600;
     text-transform:uppercase;
     letter-spacing:1px;
-    margin-bottom:13px;
+    margin-bottom:16px;
 }
 .cart-title{
     color:#ffffff;
     font-size:40px;
-    font-weight:750;
+    font-weight:700;
+    letter-spacing:-1px;
     margin:0 0 10px;
 }
 .cart-subtitle{
-    color:#e1edf5;
+    color:#dfe4e8;
     font-size:15px;
     margin:0;
 }
@@ -72,11 +73,11 @@
     padding:0 15px;
 }
 .cart-panel{
-    background:#ffffff;
-    border:1px solid #dce7f1;
-    border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
     padding:25px;
-    box-shadow:0 10px 30px rgba(24,59,91,.07);
+    box-shadow:0 2px 10px rgba(24,40,58,.04);
 }
 .cart-image{
     width:80px;
@@ -86,21 +87,34 @@
 }
 .cart-table{
     width:100%;
+    border-collapse:separate;
+    border-spacing:0;
 }
 .cart-table th{
-    background:#2f78b7;
+    background:var(--ink);
     color:#ffffff;
     padding:13px;
     border:0;
+    font-size:12.5px;
+    font-weight:650;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+.cart-table th:first-child{
+    border-top-left-radius:8px;
+}
+.cart-table th:last-child{
+    border-top-right-radius:8px;
 }
 .cart-table td{
-    padding:13px;
+    padding:14px 13px;
     vertical-align:middle;
-    color:#40566b;
-    border-bottom:1px solid #e7eef5;
+    color:var(--ink);
+    border-bottom:1px solid var(--line);
+    font-size:14px;
 }
 .cart-table tr:hover td{
-    background:#f8fbfe;
+    background:var(--accent-tint);
 }
 .quantity-box{
     display:flex;
@@ -112,21 +126,30 @@
     height:32px;
     padding:0;
     border-radius:6px;
+    border:1px solid var(--line);
+    background:#ffffff;
+    color:var(--ink);
+    font-weight:700;
+    transition:all .2s ease;
+}
+.quantity-button:hover{
+    border-color:var(--accent);
+    color:var(--accent-dark);
 }
 .quantity-text{
     width:45px;
     text-align:center;
-    color:#183b5b;
-    font-weight:600;
+    color:var(--ink);
+    font-weight:650;
 }
 .cart-total{
     text-align:right;
-    color:#183b5b;
-    font-size:21px;
+    color:var(--ink);
+    font-size:20px;
     font-weight:700;
     margin-top:22px;
     padding-top:18px;
-    border-top:1px solid #e7eef5;
+    border-top:1px solid var(--line);
 }
 .cart-actions{
     text-align:right;
@@ -134,58 +157,59 @@
 }
 .cart-actions .btn{
     border-radius:7px;
-    padding:10px 18px;
+    padding:10px 20px;
     font-weight:600;
-    margin-left:7px;
+    margin-left:8px;
+    font-size:13.5px;
 }
 .cart-actions .btn-default{
-    border-color:#cfdde8;
-    color:#526b80;
+    border-color:var(--line);
+    color:var(--ink-soft);
     background:#ffffff;
 }
 .cart-actions .btn-default:hover{
-    border-color:#2f78b7;
-    color:#2f78b7;
+    border-color:var(--accent);
+    color:var(--accent-dark);
 }
 .cart-actions .btn-primary{
-    background:#2f78b7;
-    border-color:#2f78b7;
+    background:var(--accent);
+    border-color:var(--accent);
 }
 .cart-actions .btn-primary:hover{
-    background:#245f91;
-    border-color:#245f91;
+    background:var(--accent-dark);
+    border-color:var(--accent-dark);
 }
 .message{
     display:block;
     margin-bottom:15px;
 }
 .empty-cart{
-    background:#ffffff;
+    background:var(--panel);
     text-align:center;
     padding:55px 30px;
-    color:#718397;
+    color:var(--ink-soft);
 }
 .empty-cart h4{
-    color:#183b5b;
-    font-size:24px;
+    color:var(--ink);
+    font-size:23px;
     font-weight:700;
     margin:10px 0;
 }
 .empty-cart p{
-    color:#718397;
+    color:var(--ink-soft);
     font-size:14px;
     margin-bottom:20px;
 }
 .empty-cart .btn{
-    background:#2f78b7;
-    border-color:#2f78b7;
+    background:var(--accent);
+    border-color:var(--accent);
     border-radius:7px;
     padding:10px 22px;
     font-weight:600;
 }
 .empty-cart .btn:hover{
-    background:#245f91;
-    border-color:#245f91;
+    background:var(--accent-dark);
+    border-color:var(--accent-dark);
 }
 @media(max-width:767px){
     .cart-hero{
@@ -226,7 +250,7 @@
 
 <div class="cart-label">
 <span class="glyphicon glyphicon-shopping-cart"></span>
-&nbsp; Shopping Cart
+Shopping Cart
 </div>
 
 <div class="cart-title">

@@ -7,166 +7,958 @@
 <title>Mahila Bachat Gat Portal</title>
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <link href="CSS/style.css" rel="stylesheet" />
+
 <style>
+:root{
+    --green:#4f8f68;
+    --green-dark:#3f7756;
+    --green-light:#eef7f0;
+    --orange:#c96d35;
+    --orange-dark:#ad5726;
+    --dark:#26352d;
+    --text:#52605a;
+    --muted:#89938d;
+    --light:#f8faf7;
+    --white:#fff;
+    --line:#e6ebe6;
+}
+
+html,
 body{
-    background:#f7f3ed;
+    margin:0;
+    padding:0;
+    width:100%;
+    min-height:100%;
 }
+
+body{
+    background:#fff;
+    font-family:"Inter",Arial,sans-serif;
+    color:var(--dark);
+}
+
 .top-navbar{
-    background:rgba(0,0,0,.75);
+    background:#fff;
     border:0;
-    border-bottom:1px solid rgba(255,255,255,.15);
+    border-bottom:1px solid #e9eee9;
     border-radius:0;
-    margin-bottom:0;
-    min-height:68px;
-    box-shadow:0 3px 18px rgba(0,0,0,.25);
+    margin:0;
+    min-height:76px;
+    height:76px;
+    box-shadow:0 2px 14px rgba(38,53,45,.06);
+    position:relative;
+    z-index:1000;
 }
+
+.top-navbar .container-fluid{
+    width:100%;
+    max-width:1240px;
+    min-height:76px;
+    padding-left:25px;
+    padding-right:25px;
+}
+
+.navbar-header{
+    padding-left:0!important;
+}
+
 .logo-brand{
+    display:flex!important;
+    align-items:center!important;
+    height:76px!important;
+    padding:8px 0!important;
+    color:var(--dark)!important;
+    text-decoration:none!important;
+}
+
+.logo-brand:hover,
+.logo-brand:focus{
+    background:transparent!important;
+    color:var(--dark)!important;
+    text-decoration:none!important;
+}
+
+.site-logo{
+    width:50px;
+    height:50px;
+    margin-right:11px;
+    flex-shrink:0;
+    object-fit:contain;
+    padding:5px;
+    background:#eef0e8;
+    border:2px solid #789b7d;
+    border-radius:50%;
+}
+
+.top-navbar .navbar-nav{
+    margin-top:0!important;
+    margin-bottom:0!important;
+    height:76px;
     display:flex;
     align-items:center;
-    height:68px;
-    padding:8px 15px;
-    color:#ffffff !important;
+}
+
+.top-navbar .navbar-nav>li{
+    height:76px;
+    display:flex;
+    align-items:center;
+}
+
+.top-navbar .navbar-nav>li>a{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px;
+    height:44px;
+    color:#536159!important;
+    font-size:14px;
+    font-weight:600;
+    padding:0 15px;
+    border-radius:6px;
+    transition:all .2s ease;
+    text-decoration:none!important;
+    line-height:1!important;
+}
+
+.top-navbar .navbar-nav>li>a:hover,
+.top-navbar .navbar-nav>li>a:focus{
+    color:var(--green)!important;
+    background:var(--green-light)!important;
+    text-decoration:none!important;
+}
+
+.top-navbar .navbar-nav>li>a .glyphicon{
+    display:inline-block;
+    color:var(--green);
+    font-size:13px;
+    margin:0;
+    line-height:1;
+}
+
+.top-navbar .navbar-nav>li>a.btn-login{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    height:42px!important;
+    min-height:42px!important;
+    width:auto!important;
+    margin:0 0 0 8px!important;
+    padding:0 19px!important;
+    box-sizing:border-box!important;
+    background:var(--orange)!important;
+    color:#fff!important;
+    border:1px solid var(--orange)!important;
+    border-radius:5px!important;
+    font-size:14px!important;
+    font-weight:600!important;
+    line-height:1!important;
+    gap:7px;
+    text-decoration:none!important;
+    white-space:nowrap;
+    transition:all .2s ease;
+}
+
+.top-navbar .navbar-nav>li>a.btn-login .glyphicon{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    color:#fff!important;
+    font-size:14px!important;
+    line-height:1!important;
+}
+
+.top-navbar .navbar-nav>li>a.btn-login:hover,
+.top-navbar .navbar-nav>li>a.btn-login:focus{
+    background:var(--orange-dark)!important;
+    border-color:var(--orange-dark)!important;
+    color:#fff!important;
+}
+
+.cart-link{
+    color:#536159!important;
+}
+
+.cart-link:hover,
+.cart-link:focus{
+    color:var(--green)!important;
+    background:var(--green-light)!important;
+}
+
+.navbar-toggle{
+    border:1px solid #dce4de;
+    margin-top:19px;
+    background:#fff;
+    border-radius:4px;
+}
+
+.navbar-toggle .icon-bar{
+    background-color:var(--green);
+}
+
+.navbar-toggle:hover,
+.navbar-toggle:focus{
+    background:var(--green-light);
+    border-color:var(--green);
+}
+
+.main-content{
+    min-height:400px;
+    width:100%!important;
+    max-width:none!important;
+    float:none!important;
+    display:block!important;
+    margin:0!important;
+    padding:0!important;
+}
+
+.container-fluid{
+    width:100%!important;
+    max-width:none!important;
+    padding-left:0;
+    padding-right:0;
+}
+
+.container-fluid>.main-content{
+    width:100%!important;
+    max-width:none!important;
+}
+
+.container-fluid>.main-content>.container,
+.container-fluid>.main-content .row{
+    width:100%!important;
+    max-width:none!important;
+}
+
+.public-page{
+    background:#fff;
+}
+
+.public-section{
+    padding:70px 25px;
+}
+
+.public-section-inner{
+    max-width:1180px;
+    margin:0 auto;
+}
+
+.public-section-title{
+    text-align:center;
+    margin-bottom:38px;
+}
+
+.public-section-title .eyebrow{
+    display:block;
+    color:var(--green);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-bottom:8px;
+}
+
+.public-section-title h2{
+    margin:0;
+    color:var(--dark);
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:34px;
+    font-weight:700;
+    line-height:1.2;
+}
+
+.public-section-title p{
+    max-width:650px;
+    margin:12px auto 0;
+    color:var(--text);
+    font-size:14px;
+    line-height:1.8;
+}
+
+.public-hero{
+    width:100%!important;
+    min-height:480px;
+    display:flex;
+    align-items:center;
+    background:#eef7f0;
+    background-size:cover!important;
+    background-position:center!important;
+}
+
+.public-hero-content{
+    max-width:1180px;
+    width:100%;
+    margin:0 auto;
+    padding:80px 25px;
+}
+
+.public-hero-content h1{
+    max-width:620px;
+    margin:0 0 18px;
+    color:var(--dark);
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:52px;
+    font-weight:700;
+    line-height:1.08;
+    letter-spacing:-1px;
+}
+
+.public-hero-content p{
+    max-width:570px;
+    color:var(--text);
+    font-size:16px;
+    line-height:1.8;
+    margin-bottom:28px;
+}
+
+.public-hero-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:0 24px;
+    border-radius:5px;
+    background:var(--green);
+    color:#fff!important;
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none!important;
+    transition:all .2s ease;
+}
+
+.public-hero-btn:hover{
+    background:var(--green-dark);
+    color:#fff!important;
+    text-decoration:none!important;
+}
+
+.public-stats{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+}
+
+.public-stats .stat-item{
+    text-align:center;
+    padding:25px 15px;
+    border-right:1px solid var(--line);
+}
+
+.public-stats .stat-item:last-child{
+    border-right:0;
+}
+
+.public-stats strong{
+    display:block;
+    color:var(--green);
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:30px;
+    font-weight:700;
+}
+
+.public-stats span{
+    color:var(--text);
+    font-size:13px;
+}
+
+.public-features{
+    background:#f8faf7;
+}
+
+.public-feature-card{
+    height:100%;
+    padding:30px 25px;
+    text-align:center;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+}
+
+.public-feature-icon{
+    width:54px;
+    height:54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 18px;
+    border-radius:50%;
+    background:var(--green-light);
+    color:var(--green);
+    font-size:23px;
+}
+
+.public-feature-card h3{
+    margin:0 0 10px;
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    color:var(--dark);
     font-size:19px;
     font-weight:700;
 }
-.logo-brand:hover{
-    background:transparent !important;
-    color:#ffffff !important;
+
+.public-feature-card p{
+    margin:0;
+    color:var(--text);
+    font-size:13px;
+    line-height:1.7;
 }
-.site-logo{
-    width:42px;
-    height:42px;
-    object-fit:contain;
-    margin-right:10px;
-}
-.top-navbar .navbar-nav{
-    margin-top:9px;
-}
-.top-navbar .navbar-nav>li>a{
-    color:#ffffff !important;
-    font-size:14px;
-    font-weight:600;
-    padding:16px 15px;
+
+.public-category-card{
+    display:block;
+    background:#f8faf7;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:24px 15px;
+    text-align:center;
+    text-decoration:none!important;
     transition:all .2s ease;
 }
-.top-navbar .navbar-nav>li>a:hover,
-.top-navbar .navbar-nav>li>a:focus{
-    color:#ffffff !important;
-    background:rgba(255,255,255,.12);
+
+.public-category-card:hover{
+    transform:translateY(-3px);
+    border-color:#cddfd2;
+    box-shadow:0 10px 24px rgba(38,53,45,.08);
 }
-.top-navbar .navbar-nav>li>a .glyphicon{
-    margin-right:5px;
-    color:#ffffff;
+
+.public-category-card img{
+    width:100%;
+    height:145px;
+    object-fit:contain;
+    margin-bottom:15px;
 }
-.cart-link{
-    color:#ffffff !important;
+
+.public-category-card h4{
+    margin:0;
+    color:var(--dark);
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:16px;
+    font-weight:600;
 }
-.cart-link:hover{
-    color:#ffffff !important;
-    background:rgba(255,255,255,.12) !important;
+
+.public-products-section{
+    background:#fff;
 }
-.main-content{
-    min-height:400px;
+
+.public-product-card{
+    height:100%;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:7px;
+    overflow:hidden;
+    transition:all .2s ease;
 }
+
+.public-product-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 12px 28px rgba(38,53,45,.10);
+}
+
+.public-product-image{
+    height:220px;
+    background:#f7f9f6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.public-product-image img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+}
+
+.public-product-info{
+    padding:18px;
+}
+
+.public-product-info .category{
+    display:block;
+    color:var(--green);
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    margin-bottom:7px;
+}
+
+.public-product-info h3{
+    margin:0 0 10px;
+    color:var(--dark);
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:18px;
+    font-weight:600;
+    line-height:1.35;
+}
+
+.public-product-price{
+    color:var(--orange);
+    font-size:18px;
+    font-weight:700;
+}
+
+.public-product-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    padding:0 14px;
+    border-radius:4px;
+    background:var(--green);
+    color:#fff!important;
+    text-decoration:none!important;
+    font-size:12px;
+    font-weight:600;
+}
+
+.public-product-btn:hover{
+    background:var(--green-dark);
+}
+
+.public-promo{
+    background:#eef7f0;
+    border-radius:8px;
+    padding:45px;
+    min-height:220px;
+    display:flex;
+    align-items:center;
+}
+
+.public-promo h2{
+    margin:0 0 12px;
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:30px;
+    font-weight:700;
+    color:var(--dark);
+}
+
+.public-promo p{
+    color:var(--text);
+    line-height:1.7;
+    margin-bottom:20px;
+}
+
+.public-cta{
+    background:var(--green);
+    color:#fff;
+    border-radius:8px;
+    padding:50px 40px;
+    text-align:center;
+}
+
+.public-cta h2{
+    margin:0 0 10px;
+    color:#fff;
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:31px;
+    font-weight:700;
+}
+
+.public-cta p{
+    max-width:600px;
+    margin:0 auto 22px;
+    color:rgba(255,255,255,.85);
+    line-height:1.7;
+}
+
+.public-cta .btn{
+    background:#fff;
+    color:var(--green);
+    border:0;
+    border-radius:4px;
+    padding:11px 22px;
+    font-weight:600;
+}
+
+.public-filter{
+    max-width:1180px;
+    margin:0 auto 35px;
+    padding:20px;
+    background:#f8faf7;
+    border:1px solid var(--line);
+    border-radius:7px;
+}
+
+.public-filter .form-control,
+.public-filter select{
+    height:44px;
+    border:1px solid #dfe6e0;
+    border-radius:4px;
+    box-shadow:none;
+}
+
+.public-filter .form-control:focus,
+.public-filter select:focus{
+    border-color:var(--green);
+    box-shadow:0 0 0 2px rgba(79,143,104,.10);
+}
+
+.public-search-btn{
+    height:44px;
+    border:0;
+    border-radius:4px;
+    background:var(--green);
+    color:#fff;
+    font-weight:600;
+    padding:0 20px;
+}
+
+.public-search-btn:hover{
+    background:var(--green-dark);
+}
+
+.public-clear-btn{
+    height:44px;
+    border:1px solid #d7dfd9;
+    border-radius:4px;
+    background:#fff;
+    color:var(--text);
+    font-weight:600;
+    padding:0 20px;
+}
+
+.public-clear-btn:hover{
+    background:#f2f5f2;
+}
+
+.public-message{
+    max-width:1180px;
+    margin:0 auto 25px;
+    padding:14px 18px;
+    border-radius:5px;
+    background:#fff6ee;
+    border:1px solid #f1d6bf;
+    color:#9a552b;
+}
+
+.public-table{
+    background:#fff;
+    border:1px solid var(--line);
+}
+
+.public-form-card{
+    max-width:760px;
+    margin:40px auto;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:35px;
+    box-shadow:0 8px 25px rgba(38,53,45,.06);
+}
+
+.public-login-wrapper{
+    min-height:650px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:60px 20px;
+    background:#f8faf7;
+}
+
+.public-login-card{
+    width:100%;
+    max-width:440px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:38px;
+    box-shadow:0 12px 35px rgba(38,53,45,.08);
+}
+
+.public-cart-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:25px;
+}
+
+.public-badge{
+    display:inline-flex;
+    align-items:center;
+    min-height:25px;
+    padding:0 9px;
+    border-radius:20px;
+    background:var(--green-light);
+    color:var(--green);
+    font-size:11px;
+    font-weight:700;
+}
+
+.public-empty{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--muted);
+}
+
+.public-divider{
+    width:55px;
+    height:3px;
+    margin:15px auto 0;
+    background:var(--orange);
+}
+
 .public-footer{
-    background:#302d29;
-    color:#ffffff;
-    margin-top:60px;
-    padding:50px 0 20px;
-    border-top:3px solid #b47759;
+    background:#26352d;
+    color:#fff;
+    margin-top:0;
+    padding:60px 0 20px;
+    border-top:0;
 }
+
 .footer-container{
     max-width:1180px;
     margin:0 auto;
     padding:0 25px;
 }
+
+.footer-brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    margin-bottom:15px;
+}
+
+.footer-brand .site-logo{
+    width:46px;
+    height:46px;
+    margin-right:0;
+}
+
+.footer-brand h3{
+    margin:0;
+}
+
 .footer-column{
     min-height:150px;
     margin-bottom:25px;
 }
+
 .footer-column h3{
-    font-size:24px;
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:21px;
     font-weight:700;
-    margin-top:0;
-    margin-bottom:15px;
-    color:#ffffff;
+    margin:0;
+    color:#fff;
 }
+
 .footer-column h4{
-    font-size:16px;
+    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-size:12px;
     font-weight:700;
-    margin-top:0;
-    margin-bottom:18px;
-    color:#ead7c8;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin:0 0 18px;
+    color:#9bc6aa;
 }
+
 .footer-column p{
-    color:#c9c3bc;
-    line-height:1.7;
-    font-size:14px;
-    max-width:330px;
+    color:#b8c2bc;
+    line-height:1.8;
+    font-size:13px;
+    max-width:340px;
     margin-bottom:0;
 }
+
 .footer-column a{
     display:block;
-    color:#c9c3bc;
+    color:#b8c2bc;
     text-decoration:none;
-    font-size:14px;
+    font-size:13px;
     margin-bottom:11px;
     transition:all .2s ease;
 }
+
 .footer-column a:hover{
-    color:#e0a383;
+    color:#fff;
     text-decoration:none;
     padding-left:3px;
 }
+
 .footer-support{
-    display:inline-block;
-    margin-top:15px;
-    padding:9px 13px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    margin-top:16px;
+    padding:9px 15px;
     border-radius:20px;
-    background:#403b36;
-    color:#ded2c7;
-    font-size:13px;
-    border:1px solid #504a44;
+    background:rgba(79,143,104,.16);
+    color:#cce1d2;
+    font-size:12px;
+    font-weight:600;
+    border:1px solid rgba(79,143,104,.30);
 }
+
 .footer-divider{
     height:1px;
-    background:rgba(255,255,255,.14);
+    background:rgba(255,255,255,.10);
     margin:20px 0;
 }
+
 .footer-bottom{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    color:#aaa49e;
-    font-size:13px;
+    color:#8e9992;
+    font-size:12px;
 }
-@media(max-width:767px){
-    .top-navbar{
-        min-height:60px;
+
+.footer-bottom .glyphicon-heart{
+    color:#d87a42;
+}
+
+@media(max-width:991px){
+
+    .top-navbar .container-fluid{
+        padding-left:18px;
+        padding-right:18px;
     }
-    .logo-brand{
-        height:60px;
-        font-size:17px;
-    }
-    .site-logo{
-        width:40px;
-        height:40px;
-    }
-    .top-navbar .navbar-nav{
-        margin-top:0;
-    }
+
     .top-navbar .navbar-nav>li>a{
-        padding:13px 20px;
-        border-top:1px solid rgba(255,255,255,.12);
+        padding:0 9px;
     }
+
+    .site-logo{
+        width:48px;
+        height:48px;
+    }
+
+    .public-hero-content h1{
+        font-size:43px;
+    }
+}
+
+@media(max-width:767px){
+
+    .top-navbar{
+        min-height:62px;
+        height:auto;
+    }
+
+    .top-navbar .container-fluid{
+        min-height:62px;
+        padding-left:15px;
+        padding-right:15px;
+    }
+
+    .logo-brand{
+        height:62px!important;
+    }
+
+    .site-logo{
+        width:43px;
+        height:43px;
+        padding:4px;
+        margin-right:8px;
+    }
+
+    .top-navbar .navbar-nav{
+        height:auto;
+        display:block;
+        margin-top:0!important;
+    }
+
+    .top-navbar .navbar-nav>li{
+        height:auto;
+        display:block;
+    }
+
+    .top-navbar .navbar-nav>li>a{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:flex-start!important;
+        height:auto;
+        min-height:46px;
+        padding:13px 18px;
+        border-top:1px solid #edf0ed;
+        border-radius:0;
+    }
+
+    .top-navbar .navbar-nav>li>a.btn-login{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        height:42px!important;
+        min-height:42px!important;
+        margin:10px 18px!important;
+        padding:0 18px!important;
+        border-radius:5px!important;
+    }
+
+    .main-content{
+        min-height:0;
+    }
+
+    .public-section{
+        padding:50px 15px;
+    }
+
+    .public-hero{
+        min-height:420px;
+    }
+
+    .public-hero-content{
+        padding:55px 20px;
+    }
+
+    .public-hero-content h1{
+        font-size:37px;
+    }
+
+    .public-hero-content p{
+        font-size:14px;
+    }
+
+    .public-stats .stat-item{
+        border-right:0;
+        border-bottom:1px solid var(--line);
+    }
+
+    .public-stats .stat-item:last-child{
+        border-bottom:0;
+    }
+
+    .public-section-title h2{
+        font-size:28px;
+    }
+
+    .public-promo{
+        padding:30px 25px;
+    }
+
+    .public-promo h2{
+        font-size:25px;
+    }
+
+    .public-cta{
+        padding:40px 22px;
+    }
+
+    .public-cta h2{
+        font-size:26px;
+    }
+
+    .public-form-card,
+    .public-login-card{
+        padding:25px 20px;
+    }
+
+    .public-filter{
+        margin-left:15px;
+        margin-right:15px;
+    }
+
     .public-footer{
-        padding:40px 0 20px;
+        padding:45px 0 20px;
     }
+
     .footer-column{
         min-height:auto;
         margin-bottom:30px;
     }
+
     .footer-bottom{
         display:block;
         text-align:center;
@@ -174,97 +966,232 @@ body{
     }
 }
 </style>
-<asp:ContentPlaceHolder ID="head" runat="server">
-</asp:ContentPlaceHolder>
+
+<asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+
 </head>
+
 <body>
+
 <form id="form1" runat="server">
+
 <nav class="navbar navbar-default top-navbar">
+
 <div class="container-fluid">
+
 <div class="navbar-header">
-<a class="navbar-brand logo-brand" href="PublicHome.aspx">
-<img src="images/Logo.png" class="site-logo" />
-<span>Mahila Bachat Gat</span>
+
+<button type="button"
+    class="navbar-toggle"
+    data-toggle="collapse"
+    data-target="#mainNavCollapse">
+
+<span class="sr-only">Toggle navigation</span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+
+</button>
+
+<a class="navbar-brand logo-brand"
+    href="PublicHome.aspx">
+
+<img src="images/Logo.png"
+    class="site-logo"
+    alt="Mahila Bachat Gat" />
+
 </a>
+
 </div>
+
+<div class="collapse navbar-collapse"
+    id="mainNavCollapse">
+
 <ul class="nav navbar-nav navbar-right">
+
 <li>
 <a href="PublicHome.aspx">
+
 <span class="glyphicon glyphicon-home"></span>
+
 Home
+
 </a>
 </li>
+
 <li>
 <a href="PublicProducts.aspx">
+
 <span class="glyphicon glyphicon-shopping-cart"></span>
+
 Products
+
 </a>
 </li>
+
 <li>
 <a href="MyOrders.aspx">
+
 <span class="glyphicon glyphicon-list-alt"></span>
+
 My Orders
+
 </a>
 </li>
+
 <li>
-<a href="Cart.aspx" class="cart-link">
+<a href="Cart.aspx"
+    class="cart-link">
+
 <span class="glyphicon glyphicon-shopping-cart"></span>
+
 Cart
+
 </a>
 </li>
+
 <li>
-<a href="User.aspx?mode=login">
+<a href="User.aspx?mode=login"
+    class="btn-login">
+
 <span class="glyphicon glyphicon-log-in"></span>
+
+Login
+
+</a>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</nav>
+
+<div class="container-fluid">
+
+<div class="main-content">
+
+<asp:ContentPlaceHolder
+    ID="MainContent"
+    runat="server">
+</asp:ContentPlaceHolder>
+
+</div>
+
+</div>
+
+<footer class="public-footer">
+
+<div class="footer-container">
+
+<div class="row">
+
+<div class="col-md-4 footer-column">
+
+<div class="footer-brand">
+
+<img src="images/Logo.png"
+    class="site-logo"
+    alt="Mahila Bachat Gat" />
+
+<h3>Mahila Bachat Gat</h3>
+
+</div>
+
+<p>
+Supporting women-led businesses and promoting authentic products made by local women entrepreneurs.
+</p>
+
+<div class="footer-support">
+
+<span class="glyphicon glyphicon-heart"></span>
+
+Supporting Women Entrepreneurs
+
+</div>
+
+</div>
+
+<div class="col-md-2 footer-column">
+
+<h4>Shop</h4>
+
+<a href="PublicHome.aspx">
+Home
+</a>
+
+<a href="PublicProducts.aspx">
+Products
+</a>
+
+<a href="PublicProducts.aspx">
+Categories
+</a>
+
+</div>
+
+<div class="col-md-3 footer-column">
+
+<h4>Customer</h4>
+
+<a href="User.aspx?mode=login">
 Login
 </a>
-</li>
-</ul>
+
+<a href="User.aspx?mode=signup">
+Create Account
+</a>
+
+<a href="MyOrders.aspx">
+My Orders
+</a>
+
+<a href="Cart.aspx">
+Cart
+</a>
+
 </div>
-</nav>
-<div class="container-fluid">
-<div class="main-content">
-<asp:ContentPlaceHolder ID="MainContent" runat="server">
-</asp:ContentPlaceHolder>
-</div>
-</div>
-<footer class="public-footer">
-<div class="footer-container">
-<div class="row">
-<div class="col-md-4 footer-column">
-<h3>Mahila Bachat Gat</h3>
-<p>Supporting women-led businesses and promoting authentic products made by local women entrepreneurs.</p>
-</div>
-<div class="col-md-2 footer-column">
-<h4>Shop</h4>
-<a href="PublicHome.aspx">Home</a>
-<a href="PublicProducts.aspx">Products</a>
-<a href="PublicProducts.aspx">Categories</a>
-</div>
+
 <div class="col-md-3 footer-column">
-<h4>Customer</h4>
-<a href="User.aspx?mode=login">Login</a>
-<a href="User.aspx?mode=signup">Create Account</a>
-<a href="MyOrders.aspx">My Orders</a>
-<a href="PublicProducts.aspx">Shop Products</a>
-</div>
-<div class="col-md-3 footer-column">
+
 <h4>About</h4>
-<p>Products made with skill, care and dedication by Mahila Bachat Gats.</p>
-<div class="footer-support">
-<span class="glyphicon glyphicon-heart"></span>
-Supporting Women Entrepreneurs
+
+<p>
+Products made with skill, care and dedication by Mahila Bachat Gats.
+</p>
+
 </div>
+
 </div>
-</div>
+
 <div class="footer-divider"></div>
+
 <div class="footer-bottom">
-<span>© 2026 Mahila Bachat Gat Portal</span>
-<span>Made with <span class="glyphicon glyphicon-heart"></span> to support women-led businesses</span>
+
+<span>
+© 2026 Mahila Bachat Gat Portal
+</span>
+
+<span>
+Made with
+<span class="glyphicon glyphicon-heart"></span>
+to support women-led businesses
+</span>
+
 </div>
+
 </div>
+
 </footer>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
 </form>
+
 </body>
+
 </html>

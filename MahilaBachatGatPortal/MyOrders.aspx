@@ -1,41 +1,39 @@
 ﻿<%@ Page Title="My Orders" Language="C#" MasterPageFile="~/Public.Master" AutoEventWireup="true" CodeFile="MyOrders.aspx.cs" Inherits="MyOrders" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root{
+    --ink:#1c2530;
+    --ink-soft:#5b6672;
+    --ink-faint:#93a0ad;
+    --paper:#fbfaf8;
+    --panel:#ffffff;
+    --line:#e8e4dd;
+    --accent:#c1652f;
+    --accent-dark:#a2521f;
+    --accent-tint:#fbeee5;
+}
 .orders-page{
-    background:#f4f8fc;
+    background:var(--paper);
     min-height:100vh;
     padding:0 15px 80px;
+    font-family:"Inter",Arial,sans-serif;
+    color:var(--ink);
+}
+.orders-page h1,
+.orders-page h2,
+.orders-page h3,
+.orders-page h4{
+    font-family:"Outfit","Inter",Arial,sans-serif;
 }
 .orders-hero{
     position:relative;
-    background-image:linear-gradient(rgba(24,59,91,.78),rgba(24,59,91,.78)),url("images/my-orders-bg.jpg");
+    background-image:linear-gradient(100deg,rgba(15,25,37,.88) 0%,rgba(15,25,37,.72) 55%,rgba(15,25,37,.4) 100%),url("https://images.unsplash.com/photo-1748944077011-7bd68d84150c?w=1800&h=650&fit=crop&auto=format&q=80");
     background-size:cover;
     background-position:center;
-    background-repeat:no-repeat;
     margin:0 -15px 45px;
     padding:70px 15px;
-    overflow:hidden;
-}
-.orders-hero:before{
-    content:"";
-    position:absolute;
-    width:320px;
-    height:320px;
-    border-radius:50%;
-    background:rgba(255,255,255,.06);
-    top:-150px;
-    right:-70px;
-}
-.orders-hero:after{
-    content:"";
-    position:absolute;
-    width:220px;
-    height:220px;
-    border-radius:50%;
-    background:rgba(120,185,225,.08);
-    bottom:-120px;
-    left:-60px;
 }
 .orders-heading{
     position:relative;
@@ -43,68 +41,71 @@
     text-align:center;
 }
 .orders-label{
-    display:inline-block;
-    background:rgba(255,255,255,.13);
-    border:1px solid rgba(255,255,255,.22);
-    color:#ffffff;
-    padding:8px 17px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.2);
+    color:#f3ded2;
+    padding:7px 17px;
     border-radius:30px;
     font-size:12px;
-    font-weight:700;
+    font-weight:600;
     text-transform:uppercase;
     letter-spacing:1px;
-    margin-bottom:13px;
+    margin-bottom:16px;
 }
 .orders-title{
     font-size:40px;
-    font-weight:750;
+    font-weight:700;
+    letter-spacing:-1px;
     color:#ffffff;
     margin:0 0 10px;
 }
 .orders-subtitle{
-    color:#e1edf5;
+    color:#dfe4e8;
     font-size:15px;
     margin:0;
 }
 .order-card{
-    background:#ffffff;
-    border:1px solid #dce7f1;
-    border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
     margin-bottom:25px;
     padding:26px;
-    box-shadow:0 10px 30px rgba(24,59,91,.07);
+    box-shadow:0 2px 10px rgba(24,40,58,.04);
     transition:all .25s ease;
 }
 .order-card:hover{
     transform:translateY(-3px);
-    box-shadow:0 16px 38px rgba(24,59,91,.12);
-    border-color:#c5d9ea;
+    box-shadow:0 16px 34px rgba(24,40,58,.12);
+    border-color:transparent;
 }
 .order-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom:1px solid #e7eef5;
+    border-bottom:1px solid var(--line);
     padding-bottom:18px;
     margin-bottom:22px;
 }
 .order-id{
-    font-size:19px;
-    font-weight:700;
-    color:#183b5b;
+    font-size:18px;
+    font-weight:650;
+    color:var(--ink);
 }
 .order-id:before{
     content:"";
     display:inline-block;
     width:4px;
     height:20px;
-    background:#2f78b7;
+    background:var(--accent);
     border-radius:4px;
     vertical-align:-4px;
     margin-right:10px;
 }
 .order-date{
-    color:#718397;
+    color:var(--ink-faint);
     font-size:13px;
 }
 .order-info{
@@ -112,15 +113,15 @@
 }
 .order-info > div{
     margin-bottom:15px;
-    color:#40566b;
+    color:var(--ink);
     font-size:14px;
 }
 .order-info strong{
     display:inline-block;
-    color:#2f78b7;
-    font-size:12px;
+    color:var(--accent-dark);
+    font-size:11.5px;
     text-transform:uppercase;
-    letter-spacing:.5px;
+    letter-spacing:.6px;
     margin-bottom:6px;
 }
 .status{
@@ -132,36 +133,42 @@
     margin-top:2px;
 }
 .status-placed{
-    background:#fff4d6;
+    background:#fdf1dd;
     color:#946c00;
 }
 .status-confirmed{
-    background:#e3f3e8;
+    background:#e7f3ea;
     color:#36734a;
 }
 .status-processing{
-    background:#e3f0f8;
-    color:#326582;
+    background:var(--accent-tint);
+    color:var(--accent-dark);
 }
 .status-shipped{
-    background:#dcecff;
-    color:#245b91;
+    background:#eaf0f7;
+    color:#2f4d6e;
 }
 .status-delivered{
-    background:#e2f3e8;
+    background:#e7f3ea;
     color:#39744d;
 }
 .status-cancelled{
-    background:#f9e3e5;
-    color:#9b4d55;
+    background:#fbe8e8;
+    color:#9b4d4d;
 }
 .track-title{
-    color:#183b5b;
-    font-size:16px;
-    font-weight:700;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:650;
     margin-bottom:20px;
     padding-top:20px;
-    border-top:1px solid #e7eef5;
+    border-top:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+.track-title .glyphicon{
+    color:var(--accent);
 }
 .tracking{
     display:flex;
@@ -176,7 +183,7 @@
     left:8%;
     right:8%;
     height:2px;
-    background:#dce7f1;
+    background:var(--line);
 }
 .track-step{
     position:relative;
@@ -189,64 +196,64 @@
     height:31px;
     line-height:31px;
     border-radius:50%;
-    background:#e2eaf2;
-    color:#718397;
+    background:#eef0f2;
+    color:var(--ink-faint);
     margin:0 auto 9px;
     font-size:12px;
     font-weight:700;
-    border:3px solid #f4f8fc;
+    border:3px solid var(--paper);
 }
 .track-step.active .track-circle{
-    background:#2f78b7;
+    background:var(--accent);
     color:#ffffff;
-    box-shadow:0 0 0 3px #dcecff;
+    box-shadow:0 0 0 3px var(--accent-tint);
 }
 .track-label{
     font-size:12px;
-    color:#7b8d9e;
+    color:var(--ink-faint);
 }
 .track-step.active .track-label{
-    color:#244b6c;
+    color:var(--ink);
     font-weight:700;
 }
 .empty-orders{
-    background:#ffffff;
-    border:1px solid #dce7f1;
-    border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
     padding:60px 30px;
     text-align:center;
-    color:#718397;
-    box-shadow:0 10px 30px rgba(24,59,91,.06);
+    color:var(--ink-soft);
+    box-shadow:0 2px 10px rgba(24,40,58,.04);
 }
 .empty-orders .glyphicon{
     display:inline-block;
-    font-size:42px;
-    color:#8db3d3;
+    font-size:40px;
+    color:var(--accent);
     margin-bottom:15px;
 }
 .empty-orders h3{
-    color:#183b5b;
-    font-size:23px;
+    color:var(--ink);
+    font-size:22px;
     font-weight:700;
     margin:5px 0 10px;
 }
 .empty-orders p{
-    color:#718397;
+    color:var(--ink-soft);
     font-size:14px;
     margin-bottom:0;
 }
 .shop-button{
     margin-top:22px;
-    background:#2f78b7 !important;
-    border-color:#2f78b7 !important;
+    background:var(--accent) !important;
+    border-color:var(--accent) !important;
     border-radius:7px;
-    padding:10px 20px;
+    padding:10px 22px;
     font-weight:600;
     transition:all .2s ease;
 }
 .shop-button:hover{
-    background:#245f91 !important;
-    border-color:#245f91 !important;
+    background:var(--accent-dark) !important;
+    border-color:var(--accent-dark) !important;
 }
 @media(max-width:767px){
     .orders-page{
@@ -304,7 +311,7 @@
 
 <div class="orders-label">
 <span class="glyphicon glyphicon-list-alt"></span>
-&nbsp; Order History
+Order History
 </div>
 
 <div class="orders-title">
@@ -377,7 +384,7 @@ Order #<%# Eval("OrderID") %>
 
 <div class="track-title">
 <span class="glyphicon glyphicon-road"></span>
-&nbsp; Track Order
+Track Order
 </div>
 
 <div class="tracking">

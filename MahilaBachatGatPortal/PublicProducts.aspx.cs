@@ -33,14 +33,22 @@ public partial class PublicProducts : System.Web.UI.Page
             da.Fill(dt);
 
             ddlCategory.Items.Clear();
-            ddlCategory.Items.Add(new System.Web.UI.WebControls.ListItem("All Categories", ""));
+
+            ddlCategory.Items.Add(
+                new System.Web.UI.WebControls.ListItem(
+                    "All Categories",
+                    ""
+                )
+            );
 
             foreach (DataRow row in dt.Rows)
             {
+                string category = row["Category"].ToString().Trim();
+
                 ddlCategory.Items.Add(
                     new System.Web.UI.WebControls.ListItem(
-                        row["Category"].ToString(),
-                        row["Category"].ToString()
+                        category,
+                        category
                     )
                 );
             }
@@ -62,8 +70,12 @@ public partial class PublicProducts : System.Web.UI.Page
             da.Fill(dt);
 
             ddlBachatGat.Items.Clear();
+
             ddlBachatGat.Items.Add(
-                new System.Web.UI.WebControls.ListItem("All Bachat Gats", "")
+                new System.Web.UI.WebControls.ListItem(
+                    "All Bachat Gats",
+                    ""
+                )
             );
 
             foreach (DataRow row in dt.Rows)
@@ -138,7 +150,7 @@ public partial class PublicProducts : System.Web.UI.Page
             {
                 cmd.Parameters.AddWithValue(
                     "@Category",
-                    ddlCategory.SelectedValue
+                    ddlCategory.SelectedValue.Trim()
                 );
             }
 
@@ -160,10 +172,12 @@ public partial class PublicProducts : System.Web.UI.Page
             if (dt.Rows.Count == 0)
             {
                 lblMessage.Text = "No products found.";
+                lblMessage.Visible = true;
             }
             else
             {
                 lblMessage.Text = "";
+                lblMessage.Visible = false;
             }
         }
     }
@@ -173,11 +187,29 @@ public partial class PublicProducts : System.Web.UI.Page
         LoadProducts();
     }
 
+    protected void ddlCategory_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        LoadProducts();
+    }
+
+    protected void ddlBachatGat_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        LoadProducts();
+    }
+
     protected void btnClear_Click(object sender, EventArgs e)
     {
         txtSearch.Text = "";
-        ddlCategory.SelectedIndex = 0;
-        ddlBachatGat.SelectedIndex = 0;
+
+        if (ddlCategory.Items.Count > 0)
+        {
+            ddlCategory.SelectedIndex = 0;
+        }
+
+        if (ddlBachatGat.Items.Count > 0)
+        {
+            ddlBachatGat.SelectedIndex = 0;
+        }
 
         LoadProducts();
     }
@@ -198,12 +230,17 @@ public partial class PublicProducts : System.Web.UI.Page
 
         path = path.Replace("\\", "/");
 
-        if (path.StartsWith("ProductImages/", StringComparison.OrdinalIgnoreCase))
+        if (path.StartsWith(
+            "ProductImages/",
+            StringComparison.OrdinalIgnoreCase))
         {
-            path = "Images/" + path.Substring("ProductImages/".Length);
+            path = "Images/" +
+                   path.Substring("ProductImages/".Length);
         }
 
-        if (!path.StartsWith("Images/", StringComparison.OrdinalIgnoreCase))
+        if (!path.StartsWith(
+            "Images/",
+            StringComparison.OrdinalIgnoreCase))
         {
             path = "Images/" + Path.GetFileName(path);
         }
