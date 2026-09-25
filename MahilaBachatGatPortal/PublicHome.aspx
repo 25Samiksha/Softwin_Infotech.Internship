@@ -2,31 +2,31 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root{
-    --green:#4f8f68;
-    --green-dark:#3f7756;
-    --green-light:#eef7f0;
-    --orange:#c96d35;
-    --orange-dark:#ad5726;
-    --dark:#26352d;
-    --text:#52605a;
-    --muted:#89938d;
-    --light:#f8faf7;
+    --green:#c0395b;
+    --green-dark:#9e2d4a;
+    --green-light:#fceef4;
+    --orange:#e07a38;
+    --orange-dark:#c4631f;
+    --dark:#3d1f2d;
+    --text:#5c3d4a;
+    --muted:#9a7d87;
+    --light:#fdf7f2;
     --white:#fff;
-    --line:#e6ebe6;
+    --line:#eddbd2;
 }
 
 body{
-    background:#fff;
+    background:#fdf7f2;
     color:var(--dark);
-    font-family:"Inter",Arial,sans-serif;
+    font-family:"DM Sans","Inter",Arial,sans-serif;
 }
 
 h1,h2,h3,h4{
-    font-family:"Outfit","Inter",Arial,sans-serif;
+    font-family:"Outfit","DM Sans",Arial,sans-serif;
 }
 
 .home-wrapper{
@@ -198,7 +198,7 @@ h1,h2,h3,h4{
 
 .product-slider-section{
     padding:42px 0;
-    background:#fff;
+    background:#fdf7f2;
     overflow:hidden;
     border-bottom:1px solid var(--line);
 }
@@ -362,30 +362,30 @@ h1,h2,h3,h4{
 }
 
 .products-section{
-    background:#f8faf7;
+    background:var(--light);
     border-top:1px solid var(--line);
     border-bottom:1px solid var(--line);
 }
 
 .product-card{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:7px;
+    background:var(--white);
+    border:1.5px solid var(--line);
+    border-radius:10px;
     overflow:hidden;
     height:100%;
-    box-shadow:0 2px 10px rgba(38,53,45,.04);
+    box-shadow:0 2px 10px rgba(192,57,91,.05);
     transition:all .25s ease;
 }
 
 .product-card:hover{
     transform:translateY(-5px);
-    box-shadow:0 14px 28px rgba(38,53,45,.11);
-    border-color:#d7e2da;
+    box-shadow:0 14px 28px rgba(192,57,91,.14);
+    border-color:#f2bfce;
 }
 
 .product-image-box{
     height:225px;
-    background:#f3f7f3;
+    background:#fdf0f4;
     overflow:hidden;
 }
 
@@ -415,7 +415,7 @@ h1,h2,h3,h4{
 .product-name{
     color:var(--dark);
     font-size:17px;
-    font-weight:600;
+    font-weight:700;
     line-height:1.35;
     margin:7px 0 4px;
 }
@@ -440,9 +440,9 @@ h1,h2,h3,h4{
     min-height:38px;
     background:var(--green);
     color:#fff!important;
-    border-radius:4px;
+    border-radius:6px;
     font-size:12px;
-    font-weight:600;
+    font-weight:700;
     text-decoration:none!important;
     transition:all .2s ease;
 }
@@ -454,8 +454,8 @@ h1,h2,h3,h4{
 }
 
 .cta-banner{
-    background:#26352d;
-    border-radius:8px;
+    background:#3d1f2d;
+    border-radius:10px;
     padding:48px 45px;
     display:flex;
     align-items:center;
@@ -472,7 +472,7 @@ h1,h2,h3,h4{
 }
 
 .cta-banner p{
-    color:#bdc9c1;
+    color:rgba(255,200,215,.70);
     font-size:13px;
     line-height:1.7;
     margin:0;
@@ -784,8 +784,8 @@ CssClass="product-image" />
 &nbsp; Mahila Bachat Gat
 </div>
 
-<div class="product-price">
-₹ <%# Eval("SellingPrice", "{0:N2}") %>
+<div class="product-price"> 
+&#8377; <%# Eval("SellingPrice", "{0:N2}") %> 
 </div>
 
 <a href='<%# "ProductDetails.aspx?ProductID=" + Eval("ProductID") %>' class="product-button">

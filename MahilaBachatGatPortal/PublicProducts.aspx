@@ -414,8 +414,9 @@
             justify-content: center;
             gap: 6px;
             padding: 9px 15px;
-            background: #789b7d;
+            background: #c0395b;
             color: #ffffff !important;
+            border: 1px solid #c0395b;
             border-radius: 8px;
             text-decoration: none !important;
             font-size: 12px;
@@ -425,8 +426,17 @@
         }
 
         .view-button:hover {
-            background: #607f65;
+            background: #9e2d4a;
+            border-color: #9e2d4a;
             color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
+        .view-button:focus {
+            background: #9e2d4a;
+            border-color: #9e2d4a;
+            color: #ffffff !important;
+            text-decoration: none !important;
         }
 
         .view-button i {

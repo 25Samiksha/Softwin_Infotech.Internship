@@ -1,4 +1,4 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.Master.cs" Inherits="SiteMaster" %>
+<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.Master.cs" Inherits="SiteMaster" %>
 <!DOCTYPE html>
 <html>
 <head id="Head1" runat="server">
@@ -12,6 +12,8 @@
 
 <style>
 
+/* Admin Panel — Mahila Bachat Gat Organic Theme */
+
 .navbar-header{
     padding-left:10px !important;
 }
@@ -19,31 +21,38 @@
 .logo-brand{
     display:flex !important;
     align-items:center !important;
-    justify-content:center !important;
-    height:60px !important;
-    padding:5px 10px !important;
+    justify-content:flex-start !important;
+    height:64px !important;
+    padding:5px 14px !important;
     margin:0 !important;
-    color:#ffffff !important;
+    color:#fff !important;
     text-decoration:none !important;
     overflow:visible !important;
+    gap:10px;
 }
 
 .logo-brand:hover,
 .logo-brand:focus{
     background:transparent !important;
-    color:#ffffff !important;
+    color:#fff !important;
     text-decoration:none !important;
 }
 
 .site-logo{
     display:block !important;
-    width:120px !important;
-    height:48px !important;
-    min-width:120px !important;
-    max-width:120px !important;
+    width:auto !important;
+    height:46px !important;
+    min-width:0 !important;
+    max-width:180px !important;
     margin:0 !important;
-    padding:0 !important;
+    padding:4px !important;
     object-fit:contain !important;
+    border-radius:8px !important;
+    background:rgba(255,255,255,.12) !important;
+}
+
+.navbar-right > li > a .glyphicon{
+    color:rgba(255,220,230,.75);
 }
 
 @media(max-width:767px){
@@ -54,14 +63,11 @@
 
     .logo-brand{
         height:55px !important;
-        padding:5px 8px !important;
+        padding:4px 8px !important;
     }
 
     .site-logo{
-        width:105px !important;
-        height:42px !important;
-        min-width:105px !important;
-        max-width:105px !important;
+        height:40px !important;
     }
 
 }
