@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web.UI.WebControls;
 
 public partial class Expenses : System.Web.UI.Page
 {
@@ -22,20 +23,63 @@ public partial class Expenses : System.Web.UI.Page
         }
     }
 
+    private bool IsAdmin()
+    {
+        return Session["Role"] != null &&
+               Session["Role"].ToString().Equals(
+                   "Admin",
+                   StringComparison.OrdinalIgnoreCase
+               );
+    }
+
+    private int GetBachatGatID()
+    {
+        return RoleHelper.GetBachatGatID();
+    }
+
     private void LoadBachatGats()
     {
         using (SqlConnection con = DBHelper.GetConnection())
         {
-            string query = @"
-                SELECT BachatGatID, GatName
-                FROM BachatGat
-                WHERE Status = 'Active'
-                ORDER BY GatName";
+            string query;
+
+            if (IsAdmin())
+            {
+                query = @"
+                    SELECT
+                        BachatGatID,
+                        GatName
+                    FROM BachatGat
+                    WHERE Status = 'Active'
+                    ORDER BY GatName";
+            }
+            else
+            {
+                query = @"
+                    SELECT
+                        BachatGatID,
+                        GatName
+                    FROM BachatGat
+                    WHERE Status = 'Active'
+                    AND BachatGatID = @BachatGatID
+                    ORDER BY GatName";
+            }
+
+            SqlCommand cmd =
+                new SqlCommand(query, con);
+
+            if (!IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    GetBachatGatID());
+            }
 
             SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+                new SqlDataAdapter(cmd);
 
-            DataTable dt = new DataTable();
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
 
@@ -44,12 +88,15 @@ public partial class Expenses : System.Web.UI.Page
             ddlBachatGat.DataValueField = "BachatGatID";
             ddlBachatGat.DataBind();
 
-            ddlBachatGat.Items.Insert(
-                0,
-                new System.Web.UI.WebControls.ListItem(
-                    " Select Bachat Gat ",
-                    "")
-            );
+            if (IsAdmin())
+            {
+                ddlBachatGat.Items.Insert(
+                    0,
+                    new ListItem(
+                        " Select Bachat Gat ",
+                        "")
+                );
+            }
         }
     }
 
@@ -70,14 +117,34 @@ public partial class Expenses : System.Web.UI.Page
                 FROM Expenses E
                 INNER JOIN BachatGat B
                     ON E.BachatGatID = B.BachatGatID
+                WHERE 1 = 1";
+
+            if (!IsAdmin())
+            {
+                query +=
+                    " AND E.BachatGatID = @BachatGatID";
+            }
+
+            query += @"
                 ORDER BY
                     E.ExpenseDate DESC,
                     E.ExpenseID DESC";
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+            SqlCommand cmd =
+                new SqlCommand(query, con);
 
-            DataTable dt = new DataTable();
+            if (!IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    GetBachatGatID());
+            }
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(cmd);
+
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
 
@@ -97,6 +164,19 @@ public partial class Expenses : System.Web.UI.Page
                 "alert-danger");
 
             return;
+        }
+
+        if (!IsAdmin())
+        {
+            if (ddlBachatGat.SelectedValue !=
+                GetBachatGatID().ToString())
+            {
+                ShowMessage(
+                    "You can manage expenses only for your Bachat Gat.",
+                    "alert-danger");
+
+                return;
+            }
         }
 
         if (ddlExpenseType.SelectedValue == "")
@@ -132,7 +212,22 @@ public partial class Expenses : System.Web.UI.Page
             return;
         }
 
-        using (SqlConnection con = DBHelper.GetConnection())
+        int bachatGatID;
+
+        if (IsAdmin())
+        {
+            bachatGatID =
+                Convert.ToInt32(
+                    ddlBachatGat.SelectedValue);
+        }
+        else
+        {
+            bachatGatID =
+                GetBachatGatID();
+        }
+
+        using (SqlConnection con =
+               DBHelper.GetConnection())
         {
             string query = @"
                 INSERT INTO Expenses
@@ -163,7 +258,7 @@ public partial class Expenses : System.Web.UI.Page
 
             cmd.Parameters.AddWithValue(
                 "@BachatGatID",
-                ddlBachatGat.SelectedValue);
+                bachatGatID);
 
             cmd.Parameters.AddWithValue(
                 "@ExpenseDate",
@@ -210,12 +305,13 @@ public partial class Expenses : System.Web.UI.Page
 
     protected void gvExpenses_RowCommand(
         object sender,
-        System.Web.UI.WebControls.GridViewCommandEventArgs e)
+        GridViewCommandEventArgs e)
     {
         if (e.CommandName == "DeleteExpense")
         {
             int expenseID =
-                Convert.ToInt32(e.CommandArgument);
+                Convert.ToInt32(
+                    e.CommandArgument);
 
             DeleteExpense(expenseID);
         }
@@ -223,11 +319,18 @@ public partial class Expenses : System.Web.UI.Page
 
     private void DeleteExpense(int expenseID)
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+               DBHelper.GetConnection())
         {
             string query = @"
                 DELETE FROM Expenses
                 WHERE ExpenseID = @ExpenseID";
+
+            if (!IsAdmin())
+            {
+                query +=
+                    " AND BachatGatID = @BachatGatID";
+            }
 
             SqlCommand cmd =
                 new SqlCommand(query, con);
@@ -236,9 +339,26 @@ public partial class Expenses : System.Web.UI.Page
                 "@ExpenseID",
                 expenseID);
 
+            if (!IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    GetBachatGatID());
+            }
+
             con.Open();
 
-            cmd.ExecuteNonQuery();
+            int rows =
+                cmd.ExecuteNonQuery();
+
+            if (rows == 0)
+            {
+                ShowMessage(
+                    "You cannot delete this expense record.",
+                    "alert-danger");
+
+                return;
+            }
         }
 
         ShowMessage(
@@ -256,7 +376,8 @@ public partial class Expenses : System.Web.UI.Page
         string search =
             txtSearch.Text.Trim();
 
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+               DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -272,21 +393,42 @@ public partial class Expenses : System.Web.UI.Page
                 INNER JOIN BachatGat B
                     ON E.BachatGatID = B.BachatGatID
                 WHERE
-                    E.ExpenseType LIKE @Search
-                    OR E.PaidTo LIKE @Search
-                    OR E.ReceiptNumber LIKE @Search
+                    (
+                        E.ExpenseType LIKE @Search
+                        OR E.PaidTo LIKE @Search
+                        OR E.ReceiptNumber LIKE @Search
+                    )";
+
+            if (!IsAdmin())
+            {
+                query +=
+                    " AND E.BachatGatID = @BachatGatID";
+            }
+
+            query += @"
                 ORDER BY
                     E.ExpenseDate DESC,
                     E.ExpenseID DESC";
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+            SqlCommand cmd =
+                new SqlCommand(query, con);
 
-            da.SelectCommand.Parameters.AddWithValue(
+            cmd.Parameters.AddWithValue(
                 "@Search",
                 "%" + search + "%");
 
-            DataTable dt = new DataTable();
+            if (!IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    GetBachatGatID());
+            }
+
+            SqlDataAdapter da =
+                new SqlDataAdapter(cmd);
+
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
 
@@ -306,26 +448,50 @@ public partial class Expenses : System.Web.UI.Page
 
     private void LoadSummary()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+               DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
-                    ISNULL(SUM(Amount), 0) AS TotalExpenses,
+                    ISNULL(
+                        SUM(Amount),
+                        0
+                    ) AS TotalExpenses,
+
                     COUNT(*) AS TotalRecords,
+
                     ISNULL(
                         SUM(
                             CASE
-                                WHEN MONTH(ExpenseDate) = MONTH(GETDATE())
-                                AND YEAR(ExpenseDate) = YEAR(GETDATE())
+                                WHEN MONTH(ExpenseDate)
+                                    = MONTH(GETDATE())
+                                AND YEAR(ExpenseDate)
+                                    = YEAR(GETDATE())
                                 THEN Amount
                                 ELSE 0
                             END
-                        ), 0
+                        ),
+                        0
                     ) AS CurrentMonthExpenses
-                FROM Expenses";
+
+                FROM Expenses
+                WHERE 1 = 1";
+
+            if (!IsAdmin())
+            {
+                query +=
+                    " AND BachatGatID = @BachatGatID";
+            }
 
             SqlCommand cmd =
                 new SqlCommand(query, con);
+
+            if (!IsAdmin())
+            {
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    GetBachatGatID());
+            }
 
             con.Open();
 
@@ -340,13 +506,16 @@ public partial class Expenses : System.Web.UI.Page
                     .ToString("N2");
 
                 lblTotalRecords.Text =
-                    dr["TotalRecords"].ToString();
+                    dr["TotalRecords"]
+                    .ToString();
 
                 lblCurrentMonthExpenses.Text =
                     Convert.ToDecimal(
                         dr["CurrentMonthExpenses"])
                     .ToString("N2");
             }
+
+            dr.Close();
         }
     }
 
@@ -361,7 +530,19 @@ public partial class Expenses : System.Web.UI.Page
     {
         hfExpenseID.Value = "";
 
-        ddlBachatGat.SelectedIndex = 0;
+        if (ddlBachatGat.Items.Count > 0)
+        {
+            if (IsAdmin())
+            {
+                ddlBachatGat.SelectedIndex = 0;
+            }
+            else
+            {
+                ddlBachatGat.SelectedValue =
+                    GetBachatGatID().ToString();
+            }
+        }
+
         ddlExpenseType.SelectedIndex = 0;
 
         txtExpenseDate.Text =

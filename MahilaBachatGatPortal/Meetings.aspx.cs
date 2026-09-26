@@ -8,20 +8,28 @@ public partial class Meetings : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             SetDefaultDates();
-
             LoadBachatGat();
-
             LoadMeetings();
         }
     }
 
+    private bool IsAdmin()
+    {
+        return Session["Role"] != null &&
+               Session["Role"].ToString().Equals(
+                   "Admin",
+                   StringComparison.OrdinalIgnoreCase
+               );
+    }
 
-    // ==========================================
-    // DEFAULT DATES
-    // ==========================================
+    private int GetBachatGatID()
+    {
+        return RoleHelper.GetBachatGatID();
+    }
 
     private void SetDefaultDates()
     {
@@ -33,52 +41,78 @@ public partial class Meetings : System.Web.UI.Page
             .ToString("yyyy-MM-dd");
     }
 
-
-    // ==========================================
-    // LOAD BACHAT GAT
-    // ==========================================
-
     private void LoadBachatGat()
     {
         try
         {
-            using (SqlConnection con =
-                DBHelper.GetConnection())
+            using (SqlConnection con = DBHelper.GetConnection())
             {
-                string query = @"
-                    SELECT
-                        BachatGatID,
-                        GatName
-                    FROM BachatGat
-                    WHERE Status = 'Active'
-                    ORDER BY GatName";
+                string query;
 
-                SqlDataAdapter da =
-                    new SqlDataAdapter(query, con);
+                if (IsAdmin())
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        ORDER BY GatName";
+                }
+                else
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        AND BachatGatID = @BachatGatID
+                        ORDER BY GatName";
+                }
 
-                DataTable dt =
-                    new DataTable();
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
+
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+
+                DataTable dt = new DataTable();
 
                 da.Fill(dt);
 
                 ddlBachatGat.DataSource = dt;
 
-                ddlBachatGat.DataTextField =
-                    "GatName";
+                ddlBachatGat.DataTextField = "GatName";
 
-                ddlBachatGat.DataValueField =
-                    "BachatGatID";
+                ddlBachatGat.DataValueField = "BachatGatID";
 
                 ddlBachatGat.DataBind();
             }
 
-            ddlBachatGat.Items.Insert(
-                0,
-                new ListItem(
-                    "-- Select Bachat Gat --",
-                    ""
-                )
-            );
+            if (IsAdmin())
+            {
+                ddlBachatGat.Items.Insert(
+                    0,
+                    new ListItem(
+                        "-- Select Bachat Gat --",
+                        ""
+                    )
+                );
+            }
+            else
+            {
+                if (ddlBachatGat.Items.Count > 0)
+                {
+                    ddlBachatGat.SelectedIndex = 0;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -89,11 +123,6 @@ public partial class Meetings : System.Web.UI.Page
             );
         }
     }
-
-
-    // ==========================================
-    // SAVE / UPDATE MEETING
-    // ==========================================
 
     protected void btnSave_Click(
         object sender,
@@ -109,7 +138,6 @@ public partial class Meetings : System.Web.UI.Page
             return;
         }
 
-
         if (string.IsNullOrWhiteSpace(
             txtMeetingDate.Text))
         {
@@ -121,21 +149,78 @@ public partial class Meetings : System.Web.UI.Page
             return;
         }
 
-
         try
         {
+            int selectedBachatGatID =
+                Convert.ToInt32(
+                    ddlBachatGat.SelectedValue
+                );
+
+            if (!IsAdmin())
+            {
+                if (selectedBachatGatID != GetBachatGatID())
+                {
+                    ShowMessage(
+                        "You can manage meetings only for your Bachat Gat.",
+                        System.Drawing.Color.Red
+                    );
+
+                    return;
+                }
+            }
+
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
                 con.Open();
 
-
-                // ==================================
-                // UPDATE
-                // ==================================
-
                 if (hfMeetingID.Value != "")
                 {
+                    int meetingID =
+                        Convert.ToInt32(
+                            hfMeetingID.Value
+                        );
+
+                    if (!IsAdmin())
+                    {
+                        string checkQuery = @"
+                            SELECT COUNT(*)
+                            FROM Meetings
+                            WHERE MeetingID = @MeetingID
+                            AND BachatGatID = @BachatGatID";
+
+                        SqlCommand checkCmd =
+                            new SqlCommand(
+                                checkQuery,
+                                con
+                            );
+
+                        checkCmd.Parameters.AddWithValue(
+                            "@MeetingID",
+                            meetingID
+                        );
+
+                        checkCmd.Parameters.AddWithValue(
+                            "@BachatGatID",
+                            GetBachatGatID()
+                        );
+
+                        int count =
+                            Convert.ToInt32(
+                                checkCmd.ExecuteScalar()
+                            );
+
+                        if (count == 0)
+                        {
+                            ShowMessage(
+                                "You cannot update this meeting.",
+                                System.Drawing.Color.Red
+                            );
+
+                            return;
+                        }
+                    }
+
                     string query = @"
                         UPDATE Meetings
                         SET
@@ -150,34 +235,53 @@ public partial class Meetings : System.Web.UI.Page
                             NextMeetingDate = @NextMeetingDate
                         WHERE MeetingID = @MeetingID";
 
+                    if (!IsAdmin())
+                    {
+                        query +=
+                            " AND BachatGatID = @LoggedInBachatGatID";
+                    }
 
                     SqlCommand cmd =
-                        new SqlCommand(query, con);
-
+                        new SqlCommand(
+                            query,
+                            con
+                        );
 
                     AddParameters(cmd);
 
-
                     cmd.Parameters.AddWithValue(
                         "@MeetingID",
-                        hfMeetingID.Value
+                        meetingID
                     );
 
+                    if (!IsAdmin())
+                    {
+                        cmd.Parameters.AddWithValue(
+                            "@LoggedInBachatGatID",
+                            GetBachatGatID()
+                        );
+                    }
 
-                    cmd.ExecuteNonQuery();
+                    int rows =
+                        cmd.ExecuteNonQuery();
 
+                    if (rows > 0)
+                    {
+                        ShowMessage(
+                            "Meeting updated successfully!",
+                            System.Drawing.Color.Green
+                        );
+                    }
+                    else
+                    {
+                        ShowMessage(
+                            "You cannot update this meeting.",
+                            System.Drawing.Color.Red
+                        );
 
-                    ShowMessage(
-                        "Meeting updated successfully!",
-                        System.Drawing.Color.Green
-                    );
+                        return;
+                    }
                 }
-
-
-                // ==================================
-                // INSERT
-                // ==================================
-
                 else
                 {
                     string query = @"
@@ -206,16 +310,15 @@ public partial class Meetings : System.Web.UI.Page
                             @NextMeetingDate
                         )";
 
-
                     SqlCommand cmd =
-                        new SqlCommand(query, con);
-
+                        new SqlCommand(
+                            query,
+                            con
+                        );
 
                     AddParameters(cmd);
 
-
                     cmd.ExecuteNonQuery();
-
 
                     ShowMessage(
                         "Meeting saved successfully!",
@@ -223,7 +326,6 @@ public partial class Meetings : System.Web.UI.Page
                     );
                 }
             }
-
 
             ClearForm();
 
@@ -239,16 +341,21 @@ public partial class Meetings : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // PARAMETERS
-    // ==========================================
-
     private void AddParameters(SqlCommand cmd)
     {
+        int bachatGatID =
+            Convert.ToInt32(
+                ddlBachatGat.SelectedValue
+            );
+
+        if (!IsAdmin())
+        {
+            bachatGatID = GetBachatGatID();
+        }
+
         cmd.Parameters.AddWithValue(
             "@BachatGatID",
-            ddlBachatGat.SelectedValue
+            bachatGatID
         );
 
         cmd.Parameters.AddWithValue(
@@ -288,7 +395,6 @@ public partial class Meetings : System.Web.UI.Page
             txtDecisions.Text.Trim()
         );
 
-
         if (string.IsNullOrWhiteSpace(
             txtNextMeetingDate.Text))
         {
@@ -307,11 +413,6 @@ public partial class Meetings : System.Web.UI.Page
             );
         }
     }
-
-
-    // ==========================================
-    // LOAD MEETINGS
-    // ==========================================
 
     private void LoadMeetings()
     {
@@ -333,22 +434,40 @@ public partial class Meetings : System.Web.UI.Page
                     INNER JOIN BachatGat B
                         ON M.BachatGatID =
                            B.BachatGatID
-                    ORDER BY M.MeetingID DESC";
+                    WHERE 1 = 1";
 
+                if (!IsAdmin())
+                {
+                    query +=
+                        " AND M.BachatGatID = @BachatGatID";
+                }
 
-                SqlDataAdapter da =
-                    new SqlDataAdapter(
+                query +=
+                    " ORDER BY M.MeetingID DESC";
+
+                SqlCommand cmd =
+                    new SqlCommand(
                         query,
                         con
                     );
 
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
+
+                SqlDataAdapter da =
+                    new SqlDataAdapter(
+                        cmd
+                    );
 
                 DataTable dt =
                     new DataTable();
 
-
                 da.Fill(dt);
-
 
                 gvMeetings.DataSource = dt;
 
@@ -364,11 +483,6 @@ public partial class Meetings : System.Web.UI.Page
             );
         }
     }
-
-
-    // ==========================================
-    // SEARCH
-    // ==========================================
 
     protected void btnSearch_Click(
         object sender,
@@ -393,14 +507,26 @@ public partial class Meetings : System.Web.UI.Page
                         ON M.BachatGatID =
                            B.BachatGatID
                     WHERE
-                        B.GatName LIKE @Search
-                        OR M.MeetingPlace LIKE @Search
-                    ORDER BY M.MeetingID DESC";
+                        (
+                            B.GatName LIKE @Search
+                            OR
+                            M.MeetingPlace LIKE @Search
+                        )";
 
+                if (!IsAdmin())
+                {
+                    query +=
+                        " AND M.BachatGatID = @BachatGatID";
+                }
+
+                query +=
+                    " ORDER BY M.MeetingID DESC";
 
                 SqlCommand cmd =
-                    new SqlCommand(query, con);
-
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
                 cmd.Parameters.AddWithValue(
                     "@Search",
@@ -409,17 +535,21 @@ public partial class Meetings : System.Web.UI.Page
                     "%"
                 );
 
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
 
                 SqlDataAdapter da =
                     new SqlDataAdapter(cmd);
 
-
                 DataTable dt =
                     new DataTable();
 
-
                 da.Fill(dt);
-
 
                 gvMeetings.DataSource = dt;
 
@@ -436,11 +566,6 @@ public partial class Meetings : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // SHOW ALL
-    // ==========================================
-
     protected void btnShowAll_Click(
         object sender,
         EventArgs e)
@@ -449,11 +574,6 @@ public partial class Meetings : System.Web.UI.Page
 
         LoadMeetings();
     }
-
-
-    // ==========================================
-    // EDIT / DELETE
-    // ==========================================
 
     protected void gvMeetings_RowCommand(
         object sender,
@@ -464,23 +584,16 @@ public partial class Meetings : System.Web.UI.Page
                 e.CommandArgument
             );
 
-
         if (e.CommandName == "EditMeeting")
         {
             LoadMeetingForEdit(meetingID);
         }
-
 
         if (e.CommandName == "DeleteMeeting")
         {
             DeleteMeeting(meetingID);
         }
     }
-
-
-    // ==========================================
-    // LOAD MEETING FOR EDIT
-    // ==========================================
 
     private void LoadMeetingForEdit(
         int meetingID)
@@ -495,6 +608,11 @@ public partial class Meetings : System.Web.UI.Page
                     FROM Meetings
                     WHERE MeetingID = @MeetingID";
 
+                if (!IsAdmin())
+                {
+                    query +=
+                        " AND BachatGatID = @BachatGatID";
+                }
 
                 SqlCommand cmd =
                     new SqlCommand(
@@ -502,59 +620,56 @@ public partial class Meetings : System.Web.UI.Page
                         con
                     );
 
-
                 cmd.Parameters.AddWithValue(
                     "@MeetingID",
                     meetingID
                 );
 
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
 
                 con.Open();
 
-
                 SqlDataReader dr =
                     cmd.ExecuteReader();
-
 
                 if (dr.Read())
                 {
                     hfMeetingID.Value =
                         dr["MeetingID"].ToString();
 
-
                     ddlBachatGat.SelectedValue =
                         dr["BachatGatID"].ToString();
-
 
                     txtMeetingDate.Text =
                         Convert.ToDateTime(
                             dr["MeetingDate"]
-                        ).ToString("yyyy-MM-dd");
-
+                        ).ToString(
+                            "yyyy-MM-dd"
+                        );
 
                     txtMeetingTime.Text =
                         dr["MeetingTime"].ToString();
 
-
                     txtMeetingPlace.Text =
                         dr["MeetingPlace"].ToString();
-
 
                     ddlMeetingType.SelectedValue =
                         dr["MeetingType"].ToString();
 
-
                     txtAgenda.Text =
                         dr["Agenda"].ToString();
-
 
                     txtMinutes.Text =
                         dr["Minutes"].ToString();
 
-
                     txtDecisions.Text =
                         dr["Decisions"].ToString();
-
 
                     if (dr["NextMeetingDate"]
                         != DBNull.Value)
@@ -567,17 +682,21 @@ public partial class Meetings : System.Web.UI.Page
                             );
                     }
 
-
                     btnSave.Text =
                         "Update Meeting";
-
 
                     ShowMessage(
                         "Meeting loaded for editing.",
                         System.Drawing.Color.Blue
                     );
                 }
-
+                else
+                {
+                    ShowMessage(
+                        "You cannot access this meeting.",
+                        System.Drawing.Color.Red
+                    );
+                }
 
                 dr.Close();
             }
@@ -592,11 +711,6 @@ public partial class Meetings : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // DELETE
-    // ==========================================
-
     private void DeleteMeeting(
         int meetingID)
     {
@@ -605,10 +719,15 @@ public partial class Meetings : System.Web.UI.Page
             using (SqlConnection con =
                 DBHelper.GetConnection())
             {
-                string query =
-                    "DELETE FROM Meetings " +
-                    "WHERE MeetingID = @MeetingID";
+                string query = @"
+                    DELETE FROM Meetings
+                    WHERE MeetingID = @MeetingID";
 
+                if (!IsAdmin())
+                {
+                    query +=
+                        " AND BachatGatID = @BachatGatID";
+                }
 
                 SqlCommand cmd =
                     new SqlCommand(
@@ -616,24 +735,39 @@ public partial class Meetings : System.Web.UI.Page
                         con
                     );
 
-
                 cmd.Parameters.AddWithValue(
                     "@MeetingID",
                     meetingID
                 );
 
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
 
                 con.Open();
 
-                cmd.ExecuteNonQuery();
+                int rows =
+                    cmd.ExecuteNonQuery();
+
+                if (rows > 0)
+                {
+                    ShowMessage(
+                        "Meeting deleted successfully!",
+                        System.Drawing.Color.Green
+                    );
+                }
+                else
+                {
+                    ShowMessage(
+                        "You cannot delete this meeting.",
+                        System.Drawing.Color.Red
+                    );
+                }
             }
-
-
-            ShowMessage(
-                "Meeting deleted successfully!",
-                System.Drawing.Color.Green
-            );
-
 
             LoadMeetings();
         }
@@ -647,11 +781,6 @@ public partial class Meetings : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // CLEAR
-    // ==========================================
-
     protected void btnClear_Click(
         object sender,
         EventArgs e)
@@ -659,12 +788,14 @@ public partial class Meetings : System.Web.UI.Page
         ClearForm();
     }
 
-
     private void ClearForm()
     {
         hfMeetingID.Value = "";
 
-        ddlBachatGat.SelectedIndex = 0;
+        if (ddlBachatGat.Items.Count > 0)
+        {
+            ddlBachatGat.SelectedIndex = 0;
+        }
 
         txtMeetingDate.Text =
             DateTime.Today.ToString(
@@ -687,16 +818,13 @@ public partial class Meetings : System.Web.UI.Page
         txtNextMeetingDate.Text =
             DateTime.Today
             .AddMonths(1)
-            .ToString("yyyy-MM-dd");
+            .ToString(
+                "yyyy-MM-dd"
+            );
 
         btnSave.Text =
             "Save Meeting";
     }
-
-
-    // ==========================================
-    // MESSAGE
-    // ==========================================
 
     private void ShowMessage(
         string message,

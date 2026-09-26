@@ -22,7 +22,7 @@ public partial class User : System.Web.UI.Page
                 if (Session["Role"] != null &&
                     Session["Role"].ToString().Equals("Customer", StringComparison.OrdinalIgnoreCase))
                 {
-                    Response.Redirect("PublicProducts.aspx");
+                    Response.Redirect("PublicHome.aspx");
                     return;
                 }
 
@@ -47,12 +47,12 @@ public partial class User : System.Web.UI.Page
         using (SqlConnection con = DBHelper.GetConnection())
         {
             string query = @"
-                SELECT
-                    U.UserID,
-                    U.Username,
-                    U.FullName,
-                    U.Role,
-                    U.BachatGatID,
+                SELECT 
+                    U.UserID, 
+                    U.Username, 
+                    U.FullName, 
+                    U.Role, 
+                    U.BachatGatID, 
                     M.MemberID
                 FROM Users U
                 LEFT JOIN Members M
@@ -157,7 +157,7 @@ public partial class User : System.Web.UI.Page
 
                 if (role.Equals("Customer", StringComparison.OrdinalIgnoreCase))
                 {
-                    Response.Redirect("PublicProducts.aspx");
+                    Response.Redirect("PublicHome.aspx");
                     return;
                 }
 
@@ -268,7 +268,7 @@ public partial class User : System.Web.UI.Page
                 return;
             }
 
-            Response.Redirect("PublicProducts.aspx");
+            Response.Redirect("PublicHome.aspx");
         }
     }
 }

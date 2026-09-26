@@ -8,85 +8,163 @@ public partial class MeetingAttendance : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         RoleHelper.RequirePresidentSecretary(this);
+
         if (!IsPostBack)
         {
             LoadBachatGat();
         }
     }
 
+    private bool IsAdmin()
+    {
+        return Session["Role"] != null &&
+               Session["Role"].ToString().Equals(
+                   "Admin",
+                   StringComparison.OrdinalIgnoreCase
+               );
+    }
 
-    // ==========================================
-    // LOAD BACHAT GAT
-    // ==========================================
+    private int GetBachatGatID()
+    {
+        return RoleHelper.GetBachatGatID();
+    }
 
     private void LoadBachatGat()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        try
         {
-            string query = @"
-                SELECT BachatGatID, GatName
-                FROM BachatGat
-                WHERE Status = 'Active'
-                ORDER BY GatName";
+            using (SqlConnection con = DBHelper.GetConnection())
+            {
+                string query;
 
-            SqlDataAdapter da =
-                new SqlDataAdapter(query, con);
+                if (IsAdmin())
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        ORDER BY GatName";
+                }
+                else
+                {
+                    query = @"
+                        SELECT
+                            BachatGatID,
+                            GatName
+                        FROM BachatGat
+                        WHERE Status = 'Active'
+                        AND BachatGatID = @BachatGatID
+                        ORDER BY GatName";
+                }
 
-            DataTable dt = new DataTable();
+                SqlCommand cmd =
+                    new SqlCommand(
+                        query,
+                        con
+                    );
 
-            da.Fill(dt);
+                if (!IsAdmin())
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        GetBachatGatID()
+                    );
+                }
 
-            ddlBachatGat.DataSource = dt;
+                SqlDataAdapter da =
+                    new SqlDataAdapter(
+                        cmd
+                    );
 
-            ddlBachatGat.DataTextField =
-                "GatName";
+                DataTable dt =
+                    new DataTable();
 
-            ddlBachatGat.DataValueField =
-                "BachatGatID";
+                da.Fill(dt);
 
-            ddlBachatGat.DataBind();
+                ddlBachatGat.DataSource = dt;
+
+                ddlBachatGat.DataTextField =
+                    "GatName";
+
+                ddlBachatGat.DataValueField =
+                    "BachatGatID";
+
+                ddlBachatGat.DataBind();
+            }
+
+            if (IsAdmin())
+            {
+                ddlBachatGat.Items.Insert(
+                    0,
+                    new ListItem(
+                        "-- Select Bachat Gat --",
+                        ""
+                    )
+                );
+            }
+            else
+            {
+                if (ddlBachatGat.Items.Count > 0)
+                {
+                    ddlBachatGat.SelectedIndex = 0;
+
+                    LoadMeetings();
+                }
+            }
+
+            ddlMeeting.Items.Clear();
+
+            ddlMeeting.Items.Insert(
+                0,
+                new ListItem(
+                    "-- Select Meeting --",
+                    ""
+                )
+            );
         }
-
-        ddlBachatGat.Items.Insert(
-            0,
-            new ListItem(
-                "-- Select Bachat Gat --",
-                ""
-            )
-        );
-
-        ddlMeeting.Items.Clear();
-
-        ddlMeeting.Items.Insert(
-            0,
-            new ListItem(
-                "-- Select Meeting --",
-                ""
-            )
-        );
+        catch (Exception ex)
+        {
+            ShowMessage(
+                "Error loading Bachat Gat: " +
+                ex.Message,
+                System.Drawing.Color.Red
+            );
+        }
     }
-
-
-    // ==========================================
-    // BACHAT GAT CHANGE
-    // ==========================================
 
     protected void ddlBachatGat_SelectedIndexChanged(
         object sender,
         EventArgs e)
     {
+        if (!IsAdmin())
+        {
+            if (ddlBachatGat.SelectedValue !=
+                GetBachatGatID().ToString())
+            {
+                ShowMessage(
+                    "You can access only your own Bachat Gat.",
+                    System.Drawing.Color.Red
+                );
+
+                ddlBachatGat.SelectedValue =
+                    GetBachatGatID().ToString();
+
+                LoadMeetings();
+
+                return;
+            }
+        }
+
         LoadMeetings();
 
         gvAttendance.DataSource = null;
+
         gvAttendance.DataBind();
 
         lblMeetingInfo.Text = "";
     }
-
-
-    // ==========================================
-    // LOAD MEETINGS
-    // ==========================================
 
     private void LoadMeetings()
     {
@@ -105,8 +183,30 @@ public partial class MeetingAttendance : System.Web.UI.Page
             return;
         }
 
+        int selectedBachatGatID =
+            Convert.ToInt32(
+                ddlBachatGat.SelectedValue
+            );
 
-        using (SqlConnection con = DBHelper.GetConnection())
+        if (!IsAdmin())
+        {
+            if (selectedBachatGatID !=
+                GetBachatGatID())
+            {
+                ddlMeeting.Items.Insert(
+                    0,
+                    new ListItem(
+                        "-- Select Meeting --",
+                        ""
+                    )
+                );
+
+                return;
+            }
+        }
+
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -119,20 +219,23 @@ public partial class MeetingAttendance : System.Web.UI.Page
                 ORDER BY MeetingDate DESC";
 
             SqlCommand cmd =
-                new SqlCommand(query, con);
+                new SqlCommand(
+                    query,
+                    con
+                );
 
             cmd.Parameters.AddWithValue(
                 "@BachatGatID",
-                ddlBachatGat.SelectedValue
+                selectedBachatGatID
             );
 
             SqlDataAdapter da =
                 new SqlDataAdapter(cmd);
 
-            DataTable dt = new DataTable();
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
-
 
             ddlMeeting.DataSource = dt;
 
@@ -145,7 +248,6 @@ public partial class MeetingAttendance : System.Web.UI.Page
             ddlMeeting.DataBind();
         }
 
-
         ddlMeeting.Items.Insert(
             0,
             new ListItem(
@@ -155,11 +257,6 @@ public partial class MeetingAttendance : System.Web.UI.Page
         );
     }
 
-
-    // ==========================================
-    // MEETING CHANGE
-    // ==========================================
-
     protected void ddlMeeting_SelectedIndexChanged(
         object sender,
         EventArgs e)
@@ -167,6 +264,7 @@ public partial class MeetingAttendance : System.Web.UI.Page
         if (ddlMeeting.SelectedValue == "")
         {
             gvAttendance.DataSource = null;
+
             gvAttendance.DataBind();
 
             lblMeetingInfo.Text = "";
@@ -174,20 +272,112 @@ public partial class MeetingAttendance : System.Web.UI.Page
             return;
         }
 
+        if (!ValidateSelectedMeeting())
+        {
+            ddlMeeting.SelectedIndex = 0;
+
+            gvAttendance.DataSource = null;
+
+            gvAttendance.DataBind();
+
+            lblMeetingInfo.Text = "";
+
+            return;
+        }
 
         LoadMeetingInfo();
 
         LoadMembers();
     }
 
+    private bool ValidateSelectedMeeting()
+    {
+        try
+        {
+            int meetingID =
+                Convert.ToInt32(
+                    ddlMeeting.SelectedValue
+                );
 
-    // ==========================================
-    // MEETING INFORMATION
-    // ==========================================
+            int bachatGatID =
+                Convert.ToInt32(
+                    ddlBachatGat.SelectedValue
+                );
+
+            if (!IsAdmin())
+            {
+                if (bachatGatID !=
+                    GetBachatGatID())
+                {
+                    ShowMessage(
+                        "You can access only your own Bachat Gat.",
+                        System.Drawing.Color.Red
+                    );
+
+                    return false;
+                }
+            }
+
+            using (SqlConnection con =
+                DBHelper.GetConnection())
+            {
+                string query = @"
+                    SELECT COUNT(*)
+                    FROM Meetings
+                    WHERE MeetingID = @MeetingID
+                    AND BachatGatID = @BachatGatID";
+
+                SqlCommand cmd =
+                    new SqlCommand(
+                        query,
+                        con
+                    );
+
+                cmd.Parameters.AddWithValue(
+                    "@MeetingID",
+                    meetingID
+                );
+
+                cmd.Parameters.AddWithValue(
+                    "@BachatGatID",
+                    bachatGatID
+                );
+
+                con.Open();
+
+                int count =
+                    Convert.ToInt32(
+                        cmd.ExecuteScalar()
+                    );
+
+                if (count == 0)
+                {
+                    ShowMessage(
+                        "This meeting does not belong to the selected Bachat Gat.",
+                        System.Drawing.Color.Red
+                    );
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch
+        {
+            ShowMessage(
+                "Invalid meeting selected.",
+                System.Drawing.Color.Red
+            );
+
+            return false;
+        }
+    }
 
     private void LoadMeetingInfo()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -196,14 +386,23 @@ public partial class MeetingAttendance : System.Web.UI.Page
                     MeetingPlace,
                     MeetingType
                 FROM Meetings
-                WHERE MeetingID = @MeetingID";
+                WHERE MeetingID = @MeetingID
+                AND BachatGatID = @BachatGatID";
 
             SqlCommand cmd =
-                new SqlCommand(query, con);
+                new SqlCommand(
+                    query,
+                    con
+                );
 
             cmd.Parameters.AddWithValue(
                 "@MeetingID",
                 ddlMeeting.SelectedValue
+            );
+
+            cmd.Parameters.AddWithValue(
+                "@BachatGatID",
+                ddlBachatGat.SelectedValue
             );
 
             con.Open();
@@ -216,7 +415,9 @@ public partial class MeetingAttendance : System.Web.UI.Page
                 string date =
                     Convert.ToDateTime(
                         dr["MeetingDate"]
-                    ).ToString("dd-MM-yyyy");
+                    ).ToString(
+                        "dd-MM-yyyy"
+                    );
 
                 string time =
                     dr["MeetingTime"].ToString();
@@ -226,7 +427,6 @@ public partial class MeetingAttendance : System.Web.UI.Page
 
                 string type =
                     dr["MeetingType"].ToString();
-
 
                 lblMeetingInfo.Text =
                     "Date: " + date +
@@ -239,14 +439,15 @@ public partial class MeetingAttendance : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // LOAD MEMBERS
-    // ==========================================
-
     private void LoadMembers()
     {
-        using (SqlConnection con = DBHelper.GetConnection())
+        if (!ValidateSelectedMeeting())
+        {
+            return;
+        }
+
+        using (SqlConnection con =
+            DBHelper.GetConnection())
         {
             string query = @"
                 SELECT
@@ -260,7 +461,10 @@ public partial class MeetingAttendance : System.Web.UI.Page
                 ORDER BY MemberName";
 
             SqlCommand cmd =
-                new SqlCommand(query, con);
+                new SqlCommand(
+                    query,
+                    con
+                );
 
             cmd.Parameters.AddWithValue(
                 "@BachatGatID",
@@ -270,21 +474,16 @@ public partial class MeetingAttendance : System.Web.UI.Page
             SqlDataAdapter da =
                 new SqlDataAdapter(cmd);
 
-            DataTable dt = new DataTable();
+            DataTable dt =
+                new DataTable();
 
             da.Fill(dt);
-
 
             gvAttendance.DataSource = dt;
 
             gvAttendance.DataBind();
         }
     }
-
-
-    // ==========================================
-    // SAVE ATTENDANCE
-    // ==========================================
 
     protected void btnSaveAttendance_Click(
         object sender,
@@ -300,7 +499,6 @@ public partial class MeetingAttendance : System.Web.UI.Page
             return;
         }
 
-
         if (ddlMeeting.SelectedValue == "")
         {
             ShowMessage(
@@ -311,6 +509,24 @@ public partial class MeetingAttendance : System.Web.UI.Page
             return;
         }
 
+        if (!IsAdmin())
+        {
+            if (ddlBachatGat.SelectedValue !=
+                GetBachatGatID().ToString())
+            {
+                ShowMessage(
+                    "You can save attendance only for your own Bachat Gat.",
+                    System.Drawing.Color.Red
+                );
+
+                return;
+            }
+        }
+
+        if (!ValidateSelectedMeeting())
+        {
+            return;
+        }
 
         if (gvAttendance.Rows.Count == 0)
         {
@@ -322,15 +538,25 @@ public partial class MeetingAttendance : System.Web.UI.Page
             return;
         }
 
-
         try
         {
-            using (SqlConnection con = DBHelper.GetConnection())
+            int meetingID =
+                Convert.ToInt32(
+                    ddlMeeting.SelectedValue
+                );
+
+            int bachatGatID =
+                Convert.ToInt32(
+                    ddlBachatGat.SelectedValue
+                );
+
+            using (SqlConnection con =
+                DBHelper.GetConnection())
             {
                 con.Open();
 
-
-                foreach (GridViewRow row
+                foreach (
+                    GridViewRow row
                     in gvAttendance.Rows)
                 {
                     int memberID =
@@ -340,13 +566,11 @@ public partial class MeetingAttendance : System.Web.UI.Page
                             ].Value
                         );
 
-
                     DropDownList ddlAttendance =
                         (DropDownList)
                         row.FindControl(
                             "ddlAttendance"
                         );
-
 
                     TextBox txtRemarks =
                         (TextBox)
@@ -354,9 +578,38 @@ public partial class MeetingAttendance : System.Web.UI.Page
                             "txtRemarks"
                         );
 
+                    string memberCheckQuery = @"
+                        SELECT COUNT(*)
+                        FROM Members
+                        WHERE MemberID = @MemberID
+                        AND BachatGatID = @BachatGatID
+                        AND Status = 'Active'";
 
-                    // Check whether attendance
-                    // already exists
+                    SqlCommand memberCheckCmd =
+                        new SqlCommand(
+                            memberCheckQuery,
+                            con
+                        );
+
+                    memberCheckCmd.Parameters.AddWithValue(
+                        "@MemberID",
+                        memberID
+                    );
+
+                    memberCheckCmd.Parameters.AddWithValue(
+                        "@BachatGatID",
+                        bachatGatID
+                    );
+
+                    int memberCount =
+                        Convert.ToInt32(
+                            memberCheckCmd.ExecuteScalar()
+                        );
+
+                    if (memberCount == 0)
+                    {
+                        continue;
+                    }
 
                     string checkQuery = @"
                         SELECT COUNT(*)
@@ -364,47 +617,40 @@ public partial class MeetingAttendance : System.Web.UI.Page
                         WHERE MeetingID = @MeetingID
                         AND MemberID = @MemberID";
 
-
                     SqlCommand checkCmd =
                         new SqlCommand(
                             checkQuery,
                             con
                         );
 
-
                     checkCmd.Parameters.AddWithValue(
                         "@MeetingID",
-                        ddlMeeting.SelectedValue
+                        meetingID
                     );
-
 
                     checkCmd.Parameters.AddWithValue(
                         "@MemberID",
                         memberID
                     );
 
-
                     int count =
                         Convert.ToInt32(
                             checkCmd.ExecuteScalar()
                         );
 
-
                     if (count > 0)
                     {
-                        // UPDATE
-
                         string updateQuery = @"
                             UPDATE MeetingAttendance
                             SET
                                 AttendanceStatus =
                                     @AttendanceStatus,
-                                Remarks = @Remarks
+                                Remarks =
+                                    @Remarks
                             WHERE MeetingID =
                                     @MeetingID
                             AND MemberID =
                                     @MemberID";
-
 
                         SqlCommand updateCmd =
                             new SqlCommand(
@@ -412,37 +658,30 @@ public partial class MeetingAttendance : System.Web.UI.Page
                                 con
                             );
 
-
                         updateCmd.Parameters.AddWithValue(
                             "@AttendanceStatus",
                             ddlAttendance.SelectedValue
                         );
-
 
                         updateCmd.Parameters.AddWithValue(
                             "@Remarks",
                             txtRemarks.Text.Trim()
                         );
 
-
                         updateCmd.Parameters.AddWithValue(
                             "@MeetingID",
-                            ddlMeeting.SelectedValue
+                            meetingID
                         );
-
 
                         updateCmd.Parameters.AddWithValue(
                             "@MemberID",
                             memberID
                         );
 
-
                         updateCmd.ExecuteNonQuery();
                     }
                     else
                     {
-                        // INSERT
-
                         string insertQuery = @"
                             INSERT INTO MeetingAttendance
                             (
@@ -459,43 +698,36 @@ public partial class MeetingAttendance : System.Web.UI.Page
                                 @Remarks
                             )";
 
-
                         SqlCommand insertCmd =
                             new SqlCommand(
                                 insertQuery,
                                 con
                             );
 
-
                         insertCmd.Parameters.AddWithValue(
                             "@MeetingID",
-                            ddlMeeting.SelectedValue
+                            meetingID
                         );
-
 
                         insertCmd.Parameters.AddWithValue(
                             "@MemberID",
                             memberID
                         );
 
-
                         insertCmd.Parameters.AddWithValue(
                             "@AttendanceStatus",
                             ddlAttendance.SelectedValue
                         );
-
 
                         insertCmd.Parameters.AddWithValue(
                             "@Remarks",
                             txtRemarks.Text.Trim()
                         );
 
-
                         insertCmd.ExecuteNonQuery();
                     }
                 }
             }
-
 
             ShowMessage(
                 "Attendance saved successfully!",
@@ -512,42 +744,33 @@ public partial class MeetingAttendance : System.Web.UI.Page
         }
     }
 
-
-    // ==========================================
-    // CLEAR
-    // ==========================================
-
     protected void btnClear_Click(
         object sender,
         EventArgs e)
     {
-        ddlBachatGat.SelectedIndex = 0;
+        if (IsAdmin())
+        {
+            ddlBachatGat.SelectedIndex = 0;
+        }
+        else
+        {
+            if (ddlBachatGat.Items.Count > 0)
+            {
+                ddlBachatGat.SelectedValue =
+                    GetBachatGatID().ToString();
+            }
+        }
 
-        ddlMeeting.Items.Clear();
-
-        ddlMeeting.Items.Insert(
-            0,
-            new ListItem(
-                "-- Select Meeting --",
-                ""
-            )
-        );
-
+        LoadMeetings();
 
         gvAttendance.DataSource = null;
 
         gvAttendance.DataBind();
 
-
         lblMeetingInfo.Text = "";
 
         lblMessage.Text = "";
     }
-
-
-    // ==========================================
-    // MESSAGE
-    // ==========================================
 
     private void ShowMessage(
         string message,
