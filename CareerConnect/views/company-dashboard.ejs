@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Company Dashboard - CareerConnect</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+
+    <!-- ==============================
+         NAVIGATION
+    =============================== -->
+
+    <nav>
+
+        <h2>CareerConnect</h2>
+
+        <div>
+
+            <a href="/">Home</a>
+
+            <a href="/jobs">Jobs</a>
+
+            <a href="/dashboard">Dashboard</a>
+
+            <a href="/logout">Logout</a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ==============================
+         COMPANY DASHBOARD
+    =============================== -->
+
+    <div class="form-container">
+
+
+        <!-- WELCOME -->
+
+        <h1>
+            Welcome, <%= company.CompanyName %>!
+        </h1>
+
+
+        <p>
+            Welcome to your CareerConnect
+            company dashboard.
+        </p>
+
+
+        <hr>
+
+
+        <!-- ==============================
+             COMPANY INFORMATION
+        =============================== -->
+
+        <h2>
+            Company Information
+        </h2>
+
+
+        <div class="student-info">
+
+
+            <!-- COMPANY NAME -->
+
+            <div class="student-card">
+
+                <h3>
+                    COMPANY NAME
+                </h3>
+
+                <p>
+                    <%= company.CompanyName %>
+                </p>
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="student-card">
+
+                <h3>
+                    EMAIL
+                </h3>
+
+                <p>
+                    <%= company.Email %>
+                </p>
+
+            </div>
+
+
+            <!-- PHONE -->
+
+            <div class="student-card">
+
+                <h3>
+                    PHONE
+                </h3>
+
+                <p>
+                    <%= company.Phone || "Not provided" %>
+                </p>
+
+            </div>
+
+
+            <!-- LOCATION -->
+
+            <div class="student-card">
+
+                <h3>
+                    LOCATION
+                </h3>
+
+                <p>
+                    <%= company.Location || "Not provided" %>
+                </p>
+
+            </div>
+
+
+            <!-- WEBSITE -->
+
+            <div class="student-card">
+
+                <h3>
+                    WEBSITE
+                </h3>
+
+                <p>
+                    <%= company.Website || "Not provided" %>
+                </p>
+
+            </div>
+
+
+            <!-- ROLE -->
+
+            <div class="student-card">
+
+                <h3>
+                    ROLE
+                </h3>
+
+                <p>
+                    <%= user.role %>
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+        <hr>
+
+
+        <!-- ==============================
+             COMPANY DESCRIPTION
+        =============================== -->
+
+        <h2>
+            About Company
+        </h2>
+
+
+        <p>
+
+            <%= company.Description || "No company description provided." %>
+
+        </p>
+
+
+        <hr>
+
+
+        <!-- ==============================
+             COMPANY ACTIONS
+        =============================== -->
+
+        <h2>
+            Company Actions
+        </h2>
+
+
+        <div class="dashboard-actions">
+
+
+            <!-- POST JOB -->
+
+            <a href="/company/post-job">
+
+                <button type="button">
+
+                    Post Job / Internship
+
+                </button>
+
+            </a>
+
+
+            <!-- MY POSTED JOBS -->
+
+            <a href="/company/jobs">
+
+                <button type="button">
+
+                    My Posted Jobs
+
+                </button>
+
+            </a>
+
+
+            <!-- APPLICANTS -->
+
+            
+
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+</body>
+
+</html>
