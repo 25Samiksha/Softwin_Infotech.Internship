@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Company Registration - CareerConnect</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+
+    <!-- ==============================
+         NAVIGATION
+    =============================== -->
+
+    <nav>
+
+        <h2>CareerConnect</h2>
+
+        <div>
+
+            <a href="/">Home</a>
+
+            <a href="/jobs">Jobs</a>
+
+            <a href="/login">Login</a>
+
+            <a href="/register">Student Register</a>
+
+            <a href="/company-register">Company Register</a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ==============================
+         COMPANY REGISTRATION
+    =============================== -->
+
+    <div class="form-container">
+
+        <h1>Company Registration</h1>
+
+        <p>
+            Register your company on CareerConnect
+            and start posting jobs and internships.
+        </p>
+
+        <hr>
+
+
+        <form
+            action="/company-register"
+            method="POST"
+        >
+
+
+            <!-- COMPANY NAME -->
+
+            <label>
+                Company Name
+            </label>
+
+            <input
+                type="text"
+                name="companyName"
+                placeholder="Enter company name"
+                required
+            >
+
+
+            <!-- EMAIL -->
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                placeholder="Enter company email"
+                required
+            >
+
+
+            <!-- PASSWORD -->
+
+            <label>
+                Password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Create password"
+                required
+            >
+
+
+            <!-- CONFIRM PASSWORD -->
+
+            <label>
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm password"
+                required
+            >
+
+
+            <!-- PHONE -->
+
+            <label>
+                Phone
+            </label>
+
+            <input
+                type="text"
+                name="phone"
+                placeholder="Enter phone number"
+            >
+
+
+            <!-- LOCATION -->
+
+            <label>
+                Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="Enter company location"
+            >
+
+
+            <!-- WEBSITE -->
+
+            <label>
+                Website
+            </label>
+
+            <input
+                type="text"
+                name="website"
+                placeholder="https://example.com"
+            >
+
+
+            <!-- DESCRIPTION -->
+
+            <label>
+                Company Description
+            </label>
+
+            <textarea
+                name="description"
+                placeholder="Tell us about your company"
+                rows="5"
+                style="
+                    width:100%;
+                    padding:11px;
+                    box-sizing:border-box;
+                    border:1px solid #DCC9D9;
+                    border-radius:7px;
+                    font-size:15px;
+                "
+            ></textarea>
+
+
+            <br>
+            <br>
+
+
+            <!-- SUBMIT -->
+
+            <button type="submit">
+
+                Register Company
+
+            </button>
+
+
+        </form>
+
+    </div>
+
+
+</body>
+
+</html>

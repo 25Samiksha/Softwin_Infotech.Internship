@@ -1,54 +1,143 @@
 const express = require("express");
 const sql = require("./db");
 const session = require("express-session");
+const multer = require("multer");
+const path = require("path");
 
 const app = express();
 
 
-// ==============================
-// SETTINGS
-// ==============================
+// ==========================================
+// MULTER - RESUME UPLOAD
+// ==========================================
+
+const storage = multer.diskStorage({
+
+    destination: function (request, file, callback) {
+
+        callback(
+            null,
+            "uploads/resumes/"
+        );
+
+    },
+
+    filename: function (request, file, callback) {
+
+        const uniqueName =
+            Date.now() +
+            "-" +
+            file.originalname;
+
+        callback(
+            null,
+            uniqueName
+        );
+
+    }
+
+});
+
+
+const upload = multer({
+
+    storage: storage,
+
+    fileFilter: function (request, file, callback) {
+
+        const extension =
+            path.extname(file.originalname).toLowerCase();
+
+        if (extension === ".pdf") {
+
+            callback(null, true);
+
+        }
+        else {
+
+            callback(
+                new Error("Only PDF files are allowed.")
+            );
+
+        }
+
+    },
+
+    limits: {
+
+        fileSize: 5 * 1024 * 1024
+
+    }
+
+});
+
+
+// ==========================================
+// EXPRESS SETTINGS
+// ==========================================
 
 app.set("view engine", "ejs");
 
 app.use(express.static("public"));
 
-app.use(express.urlencoded({ extended: true }));
+app.use(
+    "/uploads",
+    express.static("uploads")
+);
+
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
 
 
-// ==============================
+// ==========================================
 // SESSION
-// ==============================
+// ==========================================
 
-app.use(session({
-    secret: "careerconnect-secret-key",
-    resave: false,
-    saveUninitialized: false
-}));
+app.use(
+    session({
+
+        secret: "careerconnect-secret-key",
+
+        resave: false,
+
+        saveUninitialized: false
+
+    })
+);
 
 
-// ==============================
-// HOME PAGE
-// ==============================
+// ==========================================
+// HOME
+// ==========================================
 
 app.get("/", (request, response) => {
 
     const student = {
+
         name: "Samiksha",
+
         course: "B.Tech Computer Science",
+
         city: "Sangli"
+
     };
 
-    response.render("home", {
-        student: student
-    });
+    response.render(
+        "home",
+        {
+            student: student
+        }
+    );
 
 });
 
 
-// ==============================
-// JOBS PAGE
-// ==============================
+// ==========================================
+// JOBS
+// ==========================================
 
 app.get("/jobs", async (request, response) => {
 
@@ -64,21 +153,29 @@ app.get("/jobs", async (request, response) => {
 
         `;
 
-        console.log("Jobs fetched:");
+        console.log(
+            "Jobs fetched:"
+        );
 
-        console.log(result.recordset);
+        console.log(
+            result.recordset
+        );
 
 
-        response.render("jobs", {
-
-            jobs: result.recordset
-
-        });
+        response.render(
+            "jobs",
+            {
+                jobs: result.recordset
+            }
+        );
 
     }
+
     catch (error) {
 
-        console.log("Jobs error:");
+        console.log(
+            "Jobs error:"
+        );
 
         console.log(error);
 
@@ -92,9 +189,9 @@ app.get("/jobs", async (request, response) => {
 });
 
 
-// ==============================
+// ==========================================
 // APPLY FOR JOB
-// ==============================
+// ==========================================
 
 app.post("/apply/:jobId", async (request, response) => {
 
@@ -105,8 +202,6 @@ app.post("/apply/:jobId", async (request, response) => {
     }
 
 
-    // Only students can apply
-
     if (request.session.role !== "Student") {
 
         return response.send(
@@ -116,9 +211,11 @@ app.post("/apply/:jobId", async (request, response) => {
     }
 
 
-    const userId = request.session.userId;
+    const userId =
+        request.session.userId;
 
-    const jobId = request.params.jobId;
+    const jobId =
+        request.params.jobId;
 
 
     try {
@@ -145,7 +242,7 @@ app.post("/apply/:jobId", async (request, response) => {
         }
 
 
-        // Check whether user already applied
+        // Check duplicate application
 
         const checkApplication = await sql.query`
 
@@ -190,11 +287,19 @@ app.post("/apply/:jobId", async (request, response) => {
         `;
 
 
-        console.log("Application submitted!");
+        console.log(
+            "Application submitted!"
+        );
 
-        console.log("User ID:", userId);
+        console.log(
+            "User ID:",
+            userId
+        );
 
-        console.log("Job ID:", jobId);
+        console.log(
+            "Job ID:",
+            jobId
+        );
 
 
         response.send(
@@ -202,9 +307,12 @@ app.post("/apply/:jobId", async (request, response) => {
         );
 
     }
+
     catch (error) {
 
-        console.log("Application error:");
+        console.log(
+            "Application error:"
+        );
 
         console.log(error);
 
@@ -218,9 +326,9 @@ app.post("/apply/:jobId", async (request, response) => {
 });
 
 
-// ==============================
-// MY APPLICATIONS
-// ==============================
+// ==========================================
+// STUDENT APPLICATIONS
+// ==========================================
 
 app.get("/applications", async (request, response) => {
 
@@ -231,8 +339,6 @@ app.get("/applications", async (request, response) => {
     }
 
 
-    // Only students can view applications
-
     if (request.session.role !== "Student") {
 
         return response.send(
@@ -242,7 +348,8 @@ app.get("/applications", async (request, response) => {
     }
 
 
-    const userId = request.session.userId;
+    const userId =
+        request.session.userId;
 
 
     try {
@@ -280,21 +387,30 @@ app.get("/applications", async (request, response) => {
         `;
 
 
-        console.log("Applications fetched:");
+        console.log(
+            "Applications fetched:"
+        );
 
-        console.log(result.recordset);
+        console.log(
+            result.recordset
+        );
 
 
-        response.render("applications", {
-
-            applications: result.recordset
-
-        });
+        response.render(
+            "applications",
+            {
+                applications:
+                    result.recordset
+            }
+        );
 
     }
+
     catch (error) {
 
-        console.log("Applications error:");
+        console.log(
+            "Applications error:"
+        );
 
         console.log(error);
 
@@ -308,9 +424,9 @@ app.get("/applications", async (request, response) => {
 });
 
 
-// ==============================
-// LOGIN PAGE - GET
-// ==============================
+// ==========================================
+// LOGIN PAGE
+// ==========================================
 
 app.get("/login", (request, response) => {
 
@@ -319,19 +435,20 @@ app.get("/login", (request, response) => {
 });
 
 
-// ==============================
-// LOGIN FORM - POST
-// ==============================
+// ==========================================
+// LOGIN
+// ==========================================
 
 app.post("/login", async (request, response) => {
 
     const {
+
         email,
+
         password
+
     } = request.body;
 
-
-    // Check fields
 
     if (!email || !password) {
 
@@ -343,8 +460,6 @@ app.post("/login", async (request, response) => {
 
 
     try {
-
-        // Check user in database
 
         const result = await sql.query`
 
@@ -359,25 +474,28 @@ app.post("/login", async (request, response) => {
         `;
 
 
-        // If user exists
-
         if (result.recordset.length > 0) {
 
-            const user = result.recordset[0];
+            const user =
+                result.recordset[0];
 
 
-            // Store user information in session
+            request.session.userId =
+                user.UserId;
 
-            request.session.userId = user.UserId;
+            request.session.fullName =
+                user.FullName;
 
-            request.session.fullName = user.FullName;
+            request.session.email =
+                user.Email;
 
-            request.session.email = user.Email;
+            request.session.role =
+                user.Role;
 
-            request.session.role = user.Role;
 
-
-            console.log("Login successful!");
+            console.log(
+                "Login successful!"
+            );
 
             console.log(
                 "User:",
@@ -390,23 +508,24 @@ app.post("/login", async (request, response) => {
             );
 
 
-            // Go to dashboard
-
-            return response.redirect("/dashboard");
+            return response.redirect(
+                "/dashboard"
+            );
 
         }
 
-
-        // Invalid login
 
         response.send(
             "Invalid email or password."
         );
 
     }
+
     catch (error) {
 
-        console.log("Login error:");
+        console.log(
+            "Login error:"
+        );
 
         console.log(error);
 
@@ -420,13 +539,11 @@ app.post("/login", async (request, response) => {
 });
 
 
-// ==============================
+// ==========================================
 // DASHBOARD
-// ==============================
+// ==========================================
 
 app.get("/dashboard", async (request, response) => {
-
-    // Check whether user is logged in
 
     if (!request.session.userId) {
 
@@ -435,24 +552,42 @@ app.get("/dashboard", async (request, response) => {
     }
 
 
-    // Get user information from session
-
     const user = {
 
-        userId: request.session.userId,
+        userId:
+            request.session.userId,
 
-        fullName: request.session.fullName,
+        fullName:
+            request.session.fullName,
 
-        email: request.session.email,
+        email:
+            request.session.email,
 
-        role: request.session.role
+        role:
+            request.session.role
 
     };
 
 
-    // ==============================
+    // ======================================
+    // ADMIN DASHBOARD
+    // ======================================
+
+    if (user.role === "Admin") {
+
+        return response.render(
+            "admin-dashboard",
+            {
+                user: user
+            }
+        );
+
+    }
+
+
+    // ======================================
     // COMPANY DASHBOARD
-    // ==============================
+    // ======================================
 
     if (user.role === "Company") {
 
@@ -478,7 +613,8 @@ app.get("/dashboard", async (request, response) => {
             }
 
 
-            const company = result.recordset[0];
+            const company =
+                result.recordset[0];
 
 
             return response.render(
@@ -490,6 +626,7 @@ app.get("/dashboard", async (request, response) => {
             );
 
         }
+
         catch (error) {
 
             console.log(
@@ -508,22 +645,23 @@ app.get("/dashboard", async (request, response) => {
     }
 
 
-    // ==============================
+    // ======================================
     // STUDENT DASHBOARD
-    // ==============================
+    // ======================================
 
-    response.render("dashboard", {
-
-        user: user
-
-    });
+    response.render(
+        "dashboard",
+        {
+            user: user
+        }
+    );
 
 });
 
 
-// ==============================
-// STUDENT REGISTER PAGE - GET
-// ==============================
+// ==========================================
+// STUDENT REGISTER PAGE
+// ==========================================
 
 app.get("/register", (request, response) => {
 
@@ -532,27 +670,35 @@ app.get("/register", (request, response) => {
 });
 
 
-// ==============================
-// STUDENT REGISTER FORM - POST
-// ==============================
+// ==========================================
+// STUDENT REGISTER
+// ==========================================
 
 app.post("/register", async (request, response) => {
 
     const {
+
         fullName,
+
         email,
+
         password,
+
         confirmPassword
+
     } = request.body;
 
 
-    // Check all fields
-
     if (
+
         !fullName ||
+
         !email ||
+
         !password ||
+
         !confirmPassword
+
     ) {
 
         return response.send(
@@ -561,8 +707,6 @@ app.post("/register", async (request, response) => {
 
     }
 
-
-    // Check passwords
 
     if (password !== confirmPassword) {
 
@@ -574,8 +718,6 @@ app.post("/register", async (request, response) => {
 
 
     try {
-
-        // Check email already exists
 
         const checkUser = await sql.query`
 
@@ -596,8 +738,6 @@ app.post("/register", async (request, response) => {
 
         }
 
-
-        // Insert student user
 
         await sql.query`
 
@@ -640,6 +780,7 @@ app.post("/register", async (request, response) => {
         );
 
     }
+
     catch (error) {
 
         console.log(
@@ -658,9 +799,9 @@ app.post("/register", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY REGISTER PAGE - GET
-// ==============================
+// ==========================================
+// COMPANY REGISTER PAGE
+// ==========================================
 
 app.get("/company-register", (request, response) => {
 
@@ -669,31 +810,43 @@ app.get("/company-register", (request, response) => {
 });
 
 
-// ==============================
-// COMPANY REGISTER FORM - POST
-// ==============================
+// ==========================================
+// COMPANY REGISTER
+// ==========================================
 
 app.post("/company-register", async (request, response) => {
 
     const {
+
         companyName,
+
         email,
+
         password,
+
         confirmPassword,
+
         phone,
+
         location,
+
         website,
+
         description
+
     } = request.body;
 
 
-    // Check required fields
-
     if (
+
         !companyName ||
+
         !email ||
+
         !password ||
+
         !confirmPassword
+
     ) {
 
         return response.send(
@@ -702,8 +855,6 @@ app.post("/company-register", async (request, response) => {
 
     }
 
-
-    // Check passwords
 
     if (password !== confirmPassword) {
 
@@ -715,8 +866,6 @@ app.post("/company-register", async (request, response) => {
 
 
     try {
-
-        // Check whether email already exists
 
         const checkUser = await sql.query`
 
@@ -737,8 +886,6 @@ app.post("/company-register", async (request, response) => {
 
         }
 
-
-        // Create company user account
 
         const userResult = await sql.query`
 
@@ -766,8 +913,6 @@ app.post("/company-register", async (request, response) => {
         const userId =
             userResult.recordset[0].UserId;
 
-
-        // Create company profile
 
         await sql.query`
 
@@ -816,6 +961,7 @@ app.post("/company-register", async (request, response) => {
         );
 
     }
+
     catch (error) {
 
         console.log(
@@ -834,13 +980,11 @@ app.post("/company-register", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY POST JOB PAGE - GET
-// ==============================
+// ==========================================
+// POST JOB PAGE
+// ==========================================
 
 app.get("/company/post-job", async (request, response) => {
-
-    // Check login
 
     if (!request.session.userId) {
 
@@ -848,8 +992,6 @@ app.get("/company/post-job", async (request, response) => {
 
     }
 
-
-    // Only company can access
 
     if (request.session.role !== "Company") {
 
@@ -861,8 +1003,6 @@ app.get("/company/post-job", async (request, response) => {
 
 
     try {
-
-        // Find company
 
         const result = await sql.query`
 
@@ -884,18 +1024,19 @@ app.get("/company/post-job", async (request, response) => {
         }
 
 
-        const company = result.recordset[0];
+        const company =
+            result.recordset[0];
 
 
-        // Open post job page
-
-        response.render("post-job", {
-
-            company: company
-
-        });
+        response.render(
+            "post-job",
+            {
+                company: company
+            }
+        );
 
     }
+
     catch (error) {
 
         console.log(
@@ -914,23 +1055,28 @@ app.get("/company/post-job", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY POST JOB FORM - POST
-// ==============================
+// ==========================================
+// POST JOB
+// ==========================================
 
 app.post("/company/post-job", async (request, response) => {
 
     const {
+
         title,
+
         jobType,
+
         location,
+
         skills,
+
         salary,
+
         description
+
     } = request.body;
 
-
-    // Check login
 
     if (!request.session.userId) {
 
@@ -938,8 +1084,6 @@ app.post("/company/post-job", async (request, response) => {
 
     }
 
-
-    // Only company can post
 
     if (request.session.role !== "Company") {
 
@@ -950,14 +1094,18 @@ app.post("/company/post-job", async (request, response) => {
     }
 
 
-    // Check required fields
-
     if (
+
         !title ||
+
         !jobType ||
+
         !location ||
+
         !skills ||
+
         !description
+
     ) {
 
         return response.send(
@@ -968,8 +1116,6 @@ app.post("/company/post-job", async (request, response) => {
 
 
     try {
-
-        // Find company
 
         const companyResult = await sql.query`
 
@@ -991,10 +1137,9 @@ app.post("/company/post-job", async (request, response) => {
         }
 
 
-        const company = companyResult.recordset[0];
+        const company =
+            companyResult.recordset[0];
 
-
-        // Insert job
 
         await sql.query`
 
@@ -1040,11 +1185,12 @@ app.post("/company/post-job", async (request, response) => {
         );
 
 
-        // Go to My Posted Jobs
-
-        response.redirect("/company/jobs");
+        response.redirect(
+            "/company/jobs"
+        );
 
     }
+
     catch (error) {
 
         console.log(
@@ -1063,13 +1209,11 @@ app.post("/company/post-job", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY MY POSTED JOBS
-// ==============================
+// ==========================================
+// COMPANY POSTED JOBS
+// ==========================================
 
 app.get("/company/jobs", async (request, response) => {
-
-    // Check login
 
     if (!request.session.userId) {
 
@@ -1077,8 +1221,6 @@ app.get("/company/jobs", async (request, response) => {
 
     }
 
-
-    // Only company can access
 
     if (request.session.role !== "Company") {
 
@@ -1091,12 +1233,12 @@ app.get("/company/jobs", async (request, response) => {
 
     try {
 
-        // Find company
-
         const companyResult = await sql.query`
 
             SELECT
+
                 CompanyId,
+
                 CompanyName
 
             FROM Companies
@@ -1115,10 +1257,9 @@ app.get("/company/jobs", async (request, response) => {
         }
 
 
-        const company = companyResult.recordset[0];
+        const company =
+            companyResult.recordset[0];
 
-
-        // Find jobs posted by this company
 
         const jobResult = await sql.query`
 
@@ -1142,8 +1283,6 @@ app.get("/company/jobs", async (request, response) => {
         );
 
 
-        // Open My Posted Jobs page
-
         response.render(
             "my-posted-jobs",
             {
@@ -1153,6 +1292,7 @@ app.get("/company/jobs", async (request, response) => {
         );
 
     }
+
     catch (error) {
 
         console.log(
@@ -1171,13 +1311,11 @@ app.get("/company/jobs", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY VIEW APPLICANTS
-// ==============================
+// ==========================================
+// VIEW APPLICANTS
+// ==========================================
 
 app.get("/company/applicants/:jobId", async (request, response) => {
-
-    // Check login
 
     if (!request.session.userId) {
 
@@ -1185,8 +1323,6 @@ app.get("/company/applicants/:jobId", async (request, response) => {
 
     }
 
-
-    // Only company can access
 
     if (request.session.role !== "Company") {
 
@@ -1197,17 +1333,22 @@ app.get("/company/applicants/:jobId", async (request, response) => {
     }
 
 
-    const jobId = request.params.jobId;
+    const jobId =
+        request.params.jobId;
 
 
     try {
 
-        // Find company
+        // ======================================
+        // GET COMPANY
+        // ======================================
 
         const companyResult = await sql.query`
 
             SELECT
+
                 CompanyId,
+
                 CompanyName
 
             FROM Companies
@@ -1226,10 +1367,13 @@ app.get("/company/applicants/:jobId", async (request, response) => {
         }
 
 
-        const company = companyResult.recordset[0];
+        const company =
+            companyResult.recordset[0];
 
 
-        // Check whether this job belongs to this company
+        // ======================================
+        // CHECK JOB BELONGS TO COMPANY
+        // ======================================
 
         const jobResult = await sql.query`
 
@@ -1253,10 +1397,13 @@ app.get("/company/applicants/:jobId", async (request, response) => {
         }
 
 
-        const job = jobResult.recordset[0];
+        const job =
+            jobResult.recordset[0];
 
 
-        // Get applicants
+        // ======================================
+        // GET APPLICANTS + STUDENT PROFILE
+        // ======================================
 
         const applicantResult = await sql.query`
 
@@ -1272,13 +1419,29 @@ app.get("/company/applicants/:jobId", async (request, response) => {
 
                 Users.FullName,
 
-                Users.Email
+                Users.Email,
+
+                StudentProfiles.Phone,
+
+                StudentProfiles.College,
+
+                StudentProfiles.Course,
+
+                StudentProfiles.Education,
+
+                StudentProfiles.Skills,
+
+                StudentProfiles.ResumePath
 
             FROM Applications
 
             INNER JOIN Users
 
                 ON Applications.UserId = Users.UserId
+
+            LEFT JOIN StudentProfiles
+
+                ON Applications.UserId = StudentProfiles.UserId
 
             WHERE Applications.JobId = ${jobId}
 
@@ -1296,18 +1459,22 @@ app.get("/company/applicants/:jobId", async (request, response) => {
         );
 
 
-        // Open applicants page
-
         response.render(
             "applicants",
             {
+
                 company: company,
+
                 job: job,
-                applicants: applicantResult.recordset
+
+                applicants:
+                    applicantResult.recordset
+
             }
         );
 
     }
+
     catch (error) {
 
         console.log(
@@ -1326,13 +1493,174 @@ app.get("/company/applicants/:jobId", async (request, response) => {
 });
 
 
-// ==============================
-// COMPANY ACCEPT / REJECT APPLICANT
-// ==============================
+// ==========================================
+// ACCEPT / REJECT APPLICANT
+// ==========================================
 
-app.post("/company/applicants/:applicationId/status", async (request, response) => {
+app.post(
+    "/company/applicants/:applicationId/status",
 
-    // Check login
+    async (request, response) => {
+
+        if (!request.session.userId) {
+
+            return response.redirect("/login");
+
+        }
+
+
+        if (request.session.role !== "Company") {
+
+            return response.send(
+                "Access denied. Only companies can update applicant status."
+            );
+
+        }
+
+
+        const applicationId =
+            request.params.applicationId;
+
+
+        const status =
+            request.body.status;
+
+
+        if (
+
+            status !== "Accepted" &&
+
+            status !== "Rejected"
+
+        ) {
+
+            return response.send(
+                "Invalid application status."
+            );
+
+        }
+
+
+        try {
+
+            const companyResult = await sql.query`
+
+                SELECT
+
+                    CompanyId
+
+                FROM Companies
+
+                WHERE UserId = ${request.session.userId}
+
+            `;
+
+
+            if (companyResult.recordset.length === 0) {
+
+                return response.send(
+                    "Company profile not found."
+                );
+
+            }
+
+
+            const companyId =
+                companyResult.recordset[0].CompanyId;
+
+
+            const applicationResult = await sql.query`
+
+                SELECT
+
+                    Applications.ApplicationId,
+
+                    Applications.JobId
+
+                FROM Applications
+
+                INNER JOIN Jobs
+
+                    ON Applications.JobId = Jobs.JobId
+
+                WHERE Applications.ApplicationId = ${applicationId}
+
+                AND Jobs.CompanyId = ${companyId}
+
+            `;
+
+
+            if (applicationResult.recordset.length === 0) {
+
+                return response.send(
+                    "Application not found or access denied."
+                );
+
+            }
+
+
+            const jobId =
+                applicationResult.recordset[0].JobId;
+
+
+            await sql.query`
+
+                UPDATE Applications
+
+                SET Status = ${status}
+
+                WHERE ApplicationId = ${applicationId}
+
+            `;
+
+
+            console.log(
+                "Applicant status updated!"
+            );
+
+            console.log(
+                "Application ID:",
+                applicationId
+            );
+
+            console.log(
+                "New Status:",
+                status
+            );
+
+
+            response.redirect(
+                "/company/applicants/" +
+                jobId
+            );
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Update applicant status error:"
+            );
+
+            console.log(error);
+
+
+            response.send(
+                "Something went wrong while updating applicant status."
+            );
+
+        }
+
+    }
+
+);
+
+
+// ==========================================
+// STUDENT PROFILE
+// ==========================================
+
+app.get("/profile", async (request, response) => {
 
     if (!request.session.userId) {
 
@@ -1341,33 +1669,10 @@ app.post("/company/applicants/:applicationId/status", async (request, response) 
     }
 
 
-    // Only company can update applicant status
-
-    if (request.session.role !== "Company") {
+    if (request.session.role !== "Student") {
 
         return response.send(
-            "Access denied. Only companies can update applicant status."
-        );
-
-    }
-
-
-    const applicationId =
-        request.params.applicationId;
-
-    const status =
-        request.body.status;
-
-
-    // Allow only Accepted or Rejected
-
-    if (
-        status !== "Accepted" &&
-        status !== "Rejected"
-    ) {
-
-        return response.send(
-            "Invalid application status."
+            "Access denied. Only students can view their profile."
         );
 
     }
@@ -1375,127 +1680,77 @@ app.post("/company/applicants/:applicationId/status", async (request, response) 
 
     try {
 
-        // ==============================
-        // FIND COMPANY
-        // ==============================
-
-        const companyResult = await sql.query`
+        const userResult = await sql.query`
 
             SELECT
-                CompanyId
 
-            FROM Companies
+                UserId,
+
+                FullName,
+
+                Email
+
+            FROM Users
 
             WHERE UserId = ${request.session.userId}
 
         `;
 
 
-        if (companyResult.recordset.length === 0) {
+        if (userResult.recordset.length === 0) {
 
             return response.send(
-                "Company profile not found."
+                "Student not found."
             );
 
         }
 
 
-        const companyId =
-            companyResult.recordset[0].CompanyId;
+        const user =
+            userResult.recordset[0];
 
 
-        // ==============================
-        // CHECK APPLICATION
-        // ==============================
+        const profileResult = await sql.query`
 
-        // Make sure this application
-        // belongs to a job posted by
-        // the logged-in company
+            SELECT *
 
-        const applicationResult = await sql.query`
+            FROM StudentProfiles
 
-            SELECT
-
-                Applications.ApplicationId,
-
-                Applications.JobId
-
-            FROM Applications
-
-            INNER JOIN Jobs
-
-                ON Applications.JobId = Jobs.JobId
-
-            WHERE Applications.ApplicationId = ${applicationId}
-
-            AND Jobs.CompanyId = ${companyId}
+            WHERE UserId = ${request.session.userId}
 
         `;
 
 
-        if (applicationResult.recordset.length === 0) {
+        const profile =
 
-            return response.send(
-                "Application not found or access denied."
-            );
+            profileResult.recordset.length > 0
 
-        }
+                ? profileResult.recordset[0]
 
-
-        const jobId =
-            applicationResult.recordset[0].JobId;
+                : null;
 
 
-        // ==============================
-        // UPDATE STATUS
-        // ==============================
-
-        await sql.query`
-
-            UPDATE Applications
-
-            SET Status = ${status}
-
-            WHERE ApplicationId = ${applicationId}
-
-        `;
-
-
-        console.log(
-            "Applicant status updated!"
-        );
-
-        console.log(
-            "Application ID:",
-            applicationId
-        );
-
-        console.log(
-            "New Status:",
-            status
-        );
-
-
-        // ==============================
-        // RETURN TO APPLICANTS PAGE
-        // ==============================
-
-        response.redirect(
-            "/company/applicants/" + jobId
+        response.render(
+            "profile",
+            {
+                user: user,
+                profile: profile
+            }
         );
 
     }
+
     catch (error) {
 
         console.log(
-            "Update applicant status error:"
+            "Profile page error:"
         );
 
         console.log(error);
 
 
         response.send(
-            "Something went wrong while updating applicant status."
+            "Something went wrong while loading your profile."
         );
 
     }
@@ -1503,9 +1758,247 @@ app.post("/company/applicants/:applicationId/status", async (request, response) 
 });
 
 
-// ==============================
+// ==========================================
+// SAVE STUDENT PROFILE + RESUME
+// ==========================================
+
+app.post(
+    "/profile",
+
+    upload.single("resume"),
+
+    async (request, response) => {
+
+        if (!request.session.userId) {
+
+            return response.redirect("/login");
+
+        }
+
+
+        if (request.session.role !== "Student") {
+
+            return response.send(
+                "Access denied. Only students can update their profile."
+            );
+
+        }
+
+
+        const {
+
+            fullName,
+
+            phone,
+
+            college,
+
+            course,
+
+            education,
+
+            skills
+
+        } = request.body;
+
+
+        if (!fullName) {
+
+            return response.send(
+                "Full Name is required."
+            );
+
+        }
+
+
+        try {
+
+            // ======================================
+            // UPDATE USER NAME
+            // ======================================
+
+            await sql.query`
+
+                UPDATE Users
+
+                SET FullName = ${fullName}
+
+                WHERE UserId = ${request.session.userId}
+
+            `;
+
+
+            // ======================================
+            // GET EXISTING PROFILE
+            // ======================================
+
+            const profileResult = await sql.query`
+
+                SELECT
+
+                    ProfileId,
+
+                    ResumePath
+
+                FROM StudentProfiles
+
+                WHERE UserId = ${request.session.userId}
+
+            `;
+
+
+            let resumePath = null;
+
+
+            // ======================================
+            // NEW RESUME
+            // ======================================
+
+            if (request.file) {
+
+                resumePath =
+                    "/uploads/resumes/" +
+                    request.file.filename;
+
+            }
+
+
+            // ======================================
+            // UPDATE EXISTING PROFILE
+            // ======================================
+
+            if (profileResult.recordset.length > 0) {
+
+                // Keep old resume if no new resume
+                // was uploaded
+
+                if (!resumePath) {
+
+                    resumePath =
+                        profileResult.recordset[0].ResumePath;
+
+                }
+
+
+                await sql.query`
+
+                    UPDATE StudentProfiles
+
+                    SET
+
+                        Phone = ${phone},
+
+                        College = ${college},
+
+                        Course = ${course},
+
+                        Education = ${education},
+
+                        Skills = ${skills},
+
+                        ResumePath = ${resumePath}
+
+                    WHERE UserId = ${request.session.userId}
+
+                `;
+
+            }
+
+
+            // ======================================
+            // CREATE NEW PROFILE
+            // ======================================
+
+            else {
+
+                await sql.query`
+
+                    INSERT INTO StudentProfiles
+                    (
+                        UserId,
+                        Phone,
+                        College,
+                        Course,
+                        Education,
+                        Skills,
+                        ResumePath
+                    )
+
+                    VALUES
+                    (
+                        ${request.session.userId},
+
+                        ${phone},
+
+                        ${college},
+
+                        ${course},
+
+                        ${education},
+
+                        ${skills},
+
+                        ${resumePath}
+
+                    )
+
+                `;
+
+            }
+
+
+            // ======================================
+            // UPDATE SESSION NAME
+            // ======================================
+
+            request.session.fullName =
+                fullName;
+
+
+            console.log(
+                "Student profile saved successfully!"
+            );
+
+
+            if (request.file) {
+
+                console.log(
+                    "Resume uploaded:",
+                    request.file.filename
+                );
+
+            }
+
+
+            response.redirect(
+                "/profile"
+            );
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Save profile error:"
+            );
+
+            console.log(error);
+
+
+            response.send(
+                "Something went wrong while saving your profile."
+            );
+
+        }
+
+    }
+
+);
+
+
+// ==========================================
 // LOGOUT
-// ==============================
+// ==========================================
 
 app.get("/logout", (request, response) => {
 
@@ -1532,16 +2025,18 @@ app.get("/logout", (request, response) => {
         );
 
 
-        response.redirect("/login");
+        response.redirect(
+            "/login"
+        );
 
     });
 
 });
 
 
-// ==============================
+// ==========================================
 // START SERVER
-// ==============================
+// ==========================================
 
 app.listen(3000, () => {
 
