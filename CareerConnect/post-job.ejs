@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Post Job - CareerConnect</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+    <!-- ==============================
+         NAVIGATION
+    =============================== -->
+
+    <nav>
+
+        <h2>CareerConnect</h2>
+
+        <div>
+
+            <a href="/">Home</a>
+
+            <a href="/jobs">Jobs</a>
+
+            <a href="/dashboard">Dashboard</a>
+
+            <a href="/logout">Logout</a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ==============================
+         POST JOB FORM
+    =============================== -->
+
+    <div class="form-container">
+
+        <h1>
+            Post Job / Internship
+        </h1>
+
+        <p>
+            Create a new job or internship opportunity
+            for students on CareerConnect.
+        </p>
+
+        <hr>
+
+
+        <form action="/company/post-job" method="POST">
+
+
+            <!-- JOB TITLE -->
+
+            <label>
+                Job Title
+            </label>
+
+            <input
+                type="text"
+                name="title"
+                placeholder="Example: Web Developer Intern"
+                required
+            >
+
+
+            <!-- JOB TYPE -->
+
+            <label>
+                Job Type
+            </label>
+
+            <select
+                name="jobType"
+                required
+                style="width:100%; padding:11px; box-sizing:border-box; border:1px solid #DCC9D9; border-radius:7px; font-size:15px;"
+            >
+
+                <option value="">
+                    Select Job Type
+                </option>
+
+                <option value="Internship">
+                    Internship
+                </option>
+
+                <option value="Full Time">
+                    Full Time
+                </option>
+
+                <option value="Part Time">
+                    Part Time
+                </option>
+
+            </select>
+
+
+            <!-- LOCATION -->
+
+            <label>
+                Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="Example: Pune"
+                required
+            >
+
+
+            <!-- SKILLS -->
+
+            <label>
+                Required Skills
+            </label>
+
+            <input
+                type="text"
+                name="skills"
+                placeholder="Example: HTML, CSS, JavaScript"
+                required
+            >
+
+
+            <!-- SALARY -->
+
+            <label>
+                Salary / Stipend
+            </label>
+
+            <input
+                type="text"
+                name="salary"
+                placeholder="Example: ₹15,000/month"
+            >
+
+
+            <!-- DESCRIPTION -->
+
+            <label>
+                Job Description
+            </label>
+
+            <textarea
+                name="description"
+                placeholder="Enter job description"
+                rows="6"
+                required
+                style="width:100%; padding:11px; box-sizing:border-box; border:1px solid #DCC9D9; border-radius:7px; font-size:15px;"
+            ></textarea>
+
+
+            <br>
+            <br>
+
+
+            <!-- SUBMIT -->
+
+            <button type="submit">
+
+                Post Job / Internship
+
+            </button>
+
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

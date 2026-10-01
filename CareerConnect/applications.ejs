@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>My Applications - CareerConnect</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+
+    <nav>
+
+        <h2>CareerConnect</h2>
+
+        <div>
+
+            <a href="/">Home</a>
+
+            <a href="/jobs">Jobs</a>
+
+            <a href="/applications">My Applications</a>
+
+            <a href="/dashboard">Dashboard</a>
+
+            <a href="/logout">Logout</a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- Applications Section -->
+
+    <div class="container">
+
+        <h1>My Applications</h1>
+
+
+        <% if (applications.length === 0) { %>
+
+            <!-- No Applications -->
+
+            <div class="job-card">
+
+                <h2>No Applications Yet</h2>
+
+                <p>
+                    You have not applied for any jobs or internships yet.
+                </p>
+
+                <a href="/jobs">
+
+                    <button type="button">
+                        Browse Jobs
+                    </button>
+
+                </a>
+
+            </div>
+
+
+        <% } else { %>
+
+
+            <!-- Display Applications -->
+
+            <% applications.forEach(application => { %>
+
+                <div class="job-card">
+
+                    <h2>
+                        <%= application.Title %>
+                    </h2>
+
+
+                    <p>
+
+                        <strong>Company:</strong>
+
+                        <%= application.Company %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Location:</strong>
+
+                        <%= application.Location %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Job Type:</strong>
+
+                        <%= application.JobType %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Application Date:</strong>
+
+                        <%= new Date(application.ApplicationDate).toLocaleString() %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Status:</strong>
+
+                        <%= application.Status %>
+
+                    </p>
+
+
+                </div>
+
+            <% }) %>
+
+
+        <% } %>
+
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>My Posted Jobs - CareerConnect</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- ==============================
+         NAVIGATION
+    =============================== -->
+
+    <nav>
+
+        <h2>CareerConnect</h2>
+
+        <div>
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/jobs">
+                Jobs
+            </a>
+
+            <a href="/dashboard">
+                Dashboard
+            </a>
+
+            <a href="/logout">
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ==============================
+         MAIN CONTAINER
+    =============================== -->
+
+    <div class="container">
+
+
+        <h1>
+            My Posted Jobs
+        </h1>
+
+
+        <p>
+
+            Jobs and internships posted by
+
+            <strong>
+                <%= company.CompanyName %>
+            </strong>
+
+        </p>
+
+
+        <hr>
+
+
+        <!-- ==============================
+             NO JOBS
+        =============================== -->
+
+        <% if (jobs.length === 0) { %>
+
+
+            <div class="job-card">
+
+                <h2>
+                    No Jobs Posted Yet
+                </h2>
+
+
+                <p>
+
+                    You have not posted any
+                    jobs or internships yet.
+
+                </p>
+
+
+                <a href="/company/post-job">
+
+                    <button type="button">
+
+                        Post Job / Internship
+
+                    </button>
+
+                </a>
+
+            </div>
+
+
+        <% } else { %>
+
+
+            <!-- ==============================
+                 JOB LIST
+            =============================== -->
+
+            <% jobs.forEach(job => { %>
+
+
+                <div class="job-card">
+
+
+                    <h2>
+
+                        <%= job.Title %>
+
+                    </h2>
+
+
+                    <p>
+
+                        <strong>
+                            Company:
+                        </strong>
+
+                        <%= job.Company %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Location:
+                        </strong>
+
+                        <%= job.Location %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Job Type:
+                        </strong>
+
+                        <%= job.JobType %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Required Skills:
+                        </strong>
+
+                        <%= job.Skills %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Salary / Stipend:
+                        </strong>
+
+                        <%= job.Salary || "Not specified" %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Description:
+                        </strong>
+
+                        <%= job.Description %>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Posted Date:
+                        </strong>
+
+                        <%= new Date(job.PostedDate).toLocaleString() %>
+
+                    </p>
+
+
+                    <div class="dashboard-actions">
+
+
+                        <a href="/company/applicants/<%= job.JobId %>">
+
+                            <button type="button">
+
+                                View Applicants
+
+                            </button>
+
+                        </a>
+
+
+                    </div>
+
+
+                </div>
+
+
+            <% }) %>
+
+
+        <% } %>
+
+
+    </div>
+
+
+</body>
+
+</html>
